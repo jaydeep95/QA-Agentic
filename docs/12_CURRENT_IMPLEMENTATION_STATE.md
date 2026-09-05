@@ -15,7 +15,7 @@
 ```text
 CURRENT PHASE:       Phase 0 — Repository & Platform Foundation
 CURRENT STAGE:       P0-S1 — Repository scaffold
-CURRENT CHECKPOINT:  CP-00 Foundation  (NOT_STARTED)
+CURRENT CHECKPOINT:  CP-00 Platform Foundation  (NOT_STARTED)
 NEXT WORK ITEM:      P0-W1-T2 — repository structure and module layout
                      (needs DEC-002 resolved: control-plane language)
 
@@ -83,22 +83,32 @@ Version control is active: 50 files tracked at commit `c4664f1`, pushed to `orig
 
 ---
 
-## 2. Maturity by area
+## 2. Verified status by area
 
-Using the six states from [`06_IMPLEMENTATION_PHASES.md`](06_IMPLEMENTATION_PHASES.md) §1.
+Using the **eight states** from [`06_IMPLEMENTATION_PHASES.md`](06_IMPLEMENTATION_PHASES.md) §1.
 
-| Area | Maturity | Evidence |
-|---|---|---|
-| Product vision and scope | **DEFINED** | [`01_PRODUCT_VISION_AND_SCOPE.md`](01_PRODUCT_VISION_AND_SCOPE.md) |
-| Architecture | **DESIGNED** | [`02_ARCHITECTURE_BASELINE.md`](02_ARCHITECTURE_BASELINE.md), architecture HTML |
-| Unified Application Understanding model | **DESIGNED** | [`03_UNIFIED_APPLICATION_UNDERSTANDING.md`](03_UNIFIED_APPLICATION_UNDERSTANDING.md) |
-| Component contracts | **DESIGNED** | [`04_DOMAIN_AND_COMPONENT_CONTRACTS.md`](04_DOMAIN_AND_COMPONENT_CONTRACTS.md) |
-| Roadmap | **DEFINED** | [`05_DETAILED_DEVELOPMENT_ROADMAP.md`](05_DETAILED_DEVELOPMENT_ROADMAP.md) |
-| Checkpoints | **DEFINED** | [`checkpoints/`](checkpoints/) |
-| Every implementation area | **NOT_STARTED** | No code exists |
+> **Declared status is a claim. Verified status is what someone checked.**
+> Where the two differ, the verified column governs. An item may not be advanced on a
+> declared status alone.
 
-> Nothing in this repository is past **DESIGNED**. Documentation existing makes something
-> `DEFINED`; it never makes it `IMPLEMENTED`.
+| Item | Declared status | Verified status | Verification method | Evidence | Commit / version | Verified on |
+|---|---|---|---|---|---|---|
+| Product vision and scope | DEFINED | **DEFINED** | Document review | [`01_PRODUCT_VISION_AND_SCOPE.md`](01_PRODUCT_VISION_AND_SCOPE.md) | c4664f1 | 2026-09-05 |
+| Architecture baseline | DESIGNED | **DESIGNED** | Document review; internal consistency audit | [`02_ARCHITECTURE_BASELINE.md`](02_ARCHITECTURE_BASELINE.md) + architecture HTML | c4664f1 | 2026-09-05 |
+| UAU model | DESIGNED | **DESIGNED** | Document review | [`03_UNIFIED_APPLICATION_UNDERSTANDING.md`](03_UNIFIED_APPLICATION_UNDERSTANDING.md) | c4664f1 | 2026-09-05 |
+| Component contracts | DESIGNED | **DESIGNED** | Document review | [`04_DOMAIN_AND_COMPONENT_CONTRACTS.md`](04_DOMAIN_AND_COMPONENT_CONTRACTS.md) | 3b55f1f | 2026-09-05 |
+| Development roadmap | DEFINED | **DEFINED** | Document review; dependency audit | [`05_DETAILED_DEVELOPMENT_ROADMAP.md`](05_DETAILED_DEVELOPMENT_ROADMAP.md) | f8a0276 | 2026-09-05 |
+| Checkpoint model (13) | DEFINED | **DEFINED** | Document review | [`checkpoints/`](checkpoints/) | f8a0276 | 2026-09-05 |
+| Decision register | DEFINED | **DEFINED** | Provenance audit of every entry | [`14_ARCHITECTURAL_DECISION_REGISTER.md`](14_ARCHITECTURAL_DECISION_REGISTER.md) | 179c1ea | 2026-09-05 |
+| Version control (P0-W1-T1) | COMPLETE | **COMPLETE** | `git log`, `git ls-files`, secret scan over 50 staged files | Commit + push to `origin/main` | c4664f1 | 2026-09-05 |
+| **Platform source code** | NOT_IMPLEMENTED | **NOT_IMPLEMENTED** | Filesystem inspection — no source files exist | — | — | 2026-09-05 |
+| **Automated tests** | NOT_IMPLEMENTED | **NOT_IMPLEMENTED** | No test framework installed | — | — | 2026-09-05 |
+| **Any platform capability** | NOT_IMPLEMENTED | **NOT_VALIDATED** | No checkpoint has been attempted | — | — | 2026-09-05 |
+| CI/CD | NOT_IMPLEMENTED | **NOT_IMPLEMENTED** | No pipeline configuration exists | — | — | 2026-09-05 |
+
+> **Nothing in this repository is past `DESIGNED`** except version control, which is
+> `COMPLETE`. Documentation existing makes something `DEFINED`; it never makes it
+> `IMPLEMENTED`.
 
 ---
 

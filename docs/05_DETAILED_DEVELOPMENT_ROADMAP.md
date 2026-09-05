@@ -59,20 +59,23 @@ Phase (P0..P13) → Stage → Workstream (Wn) → Task (Tn) → Test → Evidenc
 
 **Work item ID format:** `P{phase}-W{workstream}-T{task}` — e.g. `P0-W3-T2`
 
-**Status model** (used throughout; no vague states):
+**Status model** (used throughout; no vague states). Full definitions and the rules
+they enforce: [`06_IMPLEMENTATION_PHASES.md`](06_IMPLEMENTATION_PHASES.md) §1.
 
 | Status | Objective meaning |
 |---|---|
 | `NOT_STARTED` | No work begun |
 | `PLANNED` | Scoped and sequenced, not started |
 | `IN_PROGRESS` | Actively being implemented |
-| `IMPLEMENTED` | Code complete, tests not yet passing/written |
-| `TESTING` | Tests written and running, not all passing |
-| `VALIDATED` | Tests pass; checkpoint evidence captured |
+| `IMPLEMENTED` | Code complete and compiling; tests not yet run |
+| `TESTING` | Tests are being executed; results not yet complete |
+| `TESTED` | Tests completed with **recorded results** (commit hash + output) |
+| `VALIDATED` | A checkpoint demonstrated the capability, both dimensions; evidence captured |
+| `ACCEPTED` | Product or architecture acceptance recorded by the responsible party |
 | `BLOCKED` | Cannot proceed — blocker recorded |
 | `DEFERRED` | Consciously postponed — reason recorded |
 | `REQUIRES_DECISION` | Needs an open decision resolved first |
-| `COMPLETE` | Validated and accepted at a checkpoint |
+| `COMPLETE` | Accepted **and** validated **and** no unresolved blocking issue remains |
 
 ---
 
