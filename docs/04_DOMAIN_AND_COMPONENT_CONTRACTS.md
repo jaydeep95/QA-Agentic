@@ -83,10 +83,21 @@ Every contract in this document specifies the same fields:
 
 ---
 
-## 3. `CodeIntelligenceProvider` — **PLACEHOLDER**
+## 3. `CodeIntelligenceProvider`
 
-> **Status: PLACEHOLDER.** Provider not selected. The contract is real architecture; the
-> binding is not. Research: [`research/code-intelligence/`](research/code-intelligence/). Decision gate: OD-5 + Validation B.
+> **Same separation as the crawler, and for the same reason.**
+>
+> | Aspect | Classification | Meaning |
+> |---|---|---|
+> | The **contract** below | **FIXED** (ADR-012) | The integration boundary is decided |
+> | Advisory positioning — never authoritative; platform fully functional without it | **FIXED** | Not renegotiable by a capable provider |
+> | The **concrete provider** | **OPEN / PLACEHOLDER** (ADR-041) | Deliberately unselected |
+> | Candidate evaluation | **RESEARCH** | [`research/code-intelligence/`](research/code-intelligence/) |
+> | Final binding | **PENDING DECISION** | Gate: OD-5 + Validation B |
+>
+> Until a provider is bound, development proceeds on **native static analysis**,
+> provider-neutral fixtures and contract test doubles — without any of those being
+> represented as a production provider (register §4).
 
 | | |
 |---|---|
@@ -114,9 +125,17 @@ Every contract in this document specifies the same fields:
 
 ---
 
-## 4. `CrawlerProvider` — **PLACEHOLDER**
+## 4. `CrawlerProvider`
 
-> **Status: PLACEHOLDER.** Provider not selected. Research: [`research/crawler/`](research/crawler/). Decision gate: OD-1 + Validation C.
+> **Two things are being separated here, and conflating them is the failure this section prevents.**
+>
+> | Aspect | Classification | Meaning |
+> |---|---|---|
+> | The **contract** below | **FIXED** (ADR-011) | The architectural boundary is decided and may not be renegotiated by a provider |
+> | Platform responsibilities: exploration planning, state identity, safety, governance, evidence, interpretation, reconciliation | **FIXED** | These never move to a provider |
+> | The **concrete provider/browser implementation** | **OPEN / PLACEHOLDER** (ADR-040) | Deliberately unselected |
+> | Candidate evaluation | **RESEARCH** | [`research/crawler/`](research/crawler/) |
+> | Final binding | **PENDING DECISION** | Gate: OD-1 + Validation C |
 
 The provider is a **browser actuator and sensor**. Everything constituting knowledge or
 judgement stays on the platform side.
@@ -217,8 +236,29 @@ The separation is architectural, not stylistic. It is what makes INV-6 structura
 | **Security** | Contains no secrets or environment values | Secret **references** only; resolved in-worker |
 | **Replacement rules** | Any code generator may be substituted provided it consumes the specification and never writes to it |
 
-**Enforcement:** the healing component has **no write path** to specification storage.
-This is a structural constraint verified by test, not a policy setting. (INV-6)
+### The healing invariant, at three levels
+
+| Level | What it holds | Mutability |
+|---|---|---|
+| **Specification** | Business intent, action-sequence semantics, assertion semantics, expected results, acceptance criteria | **Immutable** for a generated version. Changing it means regenerating and passing a gate — never an in-place edit by an automated process |
+| **Binding** | Concrete locator, environment, data and fixture resolution | Mutable. Versioned with an event history rather than an approval gate |
+| **Healing** | Repairs binding resolution when the application changes | **May modify the binding only** |
+
+Healing **must not** silently modify: business intent · action-sequence semantics ·
+assertion semantics · expected result · acceptance criteria.
+
+**Where healing would require such a change, it must not continue.** It emits one of:
+
+| Outcome | Meaning |
+|---|---|
+| `UNRESOLVED` | No binding-level repair exists. The test cannot run as specified |
+| `HUMAN_REVIEW_REQUIRED` | A repair exists but would alter meaning. A person must decide |
+
+Silent continuation past either state is a defect, not a degraded mode.
+
+**Enforcement is structural, not procedural:** the healing component has **no write path**
+to specification storage. Verified by test (ARCH-5), not by policy configuration — because
+a policy can be misconfigured and a missing code path cannot. (INV-6, ADR-006, ADR-016)
 
 **Page/component object model:** projected from the UAU, not invented per test case.
 Two test cases touching the same form reference the same object automatically —
@@ -307,7 +347,7 @@ Five concerns separated deliberately, because merging them is the common and dam
 | **Errors** | `Unavailable`, `RateLimited`, `BudgetExceeded`, `StructuredOutputViolation`, `ContentFiltered` |
 | **Idempotency** | Not idempotent. Reproducibility is of *inputs and lineage*, not output |
 | **Security** | Sending content is an egress event under workspace policy (OD-2); secrets never enter a prompt |
-| **Replacement rules** | **Two adapters must exist from the start**, even if only one is used — a contract with a single implementation is an assumption, not an abstraction |
+| **Replacement rules** | The **abstraction is FIXED** (ADR-013). The **adapter count is not** (ADR-030): at least one real adapter is required before LLM-dependent functionality can be validated; additional adapters are independently extensible. *Previously stated as "two adapters required from the start" — that was an engineering argument, never an approved requirement. See register §6.* |
 
 ---
 
@@ -354,7 +394,7 @@ stops being a claim and becomes a property.
 |---|---|
 | `CodeIntelligenceProvider` | Platform builds understanding with the adapter removed |
 | `CrawlerProvider` | A second implementation drives exploration with no change to state model or planning |
-| `LanguageModelProvider` | Identical typed output from two adapters; provenance records which |
+| `LanguageModelProvider` | A task runs against a real adapter with typed output honoured; provenance records which adapter was used. **When a second adapter exists**, both produce contract-conformant typed output for the same task |
 | `Capability` | A new tool is registered and invoked with no stage-level code |
 | `EvaluatorContract` | A new evaluator is added with no orchestration change |
 | `AutomationSpecification`/`Binding` | The same specification executes against two environments via different bindings; the healing path cannot reach the specification |

@@ -51,7 +51,7 @@ Each contract has a **conformance suite**. This is the mechanism that turns
 |---|---|
 | `CodeIntelligenceProvider` | Platform builds understanding with the adapter removed |
 | `CrawlerProvider` | A second implementation drives exploration with no change to state model or planning |
-| `LanguageModelProvider` | Two adapters produce identical typed output; provenance records which was used |
+| `LanguageModelProvider` | A real adapter honours the typed output contract; provenance records which was used. Cross-adapter equivalence is tested **when a second adapter exists** (ADR-030) |
 | `Capability` | A new tool registers and invokes with no stage-level code |
 | `EvaluatorContract` | A new evaluator is added with no orchestration change |
 | `AutomationSpecification`/`Binding` | One specification executes against two environments; the healing path cannot reach the specification |

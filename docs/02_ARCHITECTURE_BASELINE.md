@@ -364,7 +364,7 @@ Summarised here; full records with alternatives and consequences in the HTML com
 | Control-plane language/runtime | OPEN | DEC-002 — pending team confirmation |
 | Canonical store product | FLEXIBLE | Requires transactional guarantees; product choice open |
 | Queue technology | FLEXIBLE | Database-backed initially, behind a dispatch port |
-| LLM vendor | FLEXIBLE | Two adapters required; vendor not fixed |
+| LLM vendor and adapter count | FLEXIBLE | Abstraction FIXED (ADR-013); vendor not fixed; **adapter count PROVISIONAL** (ADR-030) — at least one real adapter before LLM-dependent validation |
 | Hosting target | OPEN | OD-7 |
 
 **Technology is subordinate to architecture.** Every technology name can be removed from
