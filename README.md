@@ -30,7 +30,7 @@ happens to emit tests. The durable asset is the understanding; tests are regener
 | **Checkpoint** | CP-00 Foundation — `NOT_STARTED` |
 | **Implementation** | **None. No platform source code exists yet.** |
 | **Next step** | `P0-W1-T1` — initialise git repository |
-| **Documentation** | Complete — source-of-truth system established |
+| **Documentation** | V2 corrected — source-of-truth system + decision register |
 
 This repository currently contains **architecture and planning documentation only**.
 Nothing is implemented, tested or validated. That is recorded honestly in
@@ -56,9 +56,13 @@ docs/
 ├── 11_RESEARCH_AND_OPEN_DECISIONS.md         what is not yet decided
 ├── 12_CURRENT_IMPLEMENTATION_STATE.md        what actually exists (living)
 ├── 13_CLAUDE_ENGINEERING_WORKING_PROTOCOL.md how to work in this repository
+├── 14_ARCHITECTURAL_DECISION_REGISTER.md      FIXED / FLEXIBLE / PROVISIONAL / PLACEHOLDER / OPEN
+├── 15_CHANGE_IMPACT_TEMPLATE.md               required form for architecture-affecting change
+├── 16_VERTICAL_SLICES.md                      user-value validation
 ├── architecture/     canonical architecture documents + diagram sources
 ├── requirements/     scope, functional and quality requirements
 ├── research/         the two open provider decisions
+├── test-assets/      reference AUT and calibration corpus (OPEN)
 └── checkpoints/      one document per checkpoint
 ```
 
@@ -72,9 +76,10 @@ implemented, by architecture tests.
 1. **The repository is the source of truth**, not any conversation. Assume the conversation is gone.
 2. **Documentation first** for any change affecting product behaviour, architecture, contracts, data model, security, governance or scope. Never implement first and document later.
 3. **A stub is not complete.** Placeholder code, fake success, simulated execution and mock-only workflows may never be presented as functional capability.
-4. **Only two placeholders exist:** `CODE_INTELLIGENCE_PROVIDER` and `CRAWLER_PROVIDER`. Their contracts are real architecture; their bindings are deliberately unselected.
-5. **Record `UNKNOWN` as `UNKNOWN`.** Never convert uncertainty into false certainty.
-6. **Advance a phase only when its checkpoint demonstrates the capability** — not because code exists.
+4. **Only two PRODUCTION placeholders exist:** `CODE_INTELLIGENCE_PROVIDER` and `CRAWLER_PROVIDER`. Their contracts are real architecture; their bindings are deliberately unselected. Test doubles are legitimate inside tests and must never be presented as capability.
+5. **A recommendation is not a requirement.** Check [`docs/14_ARCHITECTURAL_DECISION_REGISTER.md`](docs/14_ARCHITECTURAL_DECISION_REGISTER.md) before treating anything as fixed — every numeric threshold is PROVISIONAL.
+6. **Record `UNKNOWN` as `UNKNOWN`.** Never convert uncertainty into false certainty.
+7. **Advance a phase only when its checkpoint demonstrates the capability** — not because code exists.
 
 Full protocol: [`docs/13_CLAUDE_ENGINEERING_WORKING_PROTOCOL.md`](docs/13_CLAUDE_ENGINEERING_WORKING_PROTOCOL.md)
 

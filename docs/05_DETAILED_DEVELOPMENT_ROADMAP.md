@@ -16,6 +16,8 @@ STATUS:       NOT_STARTED
 DECOMPOSITION: P0 is at implementation-ready level (rolling-detail rule below)
 
 COMPLETED:    P0-W1-T1  version control established — commit c4664f1 on origin/main
+              Roadmap V2 correction — DEC-005..009, 13-checkpoint model,
+              decision register, consistency audit clean
 
 CURRENT:      P0-W1-T2  repository structure and module layout
               BLOCKED on DEC-002 (control-plane language)
