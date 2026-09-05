@@ -16,29 +16,29 @@
 CURRENT PHASE:       Phase 0 — Repository & Platform Foundation
 CURRENT STAGE:       P0-S1 — Repository scaffold
 CURRENT CHECKPOINT:  CP-00 Foundation  (NOT_STARTED)
-NEXT WORK ITEM:      P0-W1-T1 (IN_PROGRESS) — write .gitignore, then first commit
+NEXT WORK ITEM:      P0-W1-T2 — repository structure and module layout
+                     (needs DEC-002 resolved: control-plane language)
 
 IMPLEMENTATION:      NONE. No platform source code exists.
 TEST STATUS:         No tests exist. No test framework installed.
 DEPLOYMENT STATUS:   Not deployable. Nothing to deploy.
 DOCUMENTATION:       Bootstrap complete — 14 canonical documents + architecture consolidated
-VERSION CONTROL:     INITIALISED BUT EMPTY — repository on branch `master`,
-                     0 commits, 0 tracked files, no .gitignore.
-                     P0-W1-T1 is PARTIALLY COMPLETE.
+VERSION CONTROL:     ACTIVE — branch `main`, remote `origin`
+                     github.com/jaydeep95/QA-Agentic
+                     P0-W1-T1 COMPLETE at commit c4664f1
 ```
 
 ### Version control detail
 
 | Item | State |
 |---|---|
-| `git init` | **DONE** — repository exists, branch `master` |
-| `.gitignore` | **NOT CREATED** |
-| First commit | **NOT MADE** — 0 commits, 0 tracked files |
-| Everything untracked | `README.md`, `docs/` |
+| Repository | **DONE** — branch `main`, remote `origin` = github.com/jaydeep95/QA-Agentic |
+| `.gitignore` | **DONE** — GitHub Python template extended for the Node worker plane, Playwright execution artifacts, local platform state and additional secret patterns |
+| First commit | **DONE** — `c4664f1`, 50 files, 11,167 insertions, secret scan clean |
+| Pushed | **DONE** — `origin/main` at `c4664f1`, on top of the pre-existing `742266f Initial commit` |
 
-> **Do not commit before writing `.gitignore`.** Sibling directories under
-> `c:\waynautic\` contain `.env` files; nothing credential-bearing may enter history.
-> Completing `.gitignore` and the first commit finishes P0-W1-T1.
+> Execution artifacts (traces, video, screenshots) are evidence held in the object
+> store **by reference** and are excluded from git history by `.gitignore`.
 
 ---
 
@@ -48,7 +48,8 @@ Verified by inspection on 2026-09-05.
 
 ```text
 c:\waynautic\QA-Agentic\
-├── .git\                        (initialised · 0 commits · 0 tracked files)
+├── .git\                        (branch `main` · tracking origin · 1 commit)
+├── .gitignore
 ├── README.md
 └── docs\
     ├── 00_PROJECT_SOURCE_OF_TRUTH.md
@@ -78,7 +79,7 @@ c:\waynautic\QA-Agentic\
 ```
 
 **No source code. No tests. No configuration. No build files. No CI.**
-Git is initialised but empty: **no commits, no tracked files, no `.gitignore`.**
+Version control is active: 50 files tracked at commit `c4664f1`, pushed to `origin/main`.
 
 ---
 
@@ -109,6 +110,7 @@ Using the six states from [`06_IMPLEMENTATION_PHASES.md`](06_IMPLEMENTATION_PHAS
 | Architecture refinement to v2 (UAU-centric, two-level) | 2026-09-05 | `architecture-overview.html`, DEC-001 |
 | Architecture consolidated into the repository | 2026-09-05 | `docs/architecture/`, DEC-004 |
 | Documentation source-of-truth bootstrap | 2026-09-05 | `docs/` tree, DEC-003 |
+| **P0-W1-T1 version control established** | 2026-09-05 | Commit `c4664f1` pushed to `origin/main` |
 
 **Completed implementation work: none.**
 
@@ -118,29 +120,28 @@ Using the six states from [`06_IMPLEMENTATION_PHASES.md`](06_IMPLEMENTATION_PHAS
 
 | Item | Status |
 |---|---|
-| P0-W1-T1 initialise git repository | **IN_PROGRESS** — `git init` done; `.gitignore` and first commit outstanding |
+| — | Nothing in progress |
 
 ---
 
 ## 5. Next work item
 
 ```text
-ID:         P0-W1-T1
-Title:      Initialise git repository  (IN_PROGRESS)
+ID:         P0-W1-T2
+Title:      Repository structure and module layout
 Phase:      Phase 0
 Checkpoint: CP-00
 
-Done:       git init — repository exists on branch `master`
-Outstanding: .gitignore, first commit
+Purpose:    Enforce the five domain boundaries in the file system so that module
+            structure, dependency rules and the architecture boundary check
+            (P0-W8-T3) have something concrete to enforce.
 
-Purpose:    Place the repository under version control so all subsequent work is
-            recoverable and reviewable.
+BLOCKED BY: DEC-002 — control-plane language and runtime are recorded OPEN.
+            Do not choose silently by writing the first file. Resolve DEC-002,
+            record it in the Decision Log, then proceed.
 
-Acceptance: git log shows one commit; git status clean; /docs tracked;
-            no secret-bearing file tracked.
-
-Note:       Write .gitignore BEFORE the first commit. Sibling directories under
-            c:\waynautic\ contain .env files; do not let any credential enter history.
+Unblocked alternative: P0-W1-T4 (configuration model) and the contract
+            definitions in doc 04 can be refined while DEC-002 is open.
 ```
 
 Full specification: [`05_DETAILED_DEVELOPMENT_ROADMAP.md`](05_DETAILED_DEVELOPMENT_ROADMAP.md) — Phase 0, detailed specification section.

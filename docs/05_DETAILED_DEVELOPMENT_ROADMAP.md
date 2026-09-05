@@ -14,11 +14,12 @@ STAGE:        P0-S1 — Repository scaffold
 CHECKPOINT:   CP-00 Foundation
 STATUS:       NOT_STARTED
 
-COMPLETED:    (none — no implementation exists)
+COMPLETED:    P0-W1-T1  version control established — commit c4664f1 on origin/main
 
-CURRENT:      P0-W1-T1 (IN_PROGRESS) — git init done; write .gitignore, then commit /docs
+CURRENT:      P0-W1-T2  repository structure and module layout
+              BLOCKED on DEC-002 (control-plane language)
 
-NEXT:         P0-W1-T2 → P0-W1-T3 → P0-W2 (domain skeleton)
+NEXT:         P0-W1-T3 → P0-W1-T4 → P0-W2 (domain skeleton)
 
 BLOCKED:      P2 framework packs      ← OD-3 (AUT stack unknown)
               Phase sequencing commit ← OD-4 (delivery window/team unknown)
@@ -121,7 +122,7 @@ Phase 0 builds the frame, not the picture.
 
 | ID | Title | Purpose | Depends | Status |
 |---|---|---|---|---|
-| P0-W1-T1 | Initialise git repository | Version control | — | **IN_PROGRESS** |
+| P0-W1-T1 | Initialise git repository | Version control | — | **COMPLETE** `c4664f1` |
 | P0-W1-T2 | Repository structure and module layout | Enforce domain boundaries in the file system | T1 | NOT_STARTED |
 | P0-W1-T3 | Development environment + dependency management | Reproducible local setup | T1 | NOT_STARTED |
 | P0-W1-T4 | Configuration model (env, workspace, policy) | No hard-coded environment values anywhere | T3 | NOT_STARTED |
@@ -170,7 +171,7 @@ Phase 0 builds the frame, not the picture.
 | **Risks** | Accidentally committing credentials from a sibling directory — mitigate with `.gitignore` first |
 | **Open decisions** | None |
 | **Checkpoint** | CP-00 |
-| **Status** | `IN_PROGRESS` — `git init` complete; `.gitignore` and first commit outstanding |
+| **Status** | `COMPLETE` - commit `c4664f1` pushed to `origin/main`; 50 files tracked, secret scan clean |
 
 ### Phase 0 acceptance criteria
 - [ ] Repository under version control with CI running on every commit

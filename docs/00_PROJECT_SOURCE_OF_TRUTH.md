@@ -76,7 +76,7 @@ fleets (analysis, exploration, execution), connected by a job queue.
 > **No platform code exists.** The repository contains architecture and planning
 > documentation only. Nothing has been implemented, tested or validated.
 > Statuses below read `NOT_STARTED` because that is true, not because it is unrecorded.
-> The single exception is version control, which is initialised but empty.
+> The single exception is version control (P0-W1-T1), which is complete.
 
 | Area | Status | Version | Evidence | Next action |
 |---|---|---|---|---|
@@ -102,7 +102,7 @@ fleets (analysis, exploration, execution), connected by a job queue.
 | Excel export | NOT_STARTED | — | — | P13 |
 | Test suite (platform's own) | NOT_STARTED | — | — | P0-W8 |
 | CI/CD | NOT_STARTED | — | — | P0-W8 |
-| Version control | **IN_PROGRESS** | — | Repo exists on `master`; 0 commits, 0 tracked files, no `.gitignore` | **P0-W1-T1 — write `.gitignore`, then first commit** |
+| Version control | **COMPLETE** | c4664f1 | 50 files on `origin/main`; secret scan clean | None — P0-W1-T1 done |
 
 Full detail: [`12_CURRENT_IMPLEMENTATION_STATE.md`](12_CURRENT_IMPLEMENTATION_STATE.md)
 
@@ -130,8 +130,9 @@ PROVIDER RESEARCH:
   CODE_INTELLIGENCE_PROVIDER → OPEN   (research/code-intelligence/)
   CRAWLER_PROVIDER           → OPEN   (research/crawler/)
 
-NEXT APPROVED STEP:          P0-W1-T1 (partially done) — write .gitignore, then commit
-                             the existing /docs tree as the first commit
+NEXT APPROVED STEP:          P0-W1-T2 — repository structure and module layout.
+                             BLOCKED on DEC-002 (control-plane language); resolve
+                             and record it before writing the first source file.
 ```
 
 ---
