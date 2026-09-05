@@ -205,6 +205,6 @@ All are recorded as decisions in [`10_DECISION_AND_CHANGE_LOG.md`](10_DECISION_A
 
 | # | Was stated as | Actual provenance | Now classified |
 |---|---|---|---|
-| 1 | "Two LLM adapters must exist from the start" — in docs 02, 04 (twice) and 09 | An engineering argument in the v1 architecture text: *"a contract with a single implementation is an assumption"*. Never an approved product requirement | **ADR-030 PROVISIONAL** — abstraction FIXED, adapter count flexible, at least one real adapter needed before LLM-dependent validation |
+| 1 | "Two LLM adapters must exist from the start" — in docs 02, 04 (twice), 08, 09 and `requirements/` (twice) — **seven places** | An engineering argument in the v1 architecture text: *"a contract with a single implementation is an assumption"*. Never an approved product requirement | **ADR-030 PROVISIONAL** — abstraction FIXED, adapter count flexible, at least one real adapter needed before LLM-dependent validation |
 | 2 | Fourteen numeric thresholds presented as validation pass criteria | Engineering hypotheses written into the validation plan | **All PROVISIONAL** (§3), with THR-SAFETY-001 flagged for Product Owner confirmation as FIXED |
 | 3 | Reconciliation (P5) depending on the crawler phase (P4) | A sequencing convenience, not an architectural necessity — it contradicted ADR-002 / INV-4 | **Corrected** — reconciliation develops against recorded, synthetic and fixture observations; live crawler integration is a separate validation dependency |

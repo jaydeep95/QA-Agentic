@@ -222,7 +222,7 @@ Legend — Impl/Test/Evidence: `—` none yet · `✓` complete · `~` partial
 |---|---|---|---|---|---|---|---|---|
 | REQ-PROV-001 | Code Intelligence replaceable; platform functional without it | Provider Integration | `CodeIntelligenceProvider` | P3 | — | — | CP-02 | — |
 | REQ-PROV-002 | Crawler replaceable without changing state model or planning | Provider Integration | `CrawlerProvider` | P4 | — | — | CP-09 | — |
-| REQ-PROV-003 | Two LLM adapters exist; identical typed output; provenance records which | Provider Integration | `LanguageModelProvider` | P0-W7-T2 | — | — | CP-00 | — |
+| REQ-PROV-003 | `LanguageModelProvider` abstraction with **at least one real adapter**; typed output honoured; provenance records which adapter was used. Count is PROVISIONAL (ADR-030) | Provider Integration | `LanguageModelProvider` | P0-W7-T2 | — | — | CP-00 | — |
 | REQ-PROV-004 | New tool/MCP registered and invoked with no stage-level code | Provider Integration | `Capability` | P0-W7-T1 | — | — | CP-00 | — |
 | REQ-PROV-005 | Single capability-invocation path; sole egress point | Provider Integration | `Capability` | P0-W7-T1 | — | — | CP-00 | — |
 | REQ-SEC-001 | Zero provider imports in domain modules (static check) | Platform | — | P0-W8-T3 | — | — | CP-00 | — |
