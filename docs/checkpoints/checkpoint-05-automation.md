@@ -1,95 +1,123 @@
 # CP-05 — Automation
 
-**Phases:** P8
-**Status:** `NOT_STARTED`
-**Result:** — *(not yet attempted)*
-**Last updated:** 2026-09-05
+**Phase(s):** P8
+**Vertical slice:** Slice C (part 1)
+**Status:** `NOT_STARTED` · **Result:** — *(not yet attempted)*
+**Last updated:** 2026-09-05 (Roadmap V2)
 
 > Template and rules: [`../07_CHECKPOINT_AND_VALIDATION_PLAN.md`](../07_CHECKPOINT_AND_VALIDATION_PLAN.md)
-> **A checkpoint must not be marked PASS if a capability the phase requires is mocked.**
+> **A checkpoint requires BOTH dimensions.** Internal modules working is not sufficient —
+> the user-visible capability must also be demonstrated.
+> **A checkpoint requiring functional behaviour may not pass on a test double.**
 
 ---
 
 ## Objective
 
-Generated automation is maintainable, executable and structurally reusable rather than a collection of copied scripts, and healing cannot alter intent.
+Generated automation is maintainable, reusable and executable, and healing is structurally incapable of altering test intent.
+
+## A. Product validation — what the QA user can do
+
+A QA user can:
+1. Generate automation from an approved test case and see the intent separately from the environment-specific detail
+2. Bind the same automation to two different environments
+3. See the shared page and component objects the tests reuse
+4. After an application markup change, see healing **proposals** with evidence — not silent rewrites
+5. Accept a proposal and confirm only the binding changed
+6. See an audit record of every healing event
+
+## B. Engineering validation — what the platform must prove internally
+
+- Automation specification: actions, semantic element references, assertions, expected outcomes, data requirements
+- Automation binding per environment: locators with provenance, fixtures, data bindings, secret references
+- Page/component object model **projected from the UAU**, shared across cases
+- Locator lifecycle: candidate → validated → bound → verified → healed, each with evidence
+- Healing: capture, candidate search, probe, score, policy-gated application, audit event
+- Healing emits `UNRESOLVED` or `HUMAN_REVIEW_REQUIRED` where a change would touch intent — **never silent continuation**
+- **Structural** proof that the healing path cannot write to specification storage (ARCH-5)
+
+## Dependencies
+
+| Kind | Items |
+|---|---|
+| **Development dependency** *(must exist before implementation can begin)* | CP-04; CP-02 (locator candidates) |
+| **Validation dependency** *(must exist before this can be fully validated)* | CP-04; a markup-churn branch for Validation E |
+| **Optional enrichment** *(improves the capability; not required for it to exist)* | CP-09 runtime-validated locators — materially improves reliability; **not required** (unvalidated candidates are usable at lower confidence) |
+| **Parallel work** *(can safely proceed independently)* | CP-09, CP-10 |
 
 ## Preconditions
 
 - CP-04 PASS
-- Locator candidates available from the understanding; runtime-validated candidates if CP-02 passed
-- Validation E executed
+- Locator candidates available from the understanding
+- Validation E executed and recorded
+
+## Required components
+
+Automation specification · binding · object model projection · locator lifecycle · healing
 
 ## Functional test
 
-What a human should be able to do:
-
-1. Generate an automation specification from an approved test case
-2. Confirm the specification contains semantic element references and assertions, and **no** locators or environment values
-3. Generate bindings for two environments from the one specification
-4. Inspect the page and component objects; confirm they are projected from the understanding and shared across test cases
-5. Introduce a markup change in the AUT; run the suite; observe locator failures and healing **proposals**
-6. Confirm auto-apply is disabled by default and healing produced proposals, not silent changes
+1. Generate a specification from an approved test case
+2. Confirm it contains no locators or environment values
+3. Generate bindings for two environments from that one specification
+4. Inspect the page/component objects; confirm projection from the UAU and reuse across cases
+5. Introduce markup change; run; observe locator failures and healing proposals
+6. Confirm auto-apply is disabled by default
 7. Accept a proposal; confirm only the binding changed and the specification version is untouched
-8. Inspect the healing event record: before, after, evidence, score
+8. Trigger a case where healing would require changing an assertion; confirm `HUMAN_REVIEW_REQUIRED`, not silent continuation
 
 ## Automated tests
 
-- Unit: locator ranking by strategy stability; healing candidate scoring
-- Contract: `AutomationSpecification`/`Binding` conformance, including the structural test that **the healing path cannot write to specification storage**
+- Unit: locator ranking; healing candidate scoring; the intent-change refusal path
+- Contract: `AutomationSpecification`/`Binding`, including the structural test that healing cannot write to specification storage
 - Integration: one specification against two environments; object model regeneration after an understanding change
-- Architecture: ARCH-5 — healing components have no write access to specification storage
+- Architecture: ARCH-5
 - Measurement: object reuse across the generated suite
 
-## Test data
+## Required test data
 
-- Approved test cases
-- Two configured environments
-- A markup-churn branch of the AUT: renamed classes, restructured containers, a relocated control
+Approved test cases · two configured environments · a markup-churn branch (renamed classes, restructured containers, relocated control).
 
-## Evidence
+## Expected outcome
 
-Stored under `docs/checkpoints/evidence/CP-05/`:
+Reuse is structural rather than emergent. Healing repairs how an element is found and cannot change what the test means.
+
+## Evidence produced
+
+Stored under `evidence/CP-05/`:
 
 - Generated specification and two bindings
-- Page/component object model with measured reuse across the suite
+- Object model with measured reuse
 - Suite pass rate before and after markup churn
-- Healing proposals with precision measured by hand review (Validation E)
-- Test output proving an attempted assertion modification through the healing path fails
-
-## Expected result
-
-Reuse is structural. Healing repairs how an element is found and is structurally incapable
-of changing what the test means.
+- Healing proposals with precision measured by review (Validation E, THR-HEAL-001)
+- Test output proving an attempted assertion change through healing fails
+- An example `HUMAN_REVIEW_REQUIRED` outcome
 
 ## Failure conditions
 
-- **A test that modifies an assertion through the healing path succeeding**
+- **A test modifying an assertion through the healing path succeeding**
 - A specification containing locators or environment values
-- Per-test object generation instead of a shared projected object model
+- Per-test object generation instead of a shared projected model
 - Auto-apply enabled by default
-- A healing event applied without a recorded before, after, evidence and score
+- Healing silently continuing where intent would change
+- A healing event applied without before, after, evidence and score
+
+## Known limitations
+
+Locators are static candidates unless CP-09 has validated them; tests built on unvalidated locators carry capped confidence. Healing ships propose-only (ADR-027) until THR-HEAL-001 is met.
 
 ## Exit criteria
 
 - [ ] All Phase 8 acceptance criteria met
-- [ ] Validation E recorded
-- [ ] Evidence captured under `docs/checkpoints/evidence/CP-05/`
+- [ ] Validation E recorded against THR-LOC-001 and THR-HEAL-001
+- [ ] Evidence captured under `evidence/CP-05/`
 - [ ] State and roadmap position updated
 
 ## Regression criteria
 
-Must continue working from previous checkpoints:
-
-| ID | Criterion |
-|---|---|
-| RG-1 | No artifact exists without a UAU version reference (INV-2) |
-| RG-2 | No understanding element exists without resolvable evidence (INV-8) |
-| RG-3 | No provider type appears in a domain module (INV-3) |
-| RG-4 | Workers hold no database credentials (INV-10) |
-| RG-5 | No secret appears in any artifact, log or prompt |
-| RG-10 | Full test suite green in CI |
-| RG-8 | The healing path cannot write to specification storage (INV-6) |
+All previously established regression criteria (RG-1 … RG-10) in
+[`../07_CHECKPOINT_AND_VALIDATION_PLAN.md`](../07_CHECKPOINT_AND_VALIDATION_PLAN.md) §4, plus the functional test of every
+prior checkpoint re-executed automatically.
 
 ---
 
@@ -100,7 +128,7 @@ Must continue working from previous checkpoints:
 | Attempted on | — |
 | Result | — |
 | Evidence location | — |
-| Known limitations | — |
+| Known limitations accepted | — |
 | Recorded by | — |
 
 *Results: PASS · PASS WITH KNOWN LIMITATION · BLOCKED · FAIL*

@@ -11,8 +11,9 @@
 ```text
 PHASE:        Phase 0 — Repository & Platform Foundation
 STAGE:        P0-S1 — Repository scaffold
-CHECKPOINT:   CP-00 Foundation
+CHECKPOINT:   CP-00 Platform Foundation
 STATUS:       NOT_STARTED
+DECOMPOSITION: P0 is at implementation-ready level (rolling-detail rule below)
 
 COMPLETED:    P0-W1-T1  version control established — commit c4664f1 on origin/main
 
@@ -36,8 +37,13 @@ OPEN DECISIONS:
               OD-9 vendor the evaluation harness → affects P2 calibration
 
 PROVIDER RESEARCH:
-              Code Intelligence → OPEN
-              Crawler           → OPEN
+              Code Intelligence → OPEN   (ADR-041 · contract FIXED, binding OPEN)
+              Crawler           → OPEN   (ADR-040 · contract FIXED, binding OPEN)
+
+DECISION CLASSIFICATION:  see 14_ARCHITECTURAL_DECISION_REGISTER.md
+              All 15 numeric thresholds are PROVISIONAL, not acceptance requirements.
+              THR-SAFETY-001 (destructive-action recall 1.00) awaits Product Owner
+              confirmation as a FIXED safety requirement.
 ```
 
 > **Update this block whenever the development stage changes.** It is the first thing a
@@ -72,28 +78,46 @@ Phase (P0..P13) → Stage → Workstream (Wn) → Task (Tn) → Test → Evidenc
 
 ## Phase summary and dependency graph
 
-| Phase | Name | Depends on | Blocks | Parallelisable with | Checkpoint |
+| Phase | Name | Development depends on | Validation depends on | Parallel with | Checkpoint |
 |---|---|---|---|---|---|
-| **P0** | Repository & Platform Foundation | — | everything | — | CP-00 |
-| **P1** | Application Source Ingestion | P0 | P2 | P3 research | CP-00 |
-| **P2** | Static Application Understanding | P1 | P5, P6, P8 | P4 research | CP-01 |
-| **P3** | Code Intelligence Provider Integration | P2 (contract), OD-5 | — (advisory) | P4, P5 | CP-01 |
-| **P4** | Runtime Exploration / Crawler | P0, P2, OD-1 | P5 (runtime half) | P3, P6 | CP-02 |
-| **P5** | Static/Runtime Reconciliation | P2, P4 | — | P6 | CP-02 |
-| **P6** | Coverage & Test Scenario Generation | P2 | P7 | P4, P5 | CP-03 |
-| **P7** | Test Case & Test Data | P6 | P8 | — | CP-04 |
-| **P8** | Playwright Automation | P7, P2 | P9 | — | CP-05 |
-| **P9** | Real Execution | P8, P0 | P10 | — | CP-06 |
-| **P10** | Evaluation, Triage & Findings | P9 | — | P11 | CP-07 |
-| **P11** | Governance & Human/Autonomous Workflow | P0 | — | P6..P10 | CP-07 |
-| **P12** | End-to-End Integration | P1..P11 | P13 | — | CP-08 |
-| **P13** | Phase 1 Hardening | P12 | — | — | CP-08 |
+| **P0** | Repository & Platform Foundation *(incl. governance foundations)* | — | — | Provider research | CP-00 |
+| **P1** | Application Source Ingestion | P0 | P0 | Provider research | CP-01 |
+| **P2** | Static Application Understanding | P1 | P1 + reference corpus (OD-3) | P4 research | CP-02 |
+| **P3** | Code Intelligence Provider Integration | P2 (contract only) | OD-5 + Validation B | P4, P5, P6 | CP-02 |
+| **P4** | Runtime Exploration / Crawler | P0, P2 | **OD-1** + Validation C | P3, P5, P6…P11 | CP-09 |
+| **P5** | Static/Runtime Reconciliation | **P2 only** — observations may be recorded, synthetic or fixture | P2 + observation dataset + Validation D | P3, P4, P6…P11 | CP-10 |
+| **P6** | Coverage & Test Scenario Generation | P2 | P2 + Validation F | P4, P5 | CP-03 |
+| **P7** | Test Case & Test Data | P6 | P6 + an environment | P4, P5 | CP-04 |
+| **P8** | Playwright Automation | P7, P2 | P7 + Validation E | P4, P5 | CP-05 |
+| **P9** | Real Execution | P8, P0 | P8 + AUT environment | P4, P5 | CP-06 |
+| **P10** | Evaluation, Triage & Findings | P9 | P9 | P11 | CP-07 |
+| **P11** | Governance (full capability) | **P0 foundations** | Any generating stage | P6…P10 | CP-08 |
+| **P12** | End-to-End Integration | P1…P11 | All prior checkpoints | — | CP-11 |
+| **P13** | Phase 1 Hardening | P12 | P12 + OD-4, OD-7 | — | CP-12 |
 
 **Critical path:** P0 → P1 → P2 → P6 → P7 → P8 → P9 → P10 → P12 → P13
 **Off critical path (parallelisable):** P3, P4, P5, P11
 
-> P4 and P5 are **not** on the critical path because static-only operation is fully
-> supported (INV-4). Exploration adds validation and confidence; it does not gate delivery.
+> **P4 and P5 are not on the critical path.** Static-only operation is fully supported
+> (ADR-002 / INV-4): exploration adds validation and confidence, it does not gate delivery.
+>
+> **P5 does not depend on P4.** Reconciliation develops and is validated against
+> **recorded, synthetic or fixture observations**. A live `CrawlerProvider` is *optional
+> enrichment* that replaces fixtures with real observations — never a development
+> prerequisite. Treating it as one would contradict INV-4.
+
+```text
+                Static Understanding (P2)
+                          │
+              ┌───────────┴────────────┐
+              ▼                        ▼
+   Recorded / synthetic /        Live CrawlerProvider (P4)
+   fixture observations          (when available — OD-1)
+              │                        │
+              └───────────┬────────────┘
+                          ▼
+                 Reconciliation (P5)
+```
 
 ---
 
@@ -108,7 +132,14 @@ controlled workflows, store artifacts and run its own automated test suite relia
 ### Scope
 Repository structure · development environment · configuration · core domain foundations ·
 persistence · artifact management · API foundation · workflow/job foundations · observability ·
-testing foundation · security boundaries.
+testing foundation · security boundaries · **governance foundations**.
+
+> **V2 correction — governance moved earlier.** Governance is cross-cutting and must not
+> first appear as a late-stage feature. The gate contract, decision state model, approval
+> states, human/autonomous decider abstraction, mandatory policy hook and audit record are
+> built here (P0-W10). Rich approval UI, policy configuration, autonomous behaviour and
+> escalation remain at P11 / CP-08. A gate retrofitted late is a gate that stages have
+> already learned to work around.
 
 ### Non-goals
 No understanding, no extraction, no browsers, no LLM calls, no test generation.
@@ -149,6 +180,10 @@ Phase 0 builds the frame, not the picture.
 | P0-W9-T1 | Structured logging + correlation ids | Observability from the start | W5 | NOT_STARTED |
 | P0-W9-T2 | Audit log (append-only) | INV-9 groundwork | W3 | NOT_STARTED |
 | P0-W9-T3 | Secret-pattern scanner as a blocking check | Security control | W7-T3 | NOT_STARTED |
+| **P0-W10-T1** | **Gate contract + single gate implementation** | Governance foundations — moved earlier in V2 (INV-9, ARCH-6) | W3 | NOT_STARTED |
+| **P0-W10-T2** | **Decision state model + approval states** | Immutable approved versions (ADR-003) | W10-T1 | NOT_STARTED |
+| **P0-W10-T3** | **Human/autonomous decider abstraction** | One gate, two deciders — not two code paths | W10-T1 | NOT_STARTED |
+| **P0-W10-T4** | **Mandatory policy check hook + audit record** | Autonomy can never bypass a control | W10-T1, W9-T2 | NOT_STARTED |
 
 ### Detailed specification — P0-W1-T1 (the immediate next step)
 
@@ -193,7 +228,7 @@ See [`checkpoints/checkpoint-00-foundation.md`](checkpoints/checkpoint-00-founda
 
 # PHASE 1 — Application Source Ingestion
 
-**Status:** `NOT_STARTED` · **Checkpoint:** CP-00 (extended) · **Depends on:** P0
+**Status:** `NOT_STARTED` · **Checkpoint:** CP-01 · **Depends on:** P0
 
 ### Goal
 A real frontend/backend repository set can be registered, acquired, versioned and
@@ -230,7 +265,7 @@ No parsing, no understanding. Acquisition and identity only.
 
 # PHASE 2 — Static Application Understanding
 
-**Status:** `NOT_STARTED` · **Checkpoint:** CP-01 · **Depends on:** P1 · **Partially blocked by:** OD-3
+**Status:** `NOT_STARTED` · **Checkpoint:** CP-02 · **Depends on:** P1 · **Partially blocked by:** OD-3
 
 ### Goal
 Given a supported real application repository set, the platform creates a durable,
@@ -292,7 +327,7 @@ See [`02_ARCHITECTURE_BASELINE.md`](02_ARCHITECTURE_BASELINE.md) §6. Four rules
 
 # PHASE 3 — Code Intelligence Provider Integration
 
-**Status:** `REQUIRES_DECISION` · **Checkpoint:** CP-01 · **Depends on:** P2 contract, OD-5
+**Status:** `REQUIRES_DECISION` · **Checkpoint:** CP-02 · **Depends on:** P2 contract, OD-5
 
 > **This is a controlled placeholder phase.** Do not invent a concrete provider as a final
 > architectural decision.
@@ -320,7 +355,7 @@ See [`02_ARCHITECTURE_BASELINE.md`](02_ARCHITECTURE_BASELINE.md) §6. Four rules
 
 # PHASE 4 — Runtime Exploration / Crawler
 
-**Status:** `REQUIRES_DECISION` · **Checkpoint:** CP-02 · **Depends on:** P0, P2, **OD-1**
+**Status:** `REQUIRES_DECISION` · **Checkpoint:** CP-09 · **Depends on:** P0, P2 · **Validation blocked by OD-1**
 
 > Second intentional placeholder. The architecture supports `CrawlerProvider`;
 > provider selection remains open.
@@ -355,7 +390,9 @@ failure recovery · blocked states · exploration history.
 
 # PHASE 5 — Static/Runtime Reconciliation
 
-**Status:** `NOT_STARTED` · **Checkpoint:** CP-02 · **Depends on:** P2, P4
+**Status:** `NOT_STARTED` · **Checkpoint:** CP-10
+**Development depends on:** **P2 only** · **Validation depends on:** an observation dataset (any admissible source) + Validation D
+**Optional enrichment:** P4 live exploration
 
 ### Goal
 Static and runtime evidence can be compared and the resulting reconciliation is explainable
@@ -534,9 +571,12 @@ findings · evidence assembly · run comparison · history.
 
 ---
 
-# PHASE 11 — Governance & Human/Autonomous Workflow
+# PHASE 11 — Governance: Full Capability
 
-**Status:** `NOT_STARTED` · **Checkpoint:** CP-07 · **Depends on:** P0 · **Parallel with:** P6–P10
+> **Foundations were built in P0-W10** (gate contract, decision states, decider abstraction,
+> policy hook, audit). This phase completes the capability; it does not introduce governance.
+
+**Status:** `NOT_STARTED` · **Checkpoint:** CP-08 · **Depends on:** P0 governance foundations · **Parallel with:** P6–P10
 
 ### Goal
 Human and autonomous workflows use the same governance model, and autonomous mode cannot
@@ -561,7 +601,7 @@ retry · immutable approved versions · append-only audit trail.
 
 # PHASE 12 — End-to-End Integration
 
-**Status:** `NOT_STARTED` · **Checkpoint:** CP-08 · **Depends on:** P1–P11
+**Status:** `NOT_STARTED` · **Checkpoint:** CP-11 · **Depends on:** P1–P11
 
 ### Goal
 A realistic end-to-end workflow completes against a supported AUT with durable evidence at
@@ -585,7 +625,7 @@ Scenarios → Test Cases/Data → Automation → Execution → Evaluation → Fi
 
 # PHASE 13 — Phase 1 Hardening
 
-**Status:** `NOT_STARTED` · **Checkpoint:** CP-08 · **Depends on:** P12
+**Status:** `NOT_STARTED` · **Checkpoint:** CP-12 · **Depends on:** P12
 
 ### Scope
 Reliability · concurrency · failure recovery · security review · artifact integrity ·
@@ -603,6 +643,53 @@ history · **Excel export** · configuration · deployment · documentation.
 ### Final checkpoint
 > Phase 1 capabilities are functional within their explicitly documented boundaries, and
 > all known gaps are visible.
+
+---
+
+## Rolling-detail rule
+
+> **The active phase must always be decomposed to implementation-ready task level before
+> coding begins for that phase. Future phases stay at capability level.**
+
+| Phase state | Required decomposition |
+|---|---|
+| **Active** (implementation about to begin or under way) | Work Item → Components → Contract → Data → APIs → Implementation Tasks → Tests → Evidence → Checkpoint |
+| **Next** (predecessor checkpoint not yet validated) | Phase → Workstream → Capability → Acceptance Criteria → Dependencies |
+| **Later** | Phase → Goal → Scope → Acceptance Criteria → Dependencies |
+
+**Before entering a phase**, expand it to the active level. This keeps the roadmap detailed
+where detail is actionable without prematurely freezing choices that evidence has not yet
+informed.
+
+**Current decomposition state:**
+
+| Phase | Level | Note |
+|---|---|---|
+| P0 | **Active — implementation-ready** | 31 work items incl. governance foundations; P0-W1-T1 COMPLETE |
+| P1 | Next — capability level | Expand before entering |
+| P2…P13 | Later — goal, scope and acceptance criteria | Expand on approach |
+
+Expanding a phase is not a roadmap change and needs no Decision Log entry — unless the
+expansion reveals scope that was not previously represented, which is a CHANGE PROPOSAL.
+
+---
+
+## Vertical product slices
+
+The roadmap is organised by component and dependency. That is correct for engineering and
+has a known failure mode: every component progressing while nothing a QA user recognises
+exists. Five vertical slices validate user value alongside phase completion.
+
+| Slice | Delivers | Completed at | Phases involved |
+|---|---|---|---|
+| **A** | QA can inspect the understanding generated from a real repository | CP-02 | P0, P1, P2 |
+| **B** | QA can generate and inspect evidence-backed scenarios and test cases | CP-04 | P6, P7 |
+| **C** | QA can run a generated test against a real environment | CP-06 | P8, P9 |
+| **D** | QA can understand what happened and why | CP-07 | P10 |
+| **E** | The full Phase 1 journey, on both static-only and exploration paths | CP-11 | P12 |
+
+Full definitions: [`16_VERTICAL_SLICES.md`](16_VERTICAL_SLICES.md).
+**Slices validate; they do not reorder.** This roadmap remains canonical for sequencing.
 
 ---
 

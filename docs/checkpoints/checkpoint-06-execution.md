@@ -1,65 +1,97 @@
-# CP-06 — Execution
+# CP-06 — Real Execution
 
-**Phases:** P9
-**Status:** `NOT_STARTED`
-**Result:** — *(not yet attempted)*
-**Last updated:** 2026-09-05
+**Phase(s):** P9
+**Vertical slice:** Slice C (part 2) — completes Slice C
+**Status:** `NOT_STARTED` · **Result:** — *(not yet attempted)*
+**Last updated:** 2026-09-05 (Roadmap V2)
 
 > Template and rules: [`../07_CHECKPOINT_AND_VALIDATION_PLAN.md`](../07_CHECKPOINT_AND_VALIDATION_PLAN.md)
-> **A checkpoint must not be marked PASS if a capability the phase requires is mocked.**
+> **A checkpoint requires BOTH dimensions.** Internal modules working is not sufficient —
+> the user-visible capability must also be demonstrated.
+> **A checkpoint requiring functional behaviour may not pass on a test double.**
 
 ---
 
 ## Objective
 
-The platform executes real Playwright tests against a controlled environment and persists complete results and artifacts.
+Real Playwright tests execute against a controlled environment in isolated workers, with complete results and artifacts persisted.
+
+## A. Product validation — what the QA user can do
+
+A QA user can:
+1. Choose an environment and a concurrency level, and run a generated suite
+2. Watch progress and cancel a run
+3. Open a completed test and see its trace, video, screenshots, network and console logs
+4. Compare this run against a previous one
+
+**This completes Vertical Slice C:** *QA can run a generated automated test against a real environment.*
+
+## B. Engineering validation — what the platform must prove internally
+
+- Execution manager, policy gate, environment lease
+- Job queue with one job per test case
+- Three composing concurrency ceilings (global, per-environment, per-run)
+- Isolated workers with in-worker secret resolution and log redaction
+- Browser lifecycle; artifact capture and storage by reference
+- Retry classification before attempt; each retry a distinct attempt
+- Cancellation with partial artifact retention
+- Run history and comparison on content-derived identity
+
+## Dependencies
+
+| Kind | Items |
+|---|---|
+| **Development dependency** *(must exist before implementation can begin)* | CP-05; CP-00 (queue and worker harness) |
+| **Validation dependency** *(must exist before this can be fully validated)* | CP-05; a reachable AUT environment with test identities |
+| **Optional enrichment** *(improves the capability; not required for it to exist)* | CP-09 validated locators — materially raises pass rate |
+| **Parallel work** *(can safely proceed independently)* | CP-08 governance; CP-10 |
 
 ## Preconditions
 
 - CP-05 PASS
-- A reachable AUT environment with test identities
-- Environment definitions with allowlists and data-safety class
+- A reachable AUT environment with non-interactive test identities per role
+- Environment definitions with domain allowlists and data-safety class
+
+## Required components
+
+Execution manager · queue · concurrency controller · workers · artifact capture · run history
 
 ## Functional test
 
-What a human should be able to do:
-
-1. Request an execution run with concurrency set to 1; observe sequential execution
-2. Repeat with concurrency 4; observe four parallel tests and confirm the effective limit is the minimum of the three ceilings
-3. Inspect a completed attempt: trace, video, screenshots, network log, console log all present and stored by reference
-4. Force an infrastructure failure; confirm automatic retry, recorded as a distinct attempt
+1. Run with concurrency 1; observe sequential execution
+2. Run with concurrency 4; confirm the effective limit is the minimum of three ceilings
+3. Open an attempt; confirm trace, video, screenshots, network and console logs present
+4. Force an infrastructure failure; confirm automatic retry as a distinct attempt
 5. Force an assertion failure; confirm it is **not** retried
-6. Cancel a running execution; confirm partial artifacts are retained and the run is marked partially complete
+6. Cancel a run; confirm partial artifacts retained and the run marked partially complete
 7. Search all logs and artifacts for a known secret; find none
-8. Run the same suite twice; compare runs on stable identity
+8. Run twice; compare on stable identity
 
 ## Automated tests
 
 - Unit: concurrency ceiling composition; retry classification
-- Integration: real Playwright execution in isolated workers; environment lease acquisition and release; secret resolution in-worker; artifact capture and storage; cancellation with partial retention; resumption after induced worker kill
+- Integration: real Playwright execution in isolated workers; lease acquisition/release; in-worker secret resolution; artifact capture; cancellation; resumption after induced worker kill
 - Negative: worker cannot open a database connection
 - Security: secret scan across all produced artifacts and logs
 
-## Test data
+## Required test data
 
-- A reachable AUT environment
-- Test identities per role, stored as secret references
-- A generated suite from CP-05
+A reachable AUT environment · test identities as secret references · a generated suite from CP-05.
 
-## Evidence
-
-Stored under `docs/checkpoints/evidence/CP-06/`:
-
-- Execution run records with attempts, timings and artifact references
-- Trace, video and screenshot artifacts for at least one passing and one failing test
-- Concurrency demonstration at 1 and 4
-- Retry classification log
-- Secret-scan report showing zero findings
-- Run-over-run comparison output
-
-## Expected result
+## Expected outcome
 
 Real tests execute in isolation, produce complete evidence, and honour every configured ceiling.
+
+## Evidence produced
+
+Stored under `evidence/CP-06/`:
+
+- Execution records with attempts, timings and artifact references
+- Trace, video and screenshots for at least one passing and one failing test
+- Concurrency demonstration at 1 and 4
+- Retry classification log
+- Secret-scan report: zero findings
+- Run-over-run comparison output
 
 ## Failure conditions
 
@@ -67,27 +99,25 @@ Real tests execute in isolation, produce complete evidence, and honour every con
 - A worker holding database credentials
 - A secret discoverable in an artifact or log
 - An assertion failure retried automatically
-- Retries overwriting attempts rather than creating distinct ones
-- Simulated execution presented as real execution
+- Retries overwriting attempts
+- **Simulated execution presented as real execution**
+
+## Known limitations
+
+Pass rate is bounded by locator quality; without CP-09 validation, failures may reflect locator resolution rather than the AUT. Triage (CP-07) is what distinguishes them.
 
 ## Exit criteria
 
 - [ ] All Phase 9 acceptance criteria met
-- [ ] Evidence captured under `docs/checkpoints/evidence/CP-06/`
+- [ ] **Vertical Slice C demonstrated end to end**
+- [ ] Evidence captured under `evidence/CP-06/`
 - [ ] State and roadmap position updated
 
 ## Regression criteria
 
-Must continue working from previous checkpoints:
-
-| ID | Criterion |
-|---|---|
-| RG-1 | No artifact exists without a UAU version reference (INV-2) |
-| RG-2 | No understanding element exists without resolvable evidence (INV-8) |
-| RG-3 | No provider type appears in a domain module (INV-3) |
-| RG-4 | Workers hold no database credentials (INV-10) |
-| RG-5 | No secret appears in any artifact, log or prompt |
-| RG-10 | Full test suite green in CI |
+All previously established regression criteria (RG-1 … RG-10) in
+[`../07_CHECKPOINT_AND_VALIDATION_PLAN.md`](../07_CHECKPOINT_AND_VALIDATION_PLAN.md) §4, plus the functional test of every
+prior checkpoint re-executed automatically.
 
 ---
 
@@ -98,7 +128,7 @@ Must continue working from previous checkpoints:
 | Attempted on | — |
 | Result | — |
 | Evidence location | — |
-| Known limitations | — |
+| Known limitations accepted | — |
 | Recorded by | — |
 
 *Results: PASS · PASS WITH KNOWN LIMITATION · BLOCKED · FAIL*
