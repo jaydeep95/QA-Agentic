@@ -11,10 +11,36 @@
 
 ## Trace chain
 
+Extended in V2 to start from the **decision**, so that architectural changes become
+impact-visible rather than surfacing only when something breaks.
+
 ```text
-Requirement → Architecture Component → Contract → Roadmap Work Item
-           → Implementation → Test → Checkpoint → Evidence
+Decision → Requirement → Architecture/Invariant → Contract → Roadmap Work Item
+        → Implementation → Test → Checkpoint → Evidence
 ```
+
+**Worked example:**
+
+```text
+ADR-006  healing cannot change intent
+   ↓
+REQ-AUTO-005  healing cannot write to specification storage
+   ↓
+INV-6  enforced structurally, not by policy
+   ↓
+AutomationSpecification / AutomationBinding contract (doc 04 §7)
+   ↓
+P8-W5  healing implementation
+   ↓
+ARCH-5  architecture test: no write path from healing to specification
+   ↓
+CP-05  Automation checkpoint
+   ↓
+Evidence: test output proving an attempted assertion change fails
+```
+
+Changing ADR-006 therefore makes visible, in one traversal, exactly which requirement,
+contract, work item, test, checkpoint and evidence artifact are affected.
 
 **Current reality (2026-09-05):** every requirement traces as far as *Contract* and
 *Roadmap Work Item*. **Nothing traces to Implementation, Test or Evidence, because no
@@ -41,6 +67,7 @@ fact, not by omission.
 | `REQ-PROV-nnn` | Provider integration |
 | `REQ-SEC-nnn` | Security |
 | `REQ-PLAT-nnn` | Platform foundations |
+| `REQ-UX-nnn` | User experience and product behaviour |
 
 Identifiers are **stable**. Do not renumber. Retired requirements are marked `RETIRED`
 with a Decision Log reference, never deleted.
@@ -55,70 +82,70 @@ Legend — Impl/Test/Evidence: `—` none yet · `✓` complete · `~` partial
 
 | ID | Requirement | Component | Contract | Roadmap | Impl | Test | Checkpoint | Evidence |
 |---|---|---|---|---|---|---|---|---|
-| REQ-SRC-001 | Register a Git repository with URL, ref, credential reference and role | Understanding / Source Ingestion | `UnderstandingContribution` | P1-W1-T1 | — | — | CP-00 | — |
-| REQ-SRC-002 | Multiple repositories per workspace (frontend + backend) | Understanding | — | P1-W1-T2 | — | — | CP-00 | — |
-| REQ-SRC-003 | Application version is a tuple across all repositories | Understanding | `UnderstandingQuery` | P1-W1-T2 | — | — | CP-00 | — |
-| REQ-SRC-004 | Resolve and pin a revision; immutable once referenced | Understanding | — | P1-W2-T2 | — | — | CP-00 | — |
-| REQ-SRC-005 | Acquire source into an isolated sandbox with no persistent credential | Understanding | — | P1-W2-T1 | — | — | CP-00 | — |
-| REQ-SRC-006 | Content hashing per file for evidence anchoring | Understanding | — | P1-W2-T3 | — | — | CP-00 | — |
+| REQ-SRC-001 | Register a Git repository with URL, ref, credential reference and role | Understanding / Source Ingestion | `UnderstandingContribution` | P1-W1-T1 | — | — | CP-01 | — |
+| REQ-SRC-002 | Multiple repositories per workspace (frontend + backend) | Understanding | — | P1-W1-T2 | — | — | CP-01 | — |
+| REQ-SRC-003 | Application version is a tuple across all repositories | Understanding | `UnderstandingQuery` | P1-W1-T2 | — | — | CP-01 | — |
+| REQ-SRC-004 | Resolve and pin a revision; immutable once referenced | Understanding | — | P1-W2-T2 | — | — | CP-01 | — |
+| REQ-SRC-005 | Acquire source into an isolated sandbox with no persistent credential | Understanding | — | P1-W2-T1 | — | — | CP-01 | — |
+| REQ-SRC-006 | Content hashing per file for evidence anchoring | Understanding | — | P1-W2-T3 | — | — | CP-01 | — |
 
 ### Unified Application Understanding
 
 | ID | Requirement | Component | Contract | Roadmap | Impl | Test | Checkpoint | Evidence |
 |---|---|---|---|---|---|---|---|---|
-| REQ-UAU-001 | UAU is the canonical semantic model; projections are derived | Understanding / UAU | `UnderstandingQuery` | P2-W6-T1 | — | — | CP-01 | — |
-| REQ-UAU-002 | No element without ≥1 resolvable evidence reference (INV-8) | Understanding | `UnderstandingContribution` | P2-W4-T1 | — | — | CP-01 | — |
+| REQ-UAU-001 | UAU is the canonical semantic model; projections are derived | Understanding / UAU | `UnderstandingQuery` | P2-W6-T1 | — | — | CP-02 | — |
+| REQ-UAU-002 | No element without ≥1 resolvable evidence reference (INV-8) | Understanding | `UnderstandingContribution` | P2-W4-T1 | — | — | CP-02 | — |
 | REQ-UAU-003 | Evidence is append-only and immutable | Platform / Evidence | — | P0-W2-T2 | — | — | CP-00 | — |
-| REQ-UAU-004 | Element identity is content-derived and deterministic | Understanding | — | P2-W4-T1 | — | — | CP-01 | — |
-| REQ-UAU-005 | Understanding version pins the full repository tuple | Understanding | — | P2-W5-T1 | — | — | CP-01 | — |
+| REQ-UAU-004 | Element identity is content-derived and deterministic | Understanding | — | P2-W4-T1 | — | — | CP-02 | — |
+| REQ-UAU-005 | Understanding version pins the full repository tuple | Understanding | — | P2-W5-T1 | — | — | CP-02 | — |
 | REQ-UAU-006 | Every downstream artifact carries a non-nullable UAU version (INV-2) | Platform / Artifact | all artifact contracts | P0-W2-T1 | — | — | CP-00 | — |
-| REQ-UAU-007 | Projections rebuildable from canonical model with no data loss | Understanding | — | P2-W6-T1 | — | — | CP-01 | — |
-| REQ-UAU-008 | Confidence computed by platform; no model path can set it (INV-7) | Platform / Confidence | — | P2-W4-T3 | — | — | CP-01 | — |
-| REQ-UAU-009 | Evidence, inference type, oracle status, reconciliation, confidence are five separate fields | Understanding | `UnderstandingQuery` | P0-W2-T2 | — | — | CP-01 | — |
+| REQ-UAU-007 | Projections rebuildable from canonical model with no data loss | Understanding | — | P2-W6-T1 | — | — | CP-02 | — |
+| REQ-UAU-008 | Confidence computed by platform; no model path can set it (INV-7) | Platform / Confidence | — | P2-W4-T3 | — | — | CP-02 | — |
+| REQ-UAU-009 | Evidence, inference type, oracle status, reconciliation, confidence are five separate fields | Understanding | `UnderstandingQuery` | P0-W2-T2 | — | — | CP-02 | — |
 | REQ-UAU-010 | Large evidence payloads stored by reference | Platform / Artifact | — | P0-W4-T1 | — | — | CP-00 | — |
-| REQ-UAU-011 | Staleness computed and surfaced, never auto-resolved | Understanding | — | P2-W5-T2 | — | — | CP-01 | — |
-| REQ-UAU-012 | Understanding diff across versions | Understanding | `UnderstandingQuery` | P2-W5-T3 | — | — | CP-01 | — |
+| REQ-UAU-011 | Staleness computed and surfaced, never auto-resolved | Understanding | — | P2-W5-T2 | — | — | CP-02 | — |
+| REQ-UAU-012 | Understanding diff across versions | Understanding | `UnderstandingQuery` | P2-W5-T3 | — | — | CP-02 | — |
 
 ### Static understanding
 
 | ID | Requirement | Component | Contract | Roadmap | Impl | Test | Checkpoint | Evidence |
 |---|---|---|---|---|---|---|---|---|
-| REQ-STA-001 | Discover screens, pages, components, fields | Static Understanding | `UnderstandingContribution` | P2-W3-T1 | — | — | CP-01 | — |
-| REQ-STA-002 | Discover APIs, services, data structures | Static Understanding | — | P2-W3-T1 | — | — | CP-01 | — |
-| REQ-STA-003 | Extract schemas, constraints, optionality, enums | Static Understanding | — | P2-W3-T2 | — | — | CP-01 | — |
-| REQ-STA-004 | Extract validations, business rules, permissions | Static Understanding | — | P2-W3-T3 | — | — | CP-01 | — |
-| REQ-STA-005 | Discover frontend↔backend relationships with per-hop evidence | Static Understanding | — | P2-W3-T4 | — | — | CP-01 | — |
-| REQ-STA-006 | Unresolvable segments marked `unresolved`, never wildcard-matched (R1) | Static Understanding | — | P2-W3-T4 | — | — | CP-01 | — |
-| REQ-STA-007 | Route matching via framework pack modelling real resolution (R2) | Static Understanding | — | P2-W2-T2 | — | — | CP-01 | — |
-| REQ-STA-008 | Reachability alone never produces a call relation (R3) | Static Understanding | — | P2-W3-T4 | — | — | CP-01 | — |
-| REQ-STA-009 | Statically unresolvable relations marked `unverified` (R4) | Static Understanding | — | P2-W3-T4 | — | — | CP-01 | — |
-| REQ-STA-010 | Framework packs are the extensibility unit, independently evaluable | Static Understanding | — | P2-W2-T1 | — | — | CP-01 | — |
-| REQ-STA-011 | Incremental rescan scoped by change | Static Understanding | — | P2-W5-T2 | — | — | CP-01 | — |
-| REQ-STA-012 | Calibration harness with ground-truth corpus, per-extractor metrics never averaged | Platform / Confidence | — | P2-W7-T1 | — | — | CP-01 | — |
-| REQ-STA-013 | Locator candidates extracted with provenance and strategy ranking | Static Understanding | — | P2-W3-T5 | — | — | CP-01 | — |
+| REQ-STA-001 | Discover screens, pages, components, fields | Static Understanding | `UnderstandingContribution` | P2-W3-T1 | — | — | CP-02 | — |
+| REQ-STA-002 | Discover APIs, services, data structures | Static Understanding | — | P2-W3-T1 | — | — | CP-02 | — |
+| REQ-STA-003 | Extract schemas, constraints, optionality, enums | Static Understanding | — | P2-W3-T2 | — | — | CP-02 | — |
+| REQ-STA-004 | Extract validations, business rules, permissions | Static Understanding | — | P2-W3-T3 | — | — | CP-02 | — |
+| REQ-STA-005 | Discover frontend↔backend relationships with per-hop evidence | Static Understanding | — | P2-W3-T4 | — | — | CP-02 | — |
+| REQ-STA-006 | Unresolvable segments marked `unresolved`, never wildcard-matched (R1) | Static Understanding | — | P2-W3-T4 | — | — | CP-02 | — |
+| REQ-STA-007 | Route matching via framework pack modelling real resolution (R2) | Static Understanding | — | P2-W2-T2 | — | — | CP-02 | — |
+| REQ-STA-008 | Reachability alone never produces a call relation (R3) | Static Understanding | — | P2-W3-T4 | — | — | CP-02 | — |
+| REQ-STA-009 | Statically unresolvable relations marked `unverified` (R4) | Static Understanding | — | P2-W3-T4 | — | — | CP-02 | — |
+| REQ-STA-010 | Framework packs are the extensibility unit, independently evaluable | Static Understanding | — | P2-W2-T1 | — | — | CP-02 | — |
+| REQ-STA-011 | Incremental rescan scoped by change | Static Understanding | — | P2-W5-T2 | — | — | CP-02 | — |
+| REQ-STA-012 | Calibration harness with ground-truth corpus, per-extractor metrics never averaged | Platform / Confidence | — | P2-W7-T1 | — | — | CP-02 | — |
+| REQ-STA-013 | Locator candidates extracted with provenance and strategy ranking | Static Understanding | — | P2-W3-T5 | — | — | CP-02 | — |
 
 ### Runtime exploration
 
 | ID | Requirement | Component | Contract | Roadmap | Impl | Test | Checkpoint | Evidence |
 |---|---|---|---|---|---|---|---|---|
-| REQ-EXP-001 | Exploration is optional; static-only mode fully supported (INV-4) | Understanding | — | P4 / P12 | — | — | CP-02, CP-08 | — |
-| REQ-EXP-002 | Platform owns planning, state identity, safety, interpretation | Runtime Exploration | `CrawlerProvider` | P4-W1 | — | — | CP-02 | — |
-| REQ-EXP-003 | State identity is composite, not URL alone | Runtime Exploration | — | P4-W2 | — | — | CP-02 | — |
-| REQ-EXP-004 | Action risk classified before acting; unknown denied by default | Runtime Exploration | — | P4-W3 | — | — | CP-02 | — |
-| REQ-EXP-005 | Blockers are durable, attributable, resumable governed work items | Runtime Exploration / Governance | `GateContract` | P4-W4 | — | — | CP-02 | — |
-| REQ-EXP-006 | Session budgets enforced; partial exploration is a valid result | Runtime Exploration | — | P4-W5 | — | — | CP-02 | — |
-| REQ-EXP-007 | Observations become runtime evidence; provider never writes understanding | Runtime Exploration | `CrawlerProvider` | P4-W1 | — | — | CP-02 | — |
-| REQ-EXP-008 | Locator probing: exists, unique, visible, interactable | Runtime Exploration | `CrawlerProvider` | P4-W6 | — | — | CP-02 | — |
+| REQ-EXP-001 | Exploration is optional; static-only mode fully supported (INV-4) | Understanding | — | P4 / P12 | — | — | CP-09, CP-11 | — |
+| REQ-EXP-002 | Platform owns planning, state identity, safety, interpretation | Runtime Exploration | `CrawlerProvider` | P4-W1 | — | — | CP-09 | — |
+| REQ-EXP-003 | State identity is composite, not URL alone | Runtime Exploration | — | P4-W2 | — | — | CP-09 | — |
+| REQ-EXP-004 | Action risk classified before acting; unknown denied by default | Runtime Exploration | — | P4-W3 | — | — | CP-09 | — |
+| REQ-EXP-005 | Blockers are durable, attributable, resumable governed work items | Runtime Exploration / Governance | `GateContract` | P4-W4 | — | — | CP-09 | — |
+| REQ-EXP-006 | Session budgets enforced; partial exploration is a valid result | Runtime Exploration | — | P4-W5 | — | — | CP-09 | — |
+| REQ-EXP-007 | Observations become runtime evidence; provider never writes understanding | Runtime Exploration | `CrawlerProvider` | P4-W1 | — | — | CP-09 | — |
+| REQ-EXP-008 | Locator probing: exists, unique, visible, interactable | Runtime Exploration | `CrawlerProvider` | P4-W6 | — | — | CP-09 | — |
 
 ### Reconciliation
 
 | ID | Requirement | Component | Contract | Roadmap | Impl | Test | Checkpoint | Evidence |
 |---|---|---|---|---|---|---|---|---|
-| REQ-REC-001 | Six statuses: matched, runtime-only, static-only, different, conflict, unverified | Reconciliation | — | P5-W1 | — | — | CP-02 | — |
-| REQ-REC-002 | Deterministic set algebra over element identity, not fuzzy matching | Reconciliation | — | P5-W1 | — | — | CP-02 | — |
-| REQ-REC-003 | Mismatch is not defect; four deterministic checks precede any candidate (INV-5) | Reconciliation | — | P5-W2 | — | — | CP-02 | — |
-| REQ-REC-004 | All six explanations for a difference are expressible | Reconciliation | — | P5-W2 | — | — | CP-02 | — |
-| REQ-REC-005 | Confidence updates traceable to a reconciliation event | Reconciliation | — | P5-W3 | — | — | CP-02 | — |
+| REQ-REC-001 | Six statuses: matched, runtime-only, static-only, different, conflict, unverified | Reconciliation | — | P5-W1 | — | — | CP-10 | — |
+| REQ-REC-002 | Deterministic set algebra over element identity, not fuzzy matching | Reconciliation | — | P5-W1 | — | — | CP-10 | — |
+| REQ-REC-003 | Mismatch is not defect; four deterministic checks precede any candidate (INV-5) | Reconciliation | — | P5-W2 | — | — | CP-10 | — |
+| REQ-REC-004 | All six explanations for a difference are expressible | Reconciliation | — | P5-W2 | — | — | CP-10 | — |
+| REQ-REC-005 | Confidence updates traceable to a reconciliation event | Reconciliation | — | P5-W3 | — | — | CP-10 | — |
 
 ### Coverage and test design
 
@@ -181,41 +208,62 @@ Legend — Impl/Test/Evidence: `—` none yet · `✓` complete · `~` partial
 
 | ID | Requirement | Component | Contract | Roadmap | Impl | Test | Checkpoint | Evidence |
 |---|---|---|---|---|---|---|---|---|
-| REQ-GOV-001 | Exactly one gate implementation for both modes (INV-9) | Governance | `GateContract` | P11-W1 | — | — | CP-07 | — |
-| REQ-GOV-002 | Autonomous mode cannot bypass evaluators, safety or environment policy | Governance | `GateContract` | P11-W2 | — | — | CP-07 | — |
+| REQ-GOV-001 | Exactly one gate implementation for both modes (INV-9) | Governance | `GateContract` | P11-W1 | — | — | CP-08 | — |
+| REQ-GOV-002 | Autonomous mode cannot bypass evaluators, safety or environment policy | Governance | `GateContract` | P11-W2 | — | — | CP-08 | — |
 | REQ-GOV-003 | Approved versions immutable | Platform / Artifact | — | P0-W3-T3 | — | — | CP-00 | — |
-| REQ-GOV-004 | Human edit creates new version, retains machine original, re-derives confidence | Governance | — | P11-W3 | — | — | CP-07 | — |
-| REQ-GOV-005 | Rejection auditable with recorded reason | Governance | — | P11-W3 | — | — | CP-07 | — |
-| REQ-GOV-006 | One escalation mechanism for stalled gate, blocker and unknown oracle | Governance | `GateContract` | P11-W4 | — | — | CP-07 | — |
+| REQ-GOV-004 | Human edit creates new version, retains machine original, re-derives confidence | Governance | — | P11-W3 | — | — | CP-08 | — |
+| REQ-GOV-005 | Rejection auditable with recorded reason | Governance | — | P11-W3 | — | — | CP-08 | — |
+| REQ-GOV-006 | One escalation mechanism for stalled gate, blocker and unknown oracle | Governance | `GateContract` | P11-W4 | — | — | CP-08 | — |
 | REQ-GOV-007 | Append-only audit log; every decision attributable to actor and policy version | Governance | — | P0-W9-T2 | — | — | CP-00 | — |
 
 ### Providers, security, platform
 
 | ID | Requirement | Component | Contract | Roadmap | Impl | Test | Checkpoint | Evidence |
 |---|---|---|---|---|---|---|---|---|
-| REQ-PROV-001 | Code Intelligence replaceable; platform functional without it | Provider Integration | `CodeIntelligenceProvider` | P3 | — | — | CP-01 | — |
-| REQ-PROV-002 | Crawler replaceable without changing state model or planning | Provider Integration | `CrawlerProvider` | P4 | — | — | CP-02 | — |
+| REQ-PROV-001 | Code Intelligence replaceable; platform functional without it | Provider Integration | `CodeIntelligenceProvider` | P3 | — | — | CP-02 | — |
+| REQ-PROV-002 | Crawler replaceable without changing state model or planning | Provider Integration | `CrawlerProvider` | P4 | — | — | CP-09 | — |
 | REQ-PROV-003 | Two LLM adapters exist; identical typed output; provenance records which | Provider Integration | `LanguageModelProvider` | P0-W7-T2 | — | — | CP-00 | — |
 | REQ-PROV-004 | New tool/MCP registered and invoked with no stage-level code | Provider Integration | `Capability` | P0-W7-T1 | — | — | CP-00 | — |
 | REQ-PROV-005 | Single capability-invocation path; sole egress point | Provider Integration | `Capability` | P0-W7-T1 | — | — | CP-00 | — |
 | REQ-SEC-001 | Zero provider imports in domain modules (static check) | Platform | — | P0-W8-T3 | — | — | CP-00 | — |
-| REQ-SEC-002 | Repository and page content treated as data, never instructions | Platform / Security | — | P2-W1-T1 | — | — | CP-01 | — |
+| REQ-SEC-002 | Repository and page content treated as data, never instructions | Platform / Security | — | P2-W1-T1 | — | — | CP-02 | — |
 | REQ-SEC-003 | Generated content rendered as text, never markup | Platform / API | — | P0-W5-T3 | — | — | CP-00 | — |
 | REQ-SEC-004 | Workspace scoping enforced at the data-access layer | Platform | — | P0-W3-T2 | — | — | CP-00 | — |
 | REQ-SEC-005 | Secret-pattern scan blocks artifact storage | Platform / Security | — | P0-W9-T3 | — | — | CP-00 | — |
-| REQ-SEC-006 | Domain allowlist enforced for browser sessions | Execution / Exploration | — | P4-W1 / P9-W2 | — | — | CP-02, CP-06 | — |
+| REQ-SEC-006 | Domain allowlist enforced for browser sessions | Execution / Exploration | — | P4-W1 / P9-W2 | — | — | CP-09, CP-06 | — |
 | REQ-PLAT-001 | Durable run/stage state in the product database | Platform / Workflow | `StageContract` | P0-W6-T1 | — | — | CP-00 | — |
 | REQ-PLAT-002 | Stages idempotent and resumable; partial results valid | Platform / Workflow | `StageContract` | P0-W6-T3 | — | — | CP-00 | — |
-| REQ-PLAT-003 | Excel export via adapter with no domain coupling | Platform / Export | — | P13-W1 | — | — | CP-08 | — |
+| REQ-PLAT-003 | Excel export via adapter with no domain coupling | Platform / Export | — | P13-W1 | — | — | CP-12 | — |
 | REQ-PLAT-004 | Durable artifact views for all artifact types | API / UI | — | P0-W5-T3 | — | — | CP-00 | — |
+
+### User experience and product behaviour
+
+Detail: [`requirements/ux-requirements.md`](requirements/ux-requirements.md). Grouped here by area; individual
+requirements are enumerated in that document.
+
+| IDs | Area | Component | Roadmap | Impl | Test | Checkpoint | Evidence |
+|---|---|---|---|---|---|---|---|
+| REQ-UX-001…005 | Workspace and onboarding | API / UI | P0-W5, P1-W1 | — | — | CP-01 | — |
+| REQ-UX-010…013 | Workflow navigation and durable artifact views | API / UI | P0-W5-T3 | — | — | CP-02 | — |
+| REQ-UX-020…026 | Understanding review, per-item, with diff and staleness | UI / Understanding | P2-W6-T1 | — | — | CP-02 | — |
+| REQ-UX-030…035 | Evidence and confidence presentation | UI / Platform | P2-W4-T3, P0-W5-T3 | — | — | CP-02 | — |
+| REQ-UX-040…047 | Review, approval, generation control, progress and cancellation | UI / Governance | P0-W10, P11-W3 | — | — | CP-08 | — |
+| REQ-UX-050…060 | Artifact, execution, findings and export surfaces | UI / all domains | P6…P10, P13-W1 | — | — | CP-07, CP-12 | — |
+| REQ-UX-070…075 | Capabilities registry surface and conversational interaction | UI / Capability registry | P0-W7-T1 | — | — | CP-00 | — |
+
+> **Prototype shortcuts explicitly excluded** from production design — in-memory state,
+> hardcoded items, simulated execution, hardcoded confidence, unsanitised HTML rendering,
+> keyword-only routing and eight others — are enumerated in
+> [`requirements/ux-requirements.md`](requirements/ux-requirements.md) §9. They are requirements *not* to do something,
+> and are verified by the corresponding positive requirement.
 
 ---
 
 ## Gap analysis
 
-**Requirements defined:** 103
-**Traced to a contract or component:** 103
-**Traced to a roadmap item:** 103
+**Requirements defined:** 103 core + 47 UX = **150**
+**Traced to a contract or component:** 150
+**Traced to a roadmap item:** 150
 **Implemented:** 0
 **Tested:** 0
 **Validated at a checkpoint:** 0
@@ -227,7 +275,7 @@ EXEC 8 · EVAL 7 · GOV 7 · PROV 5 · SEC 6 · PLAT 4
 
 | Gap | Note |
 |---|---|
-| No UX/UI requirements are itemised | The prototype defines the interaction model; artifact-view requirements are captured only as REQ-PLAT-004. **Expand before P0-W5-T3.** |
+| ~~No UX/UI requirements itemised~~ | **CLOSED in V2** — 47 requirements now in [`requirements/ux-requirements.md`](requirements/ux-requirements.md) as `REQ-UX-001…075`, including the eleven prototype shortcuts that must not be carried forward |
 | Performance and scale requirements absent | Blocked on OD-4 and unknown execution scale. **Must be added before P13.** |
 | Accessibility requirements absent | Not yet discussed with the Product Owner. `OPEN` |
 | Deployment/operability requirements thin | Blocked on OD-7. **Must be added before P13.** |
