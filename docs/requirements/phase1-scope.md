@@ -43,7 +43,7 @@
 
 ## Architecturally extensible, not necessarily populated
 
-Multiple LLM providers (two adapters required) · external agents · MCP servers ·
+Multiple LLM providers (abstraction FIXED; **at least one real adapter**, count PROVISIONAL — ADR-030) · external agents · MCP servers ·
 external tools · enterprise advisory agents · future context sources · future integrations
 
 ## Out of scope for Phase 1

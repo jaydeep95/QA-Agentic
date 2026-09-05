@@ -139,6 +139,7 @@ silently decalibrates confidence.
 | Anti-pattern | Why it fails |
 |---|---|
 | A checkpoint passing because a mock returned success | Violates the advancement rule ([`06`](06_IMPLEMENTATION_PHASES.md) §4) |
+| Presenting a test double as production capability | Test doubles are legitimate **inside tests**; representing one as capability is not. See [`14_ARCHITECTURAL_DECISION_REGISTER.md`](14_ARCHITECTURAL_DECISION_REGISTER.md) §4 |
 | Asserting on model prose | Non-deterministic and meaningless |
 | Testing only the happy path of an agentic workflow | Partial results and failures are the common case |
 | Integration tests against a live third-party provider in CI | Non-deterministic, costly, and an egress event |

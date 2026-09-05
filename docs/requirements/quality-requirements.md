@@ -5,13 +5,16 @@
 Each attribute states the architectural consequence it forces and how it is measured.
 
 > **An attribute with no measurement is an aspiration, not a requirement.**
+>
+> **All numeric targets below are `PROVISIONAL`** and carry provenance in
+> [`../14_ARCHITECTURAL_DECISION_REGISTER.md`](../14_ARCHITECTURAL_DECISION_REGISTER.md) §3. None is an approved product obligation.
 > Where a target is `UNKNOWN`, that is recorded honestly rather than invented.
 
 | Attribute | Architectural consequence | Measured by | Target | Status |
 |---|---|---|---|---|
-| **Correctness** | Extractors individually evaluable against ground truth; provenance identifies the responsible extractor | Per-extractor precision and recall by element type, never averaged | Relationship precision ≥ 0.85 (Validation A) | REQUIRES_VALIDATION |
+| **Correctness** | Extractors individually evaluable against ground truth; provenance identifies the responsible extractor | Per-extractor precision and recall by element type, never averaged | THR-EXTRACT-001: ≥ 0.85 — **PROVISIONAL**, see register §3 | REQUIRES_VALIDATION |
 | **Evidence and provenance** | Evidence is a first-class entity; no element without a reference | Share of elements with resolvable anchors; share still resolving after N commits | 100% / TBD | NOT_MEASURED |
-| **Explainability** | Reasoning, evidence and verdicts travel as data, not prose | Interactions needed to reach source evidence from a review item | ≤ 2 | NOT_MEASURED |
+| **Explainability** | Reasoning, evidence and verdicts travel as data, not prose | Interactions needed to reach source evidence from a review item | THR-UX-001: ≤ 2 — **PROVISIONAL** | NOT_MEASURED |
 | **Traceability** | Typed lineage on every artifact version | Any finding resolves to a repository revision in one query; zero orphans | 100% | NOT_MEASURED |
 | **Determinism where required** | Extraction, matching, coverage arithmetic and triage are deterministic | Share of artifacts produced deterministically; model spend per run | Maximise; spend bounded | NOT_MEASURED |
 | **Modularity** | Bounded domains with explicit contracts; no provider type in domain logic | Static check for provider imports in domain modules | Zero | NOT_MEASURED |
@@ -26,7 +29,7 @@ Each attribute states the architectural consequence it forces and how it is meas
 | **Performance** | Read models for interface queries; long work asynchronous with progress | p95 API latency for artifact views; time to first reviewable item | **UNKNOWN** | NOT_DEFINED |
 | **Recoverability** | Canonical store is the only backup-critical component; projections rebuildable | Verified rebuild of all projections; restore drill time | Demonstrated | NOT_MEASURED |
 | **Portability** | Containerised; no managed-service-specific primitives in the core | Full stack runs locally and in the target environment unchanged | Demonstrated | NOT_MEASURED |
-| **Provider independence** | Capability contracts with conformance tests; two LLM adapters from day one | Conformance suite passes per adapter; provider swap requires no domain change | 100% | NOT_MEASURED |
+| **Provider independence** | Capability contracts with conformance tests; at least one real LLM adapter (ADR-030) | Conformance suite passes per adapter; provider swap requires no domain change | 100% | NOT_MEASURED |
 
 ## Attribute conflicts — named, not hidden
 

@@ -9,17 +9,24 @@
 
 ## 1. Before starting any work
 
-Do all seven, in order. Do not skip to implementation.
+Do all eight, in order. Do not skip to implementation.
 
 ```text
-1. Read 00_PROJECT_SOURCE_OF_TRUTH.md          → what this is, where we are
-2. Read 12_CURRENT_IMPLEMENTATION_STATE.md     → what actually exists today
-3. Read the active phase in 05_DETAILED_DEVELOPMENT_ROADMAP.md
-4. Read the active checkpoint in checkpoints/
-5. Read the relevant architecture (02) and contracts (04) for what you are about to touch
-6. Inspect the actual source tree and tests — code outranks documents on questions of STATE
-7. Determine whether the requested task is already recorded in the roadmap
+1. 00_PROJECT_SOURCE_OF_TRUTH.md            → what this is, where we are
+2. 12_CURRENT_IMPLEMENTATION_STATE.md       → what actually exists, verified
+3. 14_ARCHITECTURAL_DECISION_REGISTER.md    → what is FIXED vs free vs provisional
+4. 05_DETAILED_DEVELOPMENT_ROADMAP.md       → the active phase only
+5. The active checkpoint in checkpoints/    → what must be proven
+6. Relevant architecture (02) and contracts (04) for what you will touch
+7. Relevant source code and tests           → code outranks documents on STATE
+8. Relevant research / open decisions (11)  → what you must not decide alone
 ```
+
+**Read what is relevant to the active work.** Do not read every historical document
+blindly — 02, 03 and 04 are large and only the sections touching your task are needed.
+
+Step 3 is new in V2 and is the one most easily skipped. It is what prevents a provisional
+threshold being treated as an acceptance requirement, or a recommendation as a decision.
 
 ### If the task is not in the roadmap
 
@@ -98,7 +105,8 @@ These are not style preferences. Breaking them corrupts the project's memory.
 | **Record UNKNOWN as UNKNOWN** | Use `UNKNOWN`, `REQUIRES_VALIDATION` or `OPEN_DECISION`. Never convert uncertainty into false certainty |
 | **Never fabricate** | Not requirements, architecture, provider capabilities, test results, performance figures, compatibility, or implementation status |
 | **A stub is not complete** | Placeholder code, fake success, simulated execution, hardcoded results and mock-only workflows may never be represented as completed functional capability |
-| **Only two placeholders exist** | `CODE_INTELLIGENCE_PROVIDER` and `CRAWLER_PROVIDER`. Any additional placeholder requires an explicit Decision Log entry |
+| **Only two PRODUCTION placeholders exist** | `CODE_INTELLIGENCE_PROVIDER` and `CRAWLER_PROVIDER`. Test doubles are legitimate inside tests — see [`14`](14_ARCHITECTURAL_DECISION_REGISTER.md) §4. Any additional *production* placeholder requires a Decision Log entry |
+| **A PROVISIONAL threshold is not an obligation** | Every numeric threshold is PROVISIONAL until explicitly approved. Check the register before tracing a requirement to one |
 | **Documentation ≠ implementation** | A document existing makes something `DEFINED`, never `IMPLEMENTED` |
 | **Do not mark PASS on a mock** | If a phase requires functional behaviour and it is mocked, the checkpoint is not PASS |
 | **Report failures plainly** | If tests fail, say so and show the output. If a step was skipped, say so |
@@ -112,10 +120,14 @@ states such as "mostly done". Each status has an objective condition:
 
 | To claim | You must have |
 |---|---|
-| `IMPLEMENTED` | Code that compiles/type-checks |
-| `TESTED` | Tests that exist and run |
-| `VALIDATED` | A checkpoint with captured evidence |
-| `COMPLETE` | Checkpoint result PASS or PASS WITH KNOWN LIMITATION |
+| `IMPLEMENTED` | Code that compiles / type-checks |
+| `TESTING` | Tests actually executing |
+| `TESTED` | Tests completed with **recorded results** — output plus commit hash |
+| `VALIDATED` | A checkpoint with captured evidence, **both dimensions** |
+| `ACCEPTED` | A recorded acceptance by the responsible party |
+| `COMPLETE` | Accepted **and** validated **and** no unresolved blocker |
+
+Full definitions: [`06_IMPLEMENTATION_PHASES.md`](06_IMPLEMENTATION_PHASES.md) §1.
 
 ---
 
@@ -154,7 +166,34 @@ Research sequence before any binding: [`11_RESEARCH_AND_OPEN_DECISIONS.md`](11_R
 
 ---
 
-## 10. When you are unsure
+## 10. The DO NOT PROCEED rule
+
+Stop and record **before** implementing when any of these is true:
+
+| Trigger | Why it stops work |
+|---|---|
+| The change conflicts with a **FIXED** decision in the register | The register is the authority; a silent workaround corrupts the architecture |
+| The requirement is **not represented in the roadmap** | Undocumented work cannot be traced, validated or recovered |
+| A **component boundary is unclear** | Guessing a boundary is how responsibilities leak |
+| A **provider decision is still open** | Binding a provider silently defeats replaceability |
+| A **numeric threshold has no provenance** | It would become a fake obligation |
+| A **data model change** is required | It propagates to lineage, staleness and traceability |
+| A **checkpoint would no longer prove** its intended capability | The validation system stops meaning anything |
+| Implementation requires **changing a product invariant** | INV-1 … INV-10 are not implementation details |
+
+**Do not silently resolve any of these by choosing an arbitrary interpretation.**
+
+```text
+Identify Conflict → Record Impact → Update Decision / Roadmap
+                 → Obtain and record the Decision → Implement
+```
+
+Use [`15_CHANGE_IMPACT_TEMPLATE.md`](15_CHANGE_IMPACT_TEMPLATE.md). If the decision is not yours to make, record the
+blocker, do the unblocked work, and surface the question.
+
+---
+
+## 11. When you are unsure
 
 In priority order:
 

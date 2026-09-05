@@ -225,7 +225,7 @@ Phase 0 builds the frame, not the picture.
 - [ ] Full test suite runs green in CI
 
 ### Exit criteria → CP-00
-See [`checkpoints/checkpoint-00-foundation.md`](checkpoints/checkpoint-00-foundation.md).
+See [`checkpoints/checkpoint-00-platform-foundation.md`](checkpoints/checkpoint-00-platform-foundation.md).
 
 ---
 

@@ -112,7 +112,7 @@ Full detail: [`12_CURRENT_IMPLEMENTATION_STATE.md`](12_CURRENT_IMPLEMENTATION_ST
 
 ```text
 CURRENT DEVELOPMENT PHASE:   Phase 0 — Repository & Platform Foundation
-CURRENT CHECKPOINT:          CP-00 Foundation (NOT_STARTED)
+CURRENT CHECKPOINT:          CP-00 Platform Foundation (NOT_STARTED)
 CURRENT WORKSTREAM:          P0-W1 — Repository scaffold and version control
 CURRENT OBJECTIVE:           Establish a bootable, testable, version-controlled
                              platform skeleton with persistence, API, workflow and
@@ -157,6 +157,15 @@ disagree, the controlling document wins and the other is a defect to be fixed.
 | Unresolved questions and provider research | [`11_RESEARCH_AND_OPEN_DECISIONS.md`](11_RESEARCH_AND_OPEN_DECISIONS.md) |
 | What is actually built right now | [`12_CURRENT_IMPLEMENTATION_STATE.md`](12_CURRENT_IMPLEMENTATION_STATE.md) |
 | How an agent must work in this repository | [`13_CLAUDE_ENGINEERING_WORKING_PROTOCOL.md`](13_CLAUDE_ENGINEERING_WORKING_PROTOCOL.md) |
+| **Whether a decision is fixed, free, provisional, placeholder or open** | [`14_ARCHITECTURAL_DECISION_REGISTER.md`](14_ARCHITECTURAL_DECISION_REGISTER.md) |
+| **How to propose a change that affects architecture or product** | [`15_CHANGE_IMPACT_TEMPLATE.md`](15_CHANGE_IMPACT_TEMPLATE.md) |
+| **How user value is validated before the platform is finished** | [`16_VERTICAL_SLICES.md`](16_VERTICAL_SLICES.md) |
+| **What the reference AUT and calibration corpus must be** | [`test-assets/`](test-assets/) |
+| **What the QA user must be able to do and see** | [`requirements/ux-requirements.md`](requirements/ux-requirements.md) |
+
+> **10 and 14 are complementary, not duplicates.** Document 10 records *what changed and
+> why, over time*. Document 14 records *what the current rule is and how binding it is*.
+> A decision appears in both: 10 narrates it, 14 classifies it.
 
 **The conversation that produced these documents is not source of truth.**
 It may be gone. These documents are.

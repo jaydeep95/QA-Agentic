@@ -161,11 +161,100 @@ Superseded document retained: [`architecture/architecture-baseline-v1-SUPERSEDED
 
 ---
 
+### DEC-005 — Numeric thresholds reclassified as PROVISIONAL
+
+| Field | Value |
+|---|---|
+| **Date** | 2026-09-05 |
+| **Area** | Validation and quality targets |
+| **Previous state** | Fifteen numeric thresholds appeared as validation pass criteria and, in one case, as a quality requirement — reading as product obligations |
+| **New state** | All classified `PROVISIONAL` in [`14_ARCHITECTURAL_DECISION_REGISTER.md`](14_ARCHITECTURAL_DECISION_REGISTER.md) §3 with full provenance metadata |
+| **Reason** | Provenance audit found every one originated as an engineering hypothesis in the architecture validation plan. **None had recorded Product Owner approval.** A decision is not FIXED merely because it appears in the roadmap |
+| **Impact** | No threshold may be traced to a product requirement without explicit approval. Validations still use them as decision rules |
+| **Affected roadmap items** | Validation experiments A–F |
+| **Migration required?** | No — no implementation exists |
+| **Approved by / source** | Roadmap V2 correction, CHG-001 |
+| **Status** | **ACCEPTED** |
+
+**Flagged for decision:** THR-SAFETY-001 (destructive-action classification recall 1.00) is
+recommended for confirmation as a **FIXED safety requirement**. A missed destructive action
+can damage a real environment. It is the one threshold where PROVISIONAL may be the wrong
+classification, and only the Product Owner can settle it.
+
+---
+
+### DEC-006 — LLM adapter count reclassified
+
+| Field | Value |
+|---|---|
+| **Date** | 2026-09-05 |
+| **Area** | Provider architecture |
+| **Previous state** | Two adapters stated as required from the start, in four places |
+| **New state** | ADR-013: the **abstraction is FIXED**. ADR-030: the **count is PROVISIONAL** — at least one real adapter before LLM-dependent functionality can be validated; additional adapters independently extensible |
+| **Reason** | Provenance is an engineering argument in the v1 architecture text — that a contract with a single implementation is an assumption rather than an abstraction. Sound reasoning, never an approved requirement. The architectural decision is provider-agnosticism, which the abstraction delivers regardless of count |
+| **Impact** | P0-W7-T2 no longer requires two adapters to close |
+| **Affected documents** | 02 §10, 04 §11 and §14, 09 §2.2 |
+| **Migration required?** | No |
+| **Approved by / source** | Roadmap V2 correction, CHG-001 |
+| **Status** | **ACCEPTED** |
+
+---
+
+### DEC-007 — Reconciliation decoupled from the crawler phase
+
+| Field | Value |
+|---|---|
+| **Date** | 2026-09-05 |
+| **Area** | Roadmap dependencies |
+| **Previous state** | P5 (Reconciliation) listed P4 (Runtime Exploration) as a dependency; both shared checkpoint CP-02 |
+| **New state** | P5 depends on **P2 only**. Runtime observations may be recorded, synthetic, replay fixtures or controlled datasets. Live `CrawlerProvider` is **optional enrichment**. Separate checkpoints: CP-09 exploration, CP-10 reconciliation |
+| **Reason** | The dependency contradicted ADR-002 and INV-4, which state that static and runtime are independent evidence sources and that runtime exploration is optional. It made the crawler a hidden prerequisite for a capability that does not need one |
+| **Impact** | Reconciliation can be implemented and validated before any provider is selected; both phases come off the critical path |
+| **Affected roadmap items** | P4, P5; checkpoints CP-09, CP-10 |
+| **Migration required?** | No |
+| **Approved by / source** | Roadmap V2 correction, CHG-001 |
+| **Status** | **ACCEPTED** |
+
+---
+
+### DEC-008 — Checkpoint model restructured; governance moved earlier
+
+| Field | Value |
+|---|---|
+| **Date** | 2026-09-05 |
+| **Area** | Validation model and phase structure |
+| **Previous state** | Nine checkpoints, four combining two capabilities. Governance validated only at the end. A single dependency relation |
+| **New state** | Thirteen checkpoints (CP-00…CP-12), each requiring **both** product and engineering validation. Governance foundations moved to P0-W10. Four-way dependency model: development, validation, optional enrichment, parallel |
+| **Reason** | Combined checkpoints let one capability mask another. A checkpoint proving only internal machinery is not a checkpoint. Governance arriving late is a retrofit the stages have already learned to work around. A single dependency relation cannot express *helps but is not required* |
+| **Impact** | Checkpoint IDs remapped across documents 05, 06, 07, 08, 12 and every checkpoint file |
+| **Affected roadmap items** | All phases |
+| **Migration required?** | No |
+| **Approved by / source** | Roadmap V2 correction, CHG-001 |
+| **Status** | **ACCEPTED** |
+
+---
+
+### DEC-009 — Rolling detail, vertical slices, UX requirements, reference corpus
+
+| Field | Value |
+|---|---|
+| **Date** | 2026-09-05 |
+| **Area** | Roadmap method and requirement coverage |
+| **Previous state** | Uniform decomposition intent across phases; no user-value validation model; UX and reference-AUT gaps recorded but open |
+| **New state** | **Rolling-detail rule** — the active phase is decomposed to implementation-ready level, future phases stay at capability level. **Five vertical slices** ([`16_VERTICAL_SLICES.md`](16_VERTICAL_SLICES.md)). **47 UX requirements** with eleven prototype shortcuts explicitly excluded. **Reference AUT corpus definition** with every field UNKNOWN pending OD-3 |
+| **Reason** | Decomposing future phases now would freeze choices evidence has not yet informed. Component progress can look healthy while delivering nothing usable. The UX and corpus gaps blocked P0-W5-T3 and all calibration respectively |
+| **Impact** | Roadmap gains a decomposition-state table; traceability gains 47 requirements; new documents 15, 16 and `test-assets/` |
+| **Migration required?** | No |
+| **Approved by / source** | Roadmap V2 correction, CHG-001 |
+| **Status** | **ACCEPTED** |
+
+---
+
 ## 5. Superseded and reversed decisions
 
 | ID | Superseded by | Note |
 |---|---|---|
-| — | — | None yet |
+| DEC-002 | — | Still OPEN; also recorded as ADR-059 in the register |
 
 ---
 
@@ -173,7 +262,7 @@ Superseded document retained: [`architecture/architecture-baseline-v1-SUPERSEDED
 
 | ID | Proposal | Raised | Status |
 |---|---|---|---|
-| — | None | — | — |
+| CHG-001 | Roadmap V2 correction | 2026-09-05 | Approved — DEC-005…009 |
 
 > A change proposal must not silently become implementation. Add it here with status
 > `OPEN`, assess impact, obtain approval, then convert it into a decision entry.
