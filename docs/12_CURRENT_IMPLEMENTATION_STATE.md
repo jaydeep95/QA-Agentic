@@ -22,7 +22,9 @@ NEXT WORK ITEM:      P0-W1-T2 — repository structure and module layout
 IMPLEMENTATION:      NONE. No platform source code exists.
 TEST STATUS:         No tests exist. No test framework installed.
 DEPLOYMENT STATUS:   Not deployable. Nothing to deploy.
-DOCUMENTATION:       Bootstrap complete — 14 canonical documents + architecture consolidated
+DOCUMENTATION:       V2 corrected — 17 canonical documents + architecture consolidated
+                     Consistency audit: 0 broken links, 0 unqualified claims,
+                     13 checkpoint IDs matching 13 files
 VERSION CONTROL:     ACTIVE — branch `main`, remote `origin`
                      github.com/jaydeep95/QA-Agentic
                      P0-W1-T1 COMPLETE at commit c4664f1
@@ -120,6 +122,7 @@ Using the **eight states** from [`06_IMPLEMENTATION_PHASES.md`](06_IMPLEMENTATIO
 | Architecture refinement to v2 (UAU-centric, two-level) | 2026-09-05 | `architecture-overview.html`, DEC-001 |
 | Architecture consolidated into the repository | 2026-09-05 | `docs/architecture/`, DEC-004 |
 | Documentation source-of-truth bootstrap | 2026-09-05 | `docs/` tree, DEC-003 |
+| **Roadmap V2 correction** | 2026-09-05 | DEC-005…009; 13-checkpoint model; decision register; consistency audit clean |
 | **P0-W1-T1 version control established** | 2026-09-05 | Commit `c4664f1` pushed to `origin/main` |
 
 **Completed implementation work: none.**
