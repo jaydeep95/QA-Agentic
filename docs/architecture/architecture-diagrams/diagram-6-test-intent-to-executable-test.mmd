@@ -1,0 +1,20 @@
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EDF1F3','primaryTextColor':'#15191C','primaryBorderColor':'#8AA3AD','lineColor':'#5C7681','secondaryColor':'#E3EEF1','tertiaryColor':'#F5F7F8','clusterBkg':'#F8FAFB','clusterBorder':'#C4D2D8','fontFamily':'IBM Plex Sans, sans-serif','fontSize':'13px'}}}%%
+flowchart TB
+  TC["<b>Test Case</b><br/>what must be true"] --> AS["<b>Automation Specification</b><br/>intent · actions · semantic element refs<br/>assertions · expected outcomes · data requirements"]
+  AS --> AB["<b>Automation Binding</b><br/>concrete locators · environment<br/>fixtures · resolved data"]
+  UAU2["Unified Understanding"] --> POM["<b>Reusable page & component objects</b><br/>projected from the model, shared across tests"]
+  POM --> AB
+  AB --> PW["<b>Executable Playwright test</b>"]
+  PW --> RUN["Execution"]
+
+  HEAL["Self-healing"] -.may modify.-> AB
+  HEAL -.->|"cannot reach"| AS
+
+  classDef intent fill:#DAE8ED,stroke:#1F4E5F,stroke-width:2px,color:#12262C
+  classDef bindc fill:#F5E8DA,stroke:#8A5A2B,color:#4A3418
+  classDef norm fill:#EDF1F3,stroke:#8AA3AD,color:#15191C
+  classDef heal fill:#F8E9E7,stroke:#95322C,color:#4E1B17
+  class TC,AS intent
+  class AB,POM bindc
+  class PW,RUN,UAU2 norm
+  class HEAL heal

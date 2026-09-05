@@ -1,0 +1,16 @@
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EDF1F3','primaryTextColor':'#15191C','primaryBorderColor':'#8AA3AD','lineColor':'#5C7681','secondaryColor':'#E3EEF1','tertiaryColor':'#F5F7F8','clusterBkg':'#F8FAFB','clusterBorder':'#C4D2D8','fontFamily':'IBM Plex Sans, sans-serif','fontSize':'13px'}}}%%
+flowchart TB
+  UNT["<b>Untrusted inputs</b><br/>repository content · live page content<br/>model output · user-supplied values"]
+  UNT --> BND["<b>Security / policy boundary</b><br/>structured extraction · content is data, never instruction<br/>classification of supplied values · output sanitisation<br/>single egress point · secret references"]
+  BND --> CORE["<b>Trusted platform core</b><br/>domain · understanding · governance · audit"]
+  CORE --> WRK["<b>Isolated workers</b><br/>no database credentials · job-scoped secrets<br/>domain allowlists · fresh browser context"]
+  WRK --> EXT["Repositories · AUT environments"]
+
+  classDef unt fill:#F8E9E7,stroke:#95322C,color:#4E1B17
+  classDef bnd fill:#F5E8DA,stroke:#8A5A2B,stroke-width:2px,color:#4A3418
+  classDef core fill:#DAE8ED,stroke:#1F4E5F,stroke-width:2px,color:#12262C
+  classDef norm fill:#EDF1F3,stroke:#8AA3AD,color:#15191C
+  class UNT unt
+  class BND bnd
+  class CORE core
+  class WRK,EXT norm

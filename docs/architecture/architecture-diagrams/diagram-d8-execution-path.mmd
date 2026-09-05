@@ -1,0 +1,16 @@
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EDF1F3','primaryTextColor':'#15191C','primaryBorderColor':'#8AA3AD','lineColor':'#5C7681','secondaryColor':'#E3EEF1','tertiaryColor':'#F5F7F8','clusterBkg':'#F8FAFB','clusterBorder':'#C4D2D8','fontFamily':'IBM Plex Sans, sans-serif','fontSize':'13px'}}}%%
+flowchart TB
+  REQ["Execution request<br/>scope · environment · concurrency"] --> EM["Execution manager"]
+  EM --> POL{"Policy gate<br/>environment permitted? secrets allowed?<br/>concurrency available?"}
+  POL -->|denied| STOP["Rejected · audited"]
+  POL -->|granted| LEASE["Environment lease"]
+  LEASE --> Q[["Job queue — one job per test case"]]
+  Q --> CC["Concurrency controller<br/>global · per environment · per run"]
+  CC --> W["Playwright worker<br/>resolve secrets → browser context<br/>apply binding → run → collect artifacts"]
+  W --> OBJ[("Object store<br/>trace · video · DOM · network")]
+  W --> CB["Result callback API<br/>no direct database access"]
+  CB --> TRI["Triage ladder"] --> EV["Evaluators"] --> FI["Findings + run history"]
+  LEASE -.released.-> EM
+
+  classDef wk fill:#F5E8DA,stroke:#8A5A2B,color:#4A3418
+  class W wk

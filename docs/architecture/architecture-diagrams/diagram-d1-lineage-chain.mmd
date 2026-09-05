@@ -1,0 +1,19 @@
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EDF1F3','primaryTextColor':'#15191C','primaryBorderColor':'#8AA3AD','lineColor':'#5C7681','secondaryColor':'#E3EEF1','tertiaryColor':'#F5F7F8','clusterBkg':'#F8FAFB','clusterBorder':'#C4D2D8','fontFamily':'IBM Plex Sans, sans-serif','fontSize':'13px'}}}%%
+flowchart LR
+  RV["Repository version<br/>tuple of revisions"] --> EVD["Evidence"]
+  EVD --> ASR["Assertion"]
+  ASR --> UV["Understanding version"]
+  UV --> OBL["Coverage obligation"]
+  UV --> SC["Scenario"]
+  OBL -.satisfied by.-> SC
+  SC --> TC["Test case"]
+  TC --> DR["Data requirement"]
+  TC --> AS["Automation specification"]
+  AS --> AB["Automation binding"]
+  AB --> EX["Execution attempt"]
+  EX --> TR["Triage"]
+  TR --> FI["Finding"]
+  FI -.becomes new evidence.-> EVD
+
+  classDef hero fill:#DAE8ED,stroke:#1F4E5F,stroke-width:2px,color:#12262C
+  class ASR,UV hero

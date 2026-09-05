@@ -1,0 +1,20 @@
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EDF1F3','primaryTextColor':'#15191C','primaryBorderColor':'#8AA3AD','lineColor':'#5C7681','secondaryColor':'#E3EEF1','tertiaryColor':'#F5F7F8','clusterBkg':'#F8FAFB','clusterBorder':'#C4D2D8','fontFamily':'IBM Plex Sans, sans-serif','fontSize':'13px'}}}%%
+flowchart LR
+  REPO[("Repositories<br/>frontend + backend<br/>pinned revisions")] --> SU["<b>Static Understanding</b><br/>creates the baseline model<br/>breadth · structure · declared rules"]
+  AUT["Running AUT<br/><i>when available</i>"] --> RE["<b>Runtime Exploration</b><br/>validates · extends · enriches<br/>real DOM · real traffic · real transitions"]
+
+  SU --> RC["<b>Reconciliation</b><br/>relates observation to expectation"]
+  RE --> RC
+  RC --> UAU["<b>Unified Application<br/>Understanding</b>"]
+  SU --> UAU
+
+  UAU --> OUT["Downstream generation"]
+
+  NOTE["Static-only mode<br/>is fully supported"] -.-> SU
+
+  classDef hero fill:#DAE8ED,stroke:#1F4E5F,stroke-width:2.5px,color:#12262C
+  classDef stage fill:#EDF1F3,stroke:#8AA3AD,color:#15191C
+  classDef opt fill:#F4F7F8,stroke:#A9B4BB,stroke-dasharray:5,color:#48525A
+  class UAU hero
+  class SU,RE,RC stage
+  class NOTE,AUT opt

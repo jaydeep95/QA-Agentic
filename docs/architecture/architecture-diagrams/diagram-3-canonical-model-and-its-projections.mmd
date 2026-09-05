@@ -1,0 +1,26 @@
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EDF1F3','primaryTextColor':'#15191C','primaryBorderColor':'#8AA3AD','lineColor':'#5C7681','secondaryColor':'#E3EEF1','tertiaryColor':'#F5F7F8','clusterBkg':'#F8FAFB','clusterBorder':'#C4D2D8','fontFamily':'IBM Plex Sans, sans-serif','fontSize':'13px'}}}%%
+flowchart TB
+  UAU["<b>UNIFIED APPLICATION UNDERSTANDING</b><br/>canonical semantic model · versioned"]
+
+  UAU --> P1["Graph<br/>projection"]
+  UAU --> P2["State / behaviour<br/>projection"]
+  UAU --> P3["Domain model<br/>projection"]
+  UAU --> P4["Coverage obligation<br/>projection"]
+  UAU --> P5["Understanding document<br/>human-readable"]
+  UAU --> P6["Retrieval / index<br/>views"]
+
+  P1 --> USE1["Traversal · impact analysis · UI"]
+  P2 --> USE2["Path and transition test design"]
+  P3 --> USE3["Field semantics · test data"]
+  P4 --> USE4["Coverage measurement"]
+  P5 --> USE5["Review and approval"]
+  P6 --> USE6["Search and context assembly"]
+
+  REP["Internal representation<br/><i>versioned evidence-backed assertions</i>"] -.implements.-> UAU
+
+  classDef hero fill:#DAE8ED,stroke:#1F4E5F,stroke-width:2.5px,color:#12262C
+  classDef proj fill:#F4F7F8,stroke:#8AA3AD,color:#15191C
+  classDef impl fill:#F1F4F6,stroke:#A9B4BB,stroke-dasharray:5,color:#48525A
+  class UAU hero
+  class P1,P2,P3,P4,P5,P6 proj
+  class REP impl

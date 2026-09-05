@@ -216,3 +216,61 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ---------------------------------------------------------------------------
+# Agentic QA Platform — project-specific
+# ---------------------------------------------------------------------------
+
+# Node / TypeScript worker plane (Playwright execution and exploration workers)
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.pnpm-store/
+dist/
+*.tsbuildinfo
+
+# Playwright execution and exploration artifacts.
+# These are evidence, stored in the platform object store by reference —
+# they must never enter git history. See docs/02_ARCHITECTURE_BASELINE.md.
+playwright-report/
+test-results/
+blob-report/
+.playwright/
+traces/
+videos/
+screenshots/
+*.zip
+*.trace
+*.webm
+
+# Local platform state and generated artifacts
+.artifacts/
+.object-store/
+.sandbox/
+.workspaces/
+*.db
+*.sqlite
+
+# Secrets — belt and braces alongside the .env rules above.
+# The platform holds secret REFERENCES only; no secret value may be committed.
+*.pem
+*.key
+*.p12
+*.pfx
+secrets.json
+credentials.json
+.secrets/
+
+# Local configuration overrides
+.env.local
+.env.*.local
+config.local.*
+
+# IDE and OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini

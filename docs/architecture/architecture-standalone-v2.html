@@ -1,0 +1,1674 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unified Understanding Architecture</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  color-scheme: light;
+  --ground:#F6F8F9; --surface:#FFFFFF; --surface-2:#F1F4F6; --sunk:#EAEEF0;
+  --ink:#15191C; --ink-2:#48525A; --ink-3:#77828B;
+  --line:#DDE3E7; --line-2:#EBEFF2;
+  --accent:#1F4E5F; --accent-2:#2C7085; --accent-tint:#E3EEF1; --accent-edge:#B9D3DA;
+  --ok:#2C6A4E; --ok-tint:#E5F0EA; --ok-edge:#BEDBCB;
+  --warn:#8A5A2B; --warn-tint:#F6EDE1; --warn-edge:#E4CDB1;
+  --crit:#95322C; --crit-tint:#F8E9E7; --crit-edge:#EBC5C0;
+  --open:#4B4487; --open-tint:#ECEAF6; --open-edge:#CBC5E4;
+  --f-display:"Source Serif 4", ui-serif, Georgia, serif;
+  --f-body:"IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+}
+*{box-sizing:border-box;}
+body{background:var(--ground); color:var(--ink); font-family:var(--f-body); font-size:15px; line-height:1.6;}
+.shell{display:grid; grid-template-columns:238px minmax(0,1fr); max-width:1340px; margin:0 auto;}
+
+/* rail */
+.rail{position:sticky; top:0; align-self:start; height:100vh; overflow-y:auto; border-right:1px solid var(--line); padding:24px 15px 40px; background:var(--surface);}
+.rail-brand{font-family:var(--f-display); font-size:16.5px; font-weight:700; line-height:1.25; letter-spacing:-.01em;}
+.rail-sub{font-family:var(--f-mono); font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); margin:3px 0 20px;}
+.rail-group{font-family:var(--f-mono); font-size:9px; letter-spacing:.11em; text-transform:uppercase; color:var(--accent); margin:20px 0 6px; padding-bottom:5px; border-bottom:1px solid var(--line-2);}
+.rail a{display:grid; grid-template-columns:16px 1fr; gap:8px; align-items:baseline; text-decoration:none; color:var(--ink-2); font-size:12.5px; padding:4px; border-radius:4px; line-height:1.35;}
+.rail a:hover{background:var(--accent-tint); color:var(--accent);}
+.rail a:focus-visible{outline:2px solid var(--accent); outline-offset:1px;}
+.rail a .k{font-family:var(--f-mono); font-size:10px; color:var(--ink-3); font-weight:600;}
+
+/* content */
+main{padding:40px 50px 90px; min-width:0;}
+.masthead{padding-bottom:20px; margin-bottom:8px; border-bottom:2px solid var(--ink);}
+.masthead .eyebrow{font-family:var(--f-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); margin-bottom:9px;}
+.masthead h1{font-family:var(--f-display); font-size:38px; line-height:1.1; font-weight:700; letter-spacing:-.02em; margin:0 0 11px; text-wrap:balance;}
+.masthead .standfirst{font-size:16px; color:var(--ink-2); max-width:64ch; margin:0;}
+
+.tier{display:flex; align-items:center; gap:12px; margin:44px 0 4px;}
+.tier .num{font-family:var(--f-mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:#fff; background:var(--accent); padding:4px 9px; border-radius:3px;}
+.tier .lbl{font-family:var(--f-display); font-size:22px; font-weight:700; letter-spacing:-.01em;}
+.tier .rule{flex:1; height:1px; background:var(--line);}
+.tier-note{font-size:13px; color:var(--ink-3); margin:0 0 4px; max-width:70ch;}
+
+section{scroll-margin-top:16px;}
+h2{font-family:var(--f-display); font-size:25px; font-weight:700; letter-spacing:-.015em; line-height:1.18; margin:40px 0 10px; padding-top:22px; border-top:1px solid var(--line); text-wrap:balance;}
+h2 .sk{font-family:var(--f-mono); font-size:10.5px; font-weight:600; letter-spacing:.1em; color:var(--accent); display:block; margin-bottom:7px;}
+h3{font-family:var(--f-display); font-size:18.5px; font-weight:600; letter-spacing:-.01em; margin:28px 0 7px; text-wrap:balance;}
+h4{font-size:12.5px; font-weight:600; letter-spacing:.03em; margin:18px 0 5px;}
+p{margin:0 0 12px; max-width:72ch;}
+ul,ol{margin:0 0 13px; padding-left:19px; max-width:72ch;}
+li{margin-bottom:4px;}
+code{font-family:var(--f-mono); font-size:.86em; background:var(--sunk); padding:1px 4px; border-radius:3px;}
+a{color:var(--accent-2);}
+.lede{font-size:16px; color:var(--ink-2); max-width:68ch; margin-bottom:16px;}
+
+/* labels */
+.tag{font-family:var(--f-mono); font-size:9px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; padding:2px 7px; border-radius:3px; white-space:nowrap; display:inline-block; border:1px solid transparent;}
+.tag.fixed{background:var(--ok-tint); color:var(--ok); border-color:var(--ok-edge);}
+.tag.flex{background:var(--accent-tint); color:var(--accent); border-color:var(--accent-edge);}
+.tag.place{background:var(--warn-tint); color:var(--warn); border-color:var(--warn-edge);}
+.tag.open{background:var(--open-tint); color:var(--open); border-color:var(--open-edge);}
+.tag.crit{background:var(--crit-tint); color:var(--crit); border-color:var(--crit-edge);}
+.legend{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:14px 0 20px; padding:10px 13px; background:var(--surface); border:1px solid var(--line);}
+.legend .lg{font-size:12px; color:var(--ink-2);}
+
+/* devices */
+.note{border-left:3px solid var(--accent); background:var(--accent-tint); padding:12px 15px; margin:16px 0; max-width:72ch;}
+.note.warn{border-color:var(--warn); background:var(--warn-tint);}
+.note.crit{border-color:var(--crit); background:var(--crit-tint);}
+.note p:last-child{margin-bottom:0;}
+.note .nl{font-family:var(--f-mono); font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; font-weight:600; color:var(--ink-2); display:block; margin-bottom:5px;}
+
+.principle{border:1px solid var(--accent-edge); background:var(--surface); padding:16px 18px; margin:18px 0; max-width:76ch; border-top:3px solid var(--accent);}
+.principle .pl{font-family:var(--f-mono); font-size:9.5px; letter-spacing:.09em; text-transform:uppercase; color:var(--accent); font-weight:600; margin-bottom:6px;}
+.principle p{font-family:var(--f-display); font-size:17.5px; line-height:1.4; margin:0; color:var(--ink);}
+.principle .sub{font-family:var(--f-body); font-size:13.5px; color:var(--ink-2); margin-top:8px;}
+
+.tw{overflow-x:auto; margin:14px 0 20px; border:1px solid var(--line); background:var(--surface);}
+table{border-collapse:collapse; width:100%; font-size:12.8px;}
+th{font-family:var(--f-mono); font-size:9px; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-3); text-align:left; padding:9px 11px; border-bottom:1px solid var(--line); background:var(--surface-2); font-weight:600; vertical-align:bottom;}
+td{padding:9px 11px; border-bottom:1px solid var(--line-2); vertical-align:top; line-height:1.48;}
+tr:last-child td{border-bottom:none;}
+td.num{font-family:var(--f-mono); font-variant-numeric:tabular-nums; white-space:nowrap;}
+td.c{text-align:center;}
+
+.fig{border:1px solid var(--line); background:var(--surface); margin:20px 0 24px;}
+.fig .cap{font-family:var(--f-mono); font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); padding:9px 13px; border-bottom:1px solid var(--line-2); background:var(--surface-2);}
+.fig .body{padding:18px 16px; overflow-x:auto; background:#FFFFFF;}
+.fig pre.mermaid{margin:0; padding:0; background:transparent; text-align:left; display:block; min-width:min-content;}
+.fig pre.mermaid svg{max-width:none; height:auto; display:block; margin:0 auto;}
+.fig .fnote{font-size:12.5px; color:var(--ink-2); padding:11px 14px; border-top:1px solid var(--line-2); background:var(--surface-2); margin:0;}
+
+.deck{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:1px; background:var(--line); border:1px solid var(--line); margin:16px 0 22px;}
+.deck > div{background:var(--surface); padding:13px 15px;}
+.deck h4{margin:0 0 5px; font-size:13px;}
+.deck p{font-size:12.6px; color:var(--ink-2); margin:0; max-width:none;}
+
+details{border:1px solid var(--line); background:var(--surface); margin-bottom:9px;}
+details[open]{border-color:var(--accent-edge);}
+summary{cursor:pointer; padding:12px 15px; font-weight:600; font-size:14.5px; display:flex; align-items:baseline; gap:10px; list-style:none; background:var(--surface-2);}
+summary::-webkit-details-marker{display:none;}
+summary::before{content:"▸"; color:var(--accent); font-size:11px; transition:transform .15s;}
+details[open] summary::before{content:"▾";}
+summary .sid{font-family:var(--f-mono); font-size:10px; color:var(--ink-3); font-weight:600;}
+summary:hover{background:var(--accent-tint);}
+summary:focus-visible{outline:2px solid var(--accent); outline-offset:-2px;}
+.dbody{padding:4px 18px 16px;}
+.dbody > h3:first-child{margin-top:14px;}
+
+.kd{border:1px solid var(--line); background:var(--surface); margin-bottom:8px;}
+.kd-h{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; padding:10px 14px; border-bottom:1px solid var(--line-2);}
+.kd-h .id{font-family:var(--f-mono); font-size:10.5px; font-weight:600; color:var(--accent);}
+.kd-h .t{font-weight:600; font-size:13.8px; flex:1; min-width:200px;}
+.kd-b{padding:10px 14px; font-size:13px; color:var(--ink-2);}
+.kd-b p{max-width:none; margin:0 0 7px;}
+.kd-b p:last-child{margin:0;}
+.kd-b b{color:var(--ink);}
+
+.ck{list-style:none; padding-left:0; max-width:76ch;}
+.ck li{display:grid; grid-template-columns:16px 1fr; gap:9px; margin-bottom:6px; font-size:13.5px;}
+.ck li::before{content:"✓"; color:var(--ok); font-weight:700; font-size:12px;}
+
+@media (max-width:900px){
+  .shell{grid-template-columns:1fr;}
+  .rail{position:static; height:auto; border-right:none; border-bottom:1px solid var(--line); padding:18px;}
+  main{padding:26px 18px 60px;}
+  .masthead h1{font-size:28px;}
+}
+@media (prefers-reduced-motion: reduce){*{animation:none!important; transition:none!important;}}
+</style>
+<script>document.documentElement.classList.add("mermaid-pending");</script>
+<style id="standalone-reset">
+  html{-webkit-text-size-adjust:100%;}
+  body{margin:0;}
+  img{max-width:100%;}
+  [hidden]{display:none!important;}
+  html.mermaid-pending pre.mermaid{visibility:hidden;}
+  .diagram-fallback{display:none; font-family:var(--f-mono); font-size:11.5px; color:var(--warn);
+    background:var(--warn-tint); border:1px solid var(--warn-edge); padding:9px 12px; margin:0 0 10px;}
+  html.no-mermaid .diagram-fallback{display:block;}
+  html.no-mermaid pre.mermaid{visibility:visible; color:var(--ink-2); white-space:pre;
+    font-family:var(--f-mono); font-size:11px; line-height:1.45;}
+</style>
+<style id="print-rules">
+@media print{
+  .shell{display:block; max-width:none;}
+  .rail{display:none;}
+  main{padding:0 0 24px;}
+  h2,h3,h4,summary{page-break-after:avoid; break-after:avoid;}
+  .fig,.kd,.note,.principle,.deck,tr{page-break-inside:avoid; break-inside:avoid;}
+  .tw{overflow-x:visible;}
+  table{font-size:9pt;}
+  a{color:inherit; text-decoration:none;}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+<nav class="rail">
+  <div class="rail-brand">Unified Understanding</div>
+  <div class="rail-sub">QA Platform · Phase 1 · v2</div>
+
+  <div class="rail-group">Level 1 — Overview</div>
+  <a href="#glance"><span class="k">1</span><span>Architecture at a Glance</span></a>
+  <a href="#drivers"><span class="k">2</span><span>Architectural Drivers</span></a>
+  <a href="#components"><span class="k">3</span><span>Major Components</span></a>
+  <a href="#uau"><span class="k">4</span><span>Unified Understanding</span></a>
+  <a href="#flow"><span class="k">5</span><span>End-to-End Flow</span></a>
+  <a href="#automation"><span class="k">6</span><span>Automation &amp; Execution</span></a>
+  <a href="#quality"><span class="k">7</span><span>Governance &amp; Quality</span></a>
+  <a href="#evolution"><span class="k">8</span><span>Independent Evolution</span></a>
+  <a href="#decisions"><span class="k">9</span><span>Key Decisions</span></a>
+  <a href="#risks"><span class="k">10</span><span>Risks &amp; Validation</span></a>
+  <a href="#baseline"><span class="k">11</span><span>Phase 1 Baseline</span></a>
+
+  <div class="rail-group">Level 2 — Details</div>
+  <a href="#details"><span class="k">▸</span><span>Detail index</span></a>
+  <a href="#d-model"><span class="k">D1</span><span>Understanding model</span></a>
+  <a href="#d-static"><span class="k">D2</span><span>Static understanding</span></a>
+  <a href="#d-runtime"><span class="k">D3</span><span>Runtime exploration</span></a>
+  <a href="#d-recon"><span class="k">D4</span><span>Reconciliation</span></a>
+  <a href="#d-prov"><span class="k">D5</span><span>Provider contracts</span></a>
+  <a href="#d-design"><span class="k">D6</span><span>Coverage &amp; test design</span></a>
+  <a href="#d-auto"><span class="k">D7</span><span>Automation internals</span></a>
+  <a href="#d-exec"><span class="k">D8</span><span>Execution internals</span></a>
+  <a href="#d-eval"><span class="k">D9</span><span>Evaluators &amp; confidence</span></a>
+  <a href="#d-plat"><span class="k">D10</span><span>Storage, API, security</span></a>
+  <a href="#d-adr"><span class="k">D11</span><span>Decision records</span></a>
+  <a href="#d-tech"><span class="k">D12</span><span>Technology &amp; options</span></a>
+  <a href="#d-poc"><span class="k">D13</span><span>Validation plan</span></a>
+</nav>
+
+<main>
+<header class="masthead">
+  <div class="eyebrow">Architecture Baseline · Revision 2</div>
+  <h1>Agentic QA Platform — Phase 1 Architecture</h1>
+  <p class="standfirst">A modular platform built around a versioned Unified Application Understanding, from which test design, automation, execution and findings are generated through explicit contracts.</p>
+</header>
+
+<div class="legend">
+  <span class="lg"><strong>Every statement below is labelled:</strong></span>
+  <span class="tag fixed">Fixed</span><span class="lg">implementation follows it</span>
+  <span class="tag flex">Flexible</span><span class="lg">choose among approved approaches</span>
+  <span class="tag place">Placeholder</span><span class="lg">provider deliberately unselected</span>
+  <span class="tag open">Open</span><span class="lg">needs input or validation</span>
+</div>
+
+<div class="tier"><span class="num">Level 1</span><span class="lbl">Architecture Overview</span><span class="rule"></span></div>
+<p class="tier-note">Readable end to end in a few minutes. Nothing here depends on the detail sections that follow.</p>
+
+<!-- ═══════════════ 1 · AT A GLANCE ═══════════════ -->
+<section id="glance">
+<h2><span class="sk">1</span>Architecture at a Glance</h2>
+
+<p class="lede">The platform builds and maintains a durable, evidence-backed understanding of the application under test, then generates everything else from it.</p>
+
+<p>Source repositories are analysed to produce a baseline <strong>Unified Application Understanding</strong> — the platform's model of the application's screens, components, fields, APIs, services, data, relationships, rules, permissions and states. Where a running instance is available, <strong>runtime exploration</strong> observes the real application and <strong>reconciliation</strong> determines how those observations relate to what the source predicted. Everything downstream — coverage obligations, scenarios, test cases, test data, Playwright automation, execution and findings — is generated from that understanding, against a named version of it, and remains traceable back to the evidence that justified it.</p>
+
+<p>Around this spine sit cross-cutting platform capabilities: evidence and provenance, evaluators and confidence, governance for human and autonomous decisions, and a single integration path for external providers. Heavy or hostile workloads — code analysis, browser exploration, test execution — run in isolated workers, while the core platform stays a modular, independently evolvable whole.</p>
+
+<div class="fig">
+<div class="cap">Diagram 1 · Architecture at a glance</div>
+<div class="body">
+<div class="diagram-fallback">Diagram library could not be loaded. The diagram source is shown below and renders in any Mermaid viewer.</div>
+<pre class="mermaid">
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EDF1F3','primaryTextColor':'#15191C','primaryBorderColor':'#8AA3AD','lineColor':'#5C7681','secondaryColor':'#E3EEF1','tertiaryColor':'#F5F7F8','clusterBkg':'#F8FAFB','clusterBorder':'#C4D2D8','fontFamily':'IBM Plex Sans, sans-serif','fontSize':'13px'}}}%%
+flowchart TB
+  USER(["QA User"]) --&gt; UIX["QA Platform UI&lt;br/&gt;artifact views + transcript"]
+  UIX --&gt; APIW["Platform API + Workflow + Governance"]
+
+  APIW --&gt; UAU
+
+  subgraph CORE[" "]
+    UAU["&lt;b&gt;UNIFIED APPLICATION UNDERSTANDING&lt;/b&gt;&lt;br/&gt;entities · screens · components · fields&lt;br/&gt;APIs · services · data · relationships&lt;br/&gt;rules · permissions · states · transitions&lt;br/&gt;─────────────&lt;br/&gt;evidence · provenance · confidence&lt;br/&gt;reconciliation status · versioned"]
+  end
+
+  SU["Static Understanding&lt;br/&gt;&lt;i&gt;repositories&lt;/i&gt;"] --&gt; UAU
+  RE["Runtime Exploration&lt;br/&gt;&lt;i&gt;running AUT — optional&lt;/i&gt;"] --&gt; UAU
+  SU --&gt; RC["Reconciliation"]
+  RE --&gt; RC
+  RC --&gt; UAU
+
+  CIP["CODE_INTELLIGENCE_PROVIDER"] -.-&gt; SU
+  CRP["CRAWLER_PROVIDER"] -.-&gt; RE
+
+  UAU --&gt; TD["Test Design&lt;br/&gt;coverage obligations + scenarios"]
+  TD --&gt; TC["Test Case + Test Data"]
+  TC --&gt; AU["Playwright Automation&lt;br/&gt;specification + binding + reuse"]
+  AU --&gt; EX["Execution&lt;br/&gt;workers + environments"]
+  EX --&gt; EV["Evaluation + Findings"]
+  EV -.knowledge update.-&gt; UAU
+
+  classDef hero fill:#DAE8ED,stroke:#1F4E5F,stroke-width:2.5px,color:#12262C
+  classDef src fill:#EDF1F3,stroke:#8AA3AD,color:#15191C
+  classDef prov fill:#F5E8DA,stroke:#8A5A2B,stroke-dasharray:5,color:#4A3418
+  classDef chain fill:#F4F7F8,stroke:#8AA3AD,color:#15191C
+  class UAU hero
+  class SU,RE,RC src
+  class CIP,CRP prov
+  class TD,TC,AU,EX,EV chain
+</pre>
+</div>
+<p class="fnote">Dashed boxes are replaceable external providers. Runtime exploration is optional: when unavailable or disabled, the understanding is static-only and downstream generation still proceeds, with lower validation and lower confidence rather than no output.</p>
+</div>
+
+<h3>One-page summary</h3>
+<div class="tw">
+<table>
+<thead><tr><th style="width:22%">Area</th><th style="width:50%">Purpose</th><th style="width:14%" class="c">Evolves independently</th><th class="c">Status</th></tr></thead>
+<tbody>
+<tr><td><strong>Application Understanding</strong></td><td>Build and version the platform's model of the AUT from source</td><td class="c">Yes</td><td class="c"><span class="tag fixed">Fixed</span></td></tr>
+<tr><td><strong>Runtime Exploration</strong></td><td>Validate and discover real behaviour against a running instance</td><td class="c">Yes</td><td class="c"><span class="tag fixed">Fixed</span></td></tr>
+<tr><td><strong>Reconciliation</strong></td><td>Relate runtime observation to static expectation; classify differences</td><td class="c">Yes</td><td class="c"><span class="tag fixed">Fixed</span></td></tr>
+<tr><td><strong>Test Design</strong></td><td>Derive coverage obligations and generate comprehensive scenarios</td><td class="c">Yes</td><td class="c"><span class="tag fixed">Fixed</span></td></tr>
+<tr><td><strong>Test Case &amp; Data</strong></td><td>Produce executable test intent and declared data requirements</td><td class="c">Yes</td><td class="c"><span class="tag fixed">Fixed</span></td></tr>
+<tr><td><strong>Automation</strong></td><td>Convert test intent into maintainable, reusable Playwright</td><td class="c">Yes</td><td class="c"><span class="tag fixed">Fixed</span></td></tr>
+<tr><td><strong>Execution</strong></td><td>Run tests safely and scalably against configured environments</td><td class="c">Yes</td><td class="c"><span class="tag fixed">Fixed</span></td></tr>
+<tr><td><strong>Evaluation</strong></td><td>Assess generated quality and classify execution results</td><td class="c">Yes</td><td class="c"><span class="tag fixed">Fixed</span></td></tr>
+<tr><td><strong>Governance</strong></td><td>One gate serving human review and autonomous policy</td><td class="c">Yes</td><td class="c"><span class="tag fixed">Fixed</span></td></tr>
+<tr><td><strong>Provider Integration</strong></td><td>Single path to external intelligence, tools and models</td><td class="c">Yes</td><td class="c"><span class="tag place">Providers</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="principle">
+<div class="pl">The architecture in one statement</div>
+<p>A modular QA platform built around a versioned Unified Application Understanding, combining static source understanding with optional runtime exploration and reconciliation. Independent test-design, test-case, automation, execution and evaluation components consume that understanding through explicit contracts. External capabilities such as Code Intelligence and the Crawler remain replaceable providers. Evidence, confidence, governance and traceability are cross-cutting. Heavy browser and analysis workloads run in isolated workers, while the core platform remains modular and independently evolvable.</p>
+</div>
+</section>
+
+<!-- ═══════════════ 2 · DRIVERS ═══════════════ -->
+<section id="drivers">
+<h2><span class="sk">2</span>Architectural Drivers</h2>
+
+<p class="lede">Four forces shaped every decision in this document. Everything else follows from them.</p>
+
+<div class="deck">
+<div><h4>1 · Understanding is the product asset</h4><p>Tests are regenerable; the understanding is not. It must be durable, versioned, evidence-backed and queryable — so it is modelled first and everything else derives from it.</p></div>
+<div><h4>2 · Two sources of truth must combine</h4><p>Source code gives breadth and structure; the running application gives behavioural ground truth. Neither alone is sufficient, and their disagreements are valuable rather than noise.</p></div>
+<div><h4>3 · Nothing may be asserted without support</h4><p>Evidence, provenance, inference type, oracle status and confidence are modelled data, not presentation. The platform must be able to say "insufficient evidence" instead of inventing certainty.</p></div>
+<div><h4>4 · Every part must be replaceable</h4><p>Providers, techniques, evaluators and whole components will change across phases. Contracts are placed so that change stays local.</p></div>
+</div>
+
+<h3>Quality attributes that shaped structure</h3>
+<div class="tw">
+<table>
+<thead><tr><th style="width:17%">Attribute</th><th style="width:44%">Architectural consequence</th><th>Measured by</th></tr></thead>
+<tbody>
+<tr><td><strong>Traceability</strong></td><td>Every artifact names the understanding version it came from; typed lineage links to parents and evidence</td><td>Any finding resolves to repository revision and source location in one query</td></tr>
+<tr><td><strong>Explainability</strong></td><td>Reasoning, evidence and evaluator verdicts travel with the artifact as data</td><td>A reviewer reaches supporting evidence in two interactions or fewer</td></tr>
+<tr><td><strong>Modularity</strong></td><td>Bounded domains with explicit contracts; no provider type inside domain logic</td><td>Static check: zero provider imports in domain modules</td></tr>
+<tr><td><strong>Extensibility</strong></td><td>Techniques, evaluators, extractors and providers are registered strategies</td><td>A new technique or evaluator ships without orchestration changes</td></tr>
+<tr><td><strong>Determinism where possible</strong></td><td>Extraction, matching, coverage arithmetic and triage are deterministic; models are used only for genuine semantic judgement</td><td>Share of artifacts produced deterministically; model spend per run</td></tr>
+<tr><td><strong>Isolation</strong></td><td>Analysis, exploration and execution run in workers that hold no database credentials</td><td>Kill or poison a worker; core and store unaffected</td></tr>
+<tr><td><strong>Scalability</strong></td><td>Worker fleets scale independently of the control plane</td><td>Execution throughput at fixed control-plane resources</td></tr>
+<tr><td><strong>Reliability</strong></td><td>Workflow state is durable and stages are idempotent; partial results are valid results</td><td>Run resumes correctly after induced worker termination</td></tr>
+<tr><td><strong>Security</strong></td><td>One egress point, secret references, untrusted-content boundary, workspace scoping in the data model</td><td>Zero secrets in artifacts, logs or prompts under automated scan</td></tr>
+<tr><td><strong>Cost control</strong></td><td>Budgets are first-class: token, time, action and exploration ceilings</td><td>Cost per understanding build and per scenario set</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<!-- ═══════════════ 3 · MAJOR COMPONENTS ═══════════════ -->
+<section id="components">
+<h2><span class="sk">3</span>Major Components</h2>
+
+<p class="lede">Five architectural domains. Each owns a clear responsibility, exposes a stable contract, and can be improved or replaced without forcing change elsewhere.</p>
+
+<div class="tw">
+<table>
+<thead><tr><th style="width:16%">Domain</th><th style="width:26%">Owns</th><th style="width:24%">Explicitly does not own</th><th>Contract it exposes</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>Understanding</strong><br/><span style="font-size:11.5px;color:var(--ink-3)">source ingestion · static understanding · runtime exploration · reconciliation · the unified model</span></td>
+<td>Repository identity and revisions; extraction; exploration planning and state identity; reconciliation status; the versioned Unified Application Understanding and its projections</td>
+<td>What any of it means for testing. It has no notion of a scenario, a test case or coverage.</td>
+<td>Understanding query and traversal API; understanding version identity; contribution contract for any extractor or observer</td>
+</tr>
+<tr>
+<td><strong>Quality Design</strong><br/><span style="font-size:11.5px;color:var(--ink-3)">coverage · scenarios · test cases · test data</span></td>
+<td>Coverage obligations and the satisfaction ledger; technique selection and rationale; scenarios; test cases; declared data requirements</td>
+<td>How anything executes. It produces no locators, no environment detail, no resolved data.</td>
+<td>Scenario contract; Test Case and Data Requirement contract</td>
+</tr>
+<tr>
+<td><strong>Automation</strong><br/><span style="font-size:11.5px;color:var(--ink-3)">specification · binding · page objects · locators · healing</span></td>
+<td>Automation specifications; page and component abstraction; locator lifecycle; environment-specific bindings; healing proposals; generated Playwright</td>
+<td>Test intent. It may not add, remove or reinterpret an assertion or an expected outcome.</td>
+<td>Automation Specification contract; Automation Binding contract</td>
+</tr>
+<tr>
+<td><strong>Execution &amp; Diagnostics</strong><br/><span style="font-size:11.5px;color:var(--ink-3)">execution · workers · environments · results · triage · findings</span></td>
+<td>Scheduling, concurrency, environment leasing, worker lifecycle, artifact collection, failure triage, findings of record, run history</td>
+<td>Test content. It never edits a specification or decides what should have happened.</td>
+<td>Execution request and result contract; Finding contract</td>
+</tr>
+<tr>
+<td><strong>Platform &amp; Governance</strong><br/><span style="font-size:11.5px;color:var(--ink-3)">workflow · evaluators · confidence · evidence · governance · providers · artifacts</span></td>
+<td>Run and stage orchestration; the evaluator registry; confidence computation; evidence and lineage; gates, policy and audit; the single provider integration path; artifact versioning and export</td>
+<td>Domain semantics. The workflow engine cannot tell a scenario from an exploration session; the gate does not know what it is gating.</td>
+<td>Stage contract; Evaluator contract; Gate contract; Capability and Provider contracts</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="note">
+<span class="nl">Why five domains rather than twelve modules</span>
+<p>The lower-level decomposition still exists in code and in <a href="#details">Level 2</a> — separation has not been reduced. What changed is the presentation: exposing every internal module as an equal architectural box makes the shape harder to see, not easier. These five are the units that a reviewer, a roadmap and a team assignment can all address.</p>
+</div>
+
+<h3>Deployment shape <span class="tag fixed">Fixed</span></h3>
+<p>A modular monolith control plane with three isolated worker fleets. A module becomes a worker only when it has a genuinely different resource profile, blast radius, runtime isolation need or execution duration — not because it has a domain name.</p>
+
+<div class="fig">
+<div class="cap">Diagram 2 · Control plane and workers</div>
+<div class="body">
+<div class="diagram-fallback">Diagram library could not be loaded. The diagram source is shown below and renders in any Mermaid viewer.</div>
+<pre class="mermaid">
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EDF1F3','primaryTextColor':'#15191C','primaryBorderColor':'#8AA3AD','lineColor':'#5C7681','secondaryColor':'#E3EEF1','tertiaryColor':'#F5F7F8','clusterBkg':'#F8FAFB','clusterBorder':'#C4D2D8','fontFamily':'IBM Plex Sans, sans-serif','fontSize':'13px'}}}%%
+flowchart TB
+  subgraph CP[" Platform Control Plane "]
+    direction TB
+    A1["API"]
+    A2["Domain modules&lt;br/&gt;understanding · quality design · automation"]
+    A3["Workflow + Governance"]
+    A4["Evidence + lineage"]
+  end
+
+  Q[["Job Queue"]]
+  CP --&gt; Q
+
+  Q --&gt; W1["Analysis Workers&lt;br/&gt;&lt;i&gt;parse untrusted source&lt;/i&gt;"]
+  Q --&gt; W2["Exploration Workers&lt;br/&gt;&lt;i&gt;drive a real browser&lt;/i&gt;"]
+  Q --&gt; W3["Execution Workers&lt;br/&gt;&lt;i&gt;run Playwright&lt;/i&gt;"]
+
+  W1 -.results via API.-&gt; CP
+  W2 -.results via API.-&gt; CP
+  W3 -.results via API.-&gt; CP
+
+  W2 --&gt; AUT["AUT Environment"]
+  W3 --&gt; AUT
+  W1 --&gt; REPO[("Repositories")]
+
+  classDef cpx fill:#DAE8ED,stroke:#1F4E5F,stroke-width:2px,color:#12262C
+  classDef wk fill:#F5E8DA,stroke:#8A5A2B,color:#4A3418
+  class CP cpx
+  class W1,W2,W3 wk
+</pre>
+</div>
+<p class="fnote">Workers hold no database credentials and post results through a narrow authenticated callback, so a crashing or compromised worker cannot reach canonical state.</p>
+</div>
+</section>
+
+<!-- ═══════════════ 4 · UNIFIED UNDERSTANDING ═══════════════ -->
+<section id="uau">
+<h2><span class="sk">4</span>Unified Application Understanding</h2>
+
+<p class="lede">The central product asset. Everything the platform generates is generated from it, against a named version of it.</p>
+
+<h3>What it holds</h3>
+<div class="deck">
+<div><h4>Application structure</h4><p>Entities · screens and pages · components · fields · APIs · backend services · data structures</p></div>
+<div><h4>Relationships</h4><p>Navigation · component composition · frontend-to-backend call paths · service and data dependencies · cross-repository links</p></div>
+<div><h4>Behaviour</h4><p>Validations · business rules · permissions and roles · states · transitions · error paths</p></div>
+<div><h4>Grounding</h4><p>Evidence · provenance · inference type · oracle status · reconciliation status · confidence · version</p></div>
+</div>
+
+<p>Every element carries its own grounding. A screen is not simply "known to exist" — it is known on the basis of specific evidence, reached by a specific kind of inference, confirmed or not confirmed at runtime, and carried at a stated confidence. This is what allows the platform to distinguish what it has verified from what it has assumed.</p>
+
+<div class="principle">
+<div class="pl">Architecture invariant <span class="tag fixed">Fixed</span></div>
+<p>No downstream artifact is generated against an implicit, unversioned or unknown application context.</p>
+<div class="sub">Every scenario, test case, data requirement, automation specification and execution names the Understanding version it was generated from. When that understanding changes, the platform can identify exactly what is now stale — and staleness is surfaced for a decision, never silently auto-resolved.</div>
+</div>
+
+<div class="fig">
+<div class="cap">Diagram 3 · Canonical model and its projections</div>
+<div class="body">
+<div class="diagram-fallback">Diagram library could not be loaded. The diagram source is shown below and renders in any Mermaid viewer.</div>
+<pre class="mermaid">
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EDF1F3','primaryTextColor':'#15191C','primaryBorderColor':'#8AA3AD','lineColor':'#5C7681','secondaryColor':'#E3EEF1','tertiaryColor':'#F5F7F8','clusterBkg':'#F8FAFB','clusterBorder':'#C4D2D8','fontFamily':'IBM Plex Sans, sans-serif','fontSize':'13px'}}}%%
+flowchart TB
+  UAU["&lt;b&gt;UNIFIED APPLICATION UNDERSTANDING&lt;/b&gt;&lt;br/&gt;canonical semantic model · versioned"]
+
+  UAU --&gt; P1["Graph&lt;br/&gt;projection"]
+  UAU --&gt; P2["State / behaviour&lt;br/&gt;projection"]
+  UAU --&gt; P3["Domain model&lt;br/&gt;projection"]
+  UAU --&gt; P4["Coverage obligation&lt;br/&gt;projection"]
+  UAU --&gt; P5["Understanding document&lt;br/&gt;human-readable"]
+  UAU --&gt; P6["Retrieval / index&lt;br/&gt;views"]
+
+  P1 --&gt; USE1["Traversal · impact analysis · UI"]
+  P2 --&gt; USE2["Path and transition test design"]
+  P3 --&gt; USE3["Field semantics · test data"]
+  P4 --&gt; USE4["Coverage measurement"]
+  P5 --&gt; USE5["Review and approval"]
+  P6 --&gt; USE6["Search and context assembly"]
+
+  REP["Internal representation&lt;br/&gt;&lt;i&gt;versioned evidence-backed assertions&lt;/i&gt;"] -.implements.-&gt; UAU
+
+  classDef hero fill:#DAE8ED,stroke:#1F4E5F,stroke-width:2.5px,color:#12262C
+  classDef proj fill:#F4F7F8,stroke:#8AA3AD,color:#15191C
+  classDef impl fill:#F1F4F6,stroke:#A9B4BB,stroke-dasharray:5,color:#48525A
+  class UAU hero
+  class P1,P2,P3,P4,P5,P6 proj
+  class REP impl
+</pre>
+</div>
+<p class="fnote">Projections are derived and rebuildable. Each may evolve, be added or be dropped without changing the canonical model — and the graph implementation in particular is not the architecture, it is one view of it.</p>
+</div>
+
+<h3>Canonical model versus internal representation</h3>
+<p>The <strong>canonical semantic model</strong> is the Unified Application Understanding: the application as the platform understands it. <span class="tag fixed">Fixed</span></p>
+<p>The <strong>internal representation</strong> — how that model is physically recorded so it can carry provenance, versioning and contradiction — is a separate concern. The baseline records it as versioned, evidence-backed assertions with stable content-derived identity, which makes understanding-diff, corroboration and reconciliation ordinary set operations. That technique is sound and recommended, but it is an implementation of the model rather than the model itself. <span class="tag flex">Flexible</span> — see <a href="#d-model">D1</a>.</p>
+
+<h3>Two sources, one model</h3>
+
+<div class="fig">
+<div class="cap">Diagram 4 · Static and runtime contribution</div>
+<div class="body">
+<div class="diagram-fallback">Diagram library could not be loaded. The diagram source is shown below and renders in any Mermaid viewer.</div>
+<pre class="mermaid">
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EDF1F3','primaryTextColor':'#15191C','primaryBorderColor':'#8AA3AD','lineColor':'#5C7681','secondaryColor':'#E3EEF1','tertiaryColor':'#F5F7F8','clusterBkg':'#F8FAFB','clusterBorder':'#C4D2D8','fontFamily':'IBM Plex Sans, sans-serif','fontSize':'13px'}}}%%
+flowchart LR
+  REPO[("Repositories&lt;br/&gt;frontend + backend&lt;br/&gt;pinned revisions")] --&gt; SU["&lt;b&gt;Static Understanding&lt;/b&gt;&lt;br/&gt;creates the baseline model&lt;br/&gt;breadth · structure · declared rules"]
+  AUT["Running AUT&lt;br/&gt;&lt;i&gt;when available&lt;/i&gt;"] --&gt; RE["&lt;b&gt;Runtime Exploration&lt;/b&gt;&lt;br/&gt;validates · extends · enriches&lt;br/&gt;real DOM · real traffic · real transitions"]
+
+  SU --&gt; RC["&lt;b&gt;Reconciliation&lt;/b&gt;&lt;br/&gt;relates observation to expectation"]
+  RE --&gt; RC
+  RC --&gt; UAU["&lt;b&gt;Unified Application&lt;br/&gt;Understanding&lt;/b&gt;"]
+  SU --&gt; UAU
+
+  UAU --&gt; OUT["Downstream generation"]
+
+  NOTE["Static-only mode&lt;br/&gt;is fully supported"] -.-&gt; SU
+
+  classDef hero fill:#DAE8ED,stroke:#1F4E5F,stroke-width:2.5px,color:#12262C
+  classDef stage fill:#EDF1F3,stroke:#8AA3AD,color:#15191C
+  classDef opt fill:#F4F7F8,stroke:#A9B4BB,stroke-dasharray:5,color:#48525A
+  class UAU hero
+  class SU,RE,RC stage
+  class NOTE,AUT opt
+</pre>
+</div>
+</div>
+
+<div class="tw">
+<table>
+<thead><tr><th style="width:20%">Source</th><th style="width:34%">Contributes</th><th>Characteristic limit</th></tr></thead>
+<tbody>
+<tr><td><strong>Static understanding</strong></td><td>The baseline model: inventory, structure, schemas, declared rules, candidate relationships, candidate locators. Available always.</td><td>Strong on enumeration, weaker on relationships that only resolve at runtime. Cannot confirm behaviour.</td></tr>
+<tr><td><strong>Runtime exploration</strong></td><td>Confirmation, correction and discovery: real DOM, real network traffic, real state transitions, validated locators. Available when a running instance is reachable and permitted.</td><td>Only covers what it reaches. Absence of an observation is never evidence of absence.</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="note">
+<span class="nl">Runtime exploration is valuable, not mandatory <span class="tag fixed">Fixed</span></span>
+<p>The platform produces useful output from static evidence alone. Exploration may be unavailable, restricted by policy, blocked on a prerequisite, or deliberately switched off — and in every one of those cases understanding is still built, scenarios and test cases are still generated, and automation is still produced. What changes is the <em>validation level</em>: unconfirmed elements are marked unverified, locators remain unvalidated, confidence is lower, and coverage reports a larger insufficient-evidence share. Downstream components are required to handle unverified input; none of them may treat runtime confirmation as a precondition.</p>
+</div>
+
+<h4>Operating modes <span class="tag flex">Flexible</span></h4>
+<div class="deck">
+<div><h4>Static only</h4><p>No running instance. Full pipeline runs; locators are candidates; confidence capped; coverage reports unverified obligations honestly.</p></div>
+<div><h4>Static + exploration</h4><p>The intended default. Runtime confirms relationships and locators, raises confidence, and surfaces reconciliation differences.</p></div>
+<div><h4>Continuous</h4><p>Re-analysis on new revisions and periodic re-exploration; understanding diffs drive staleness and regeneration decisions.</p></div>
+</div>
+</section>
+
+<!-- ═══════════════ 5 · END-TO-END FLOW ═══════════════ -->
+<section id="flow">
+<h2><span class="sk">5</span>End-to-End Flow</h2>
+
+<p class="lede">A loop, not a line. Execution evidence and findings re-enter the understanding, so the model improves with use.</p>
+
+<div class="fig">
+<div class="cap">Diagram 5 · Platform lifecycle</div>
+<div class="body">
+<div class="diagram-fallback">Diagram library could not be loaded. The diagram source is shown below and renders in any Mermaid viewer.</div>
+<pre class="mermaid">
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EDF1F3','primaryTextColor':'#15191C','primaryBorderColor':'#8AA3AD','lineColor':'#5C7681','secondaryColor':'#E3EEF1','tertiaryColor':'#F5F7F8','clusterBkg':'#F8FAFB','clusterBorder':'#C4D2D8','fontFamily':'IBM Plex Sans, sans-serif','fontSize':'13px'}}}%%
+flowchart LR
+  S1["&lt;b&gt;1 · Understand&lt;/b&gt;&lt;br/&gt;analyse repositories"] --&gt; S2["&lt;b&gt;2 · Explore&lt;/b&gt;&lt;br/&gt;observe the running app&lt;br/&gt;&lt;i&gt;optional · high value&lt;/i&gt;"]
+  S2 --&gt; S3["&lt;b&gt;3 · Reconcile&lt;/b&gt;&lt;br/&gt;relate observation&lt;br/&gt;to expectation"]
+  S1 -.static-only path.-&gt; S3
+  S3 --&gt; S4["&lt;b&gt;4 · Design tests&lt;/b&gt;&lt;br/&gt;obligations + scenarios"]
+  S4 --&gt; S5["&lt;b&gt;5 · Build automation&lt;/b&gt;&lt;br/&gt;specification + binding"]
+  S5 --&gt; S6["&lt;b&gt;6 · Execute&lt;/b&gt;&lt;br/&gt;real Playwright runs"]
+  S6 --&gt; S7["&lt;b&gt;7 · Evaluate&lt;/b&gt;&lt;br/&gt;triage + findings"]
+  S7 --&gt; S8["&lt;b&gt;8 · Learn&lt;/b&gt;&lt;br/&gt;update understanding"]
+  S8 --&gt;|feedback loop| S1
+
+  G(["Governance gate&lt;br/&gt;at every stage transition"]) -.-&gt; S4
+  G -.-&gt; S5
+  G -.-&gt; S6
+  G -.-&gt; S7
+
+  classDef st fill:#EDF1F3,stroke:#8AA3AD,color:#15191C
+  classDef learn fill:#DAE8ED,stroke:#1F4E5F,stroke-width:2px,color:#12262C
+  classDef gov fill:#F5E8DA,stroke:#8A5A2B,color:#4A3418
+  class S1,S2,S3,S4,S5,S6,S7 st
+  class S8 learn
+  class G gov
+</pre>
+</div>
+<p class="fnote">Each stage consumes the approved output of the previous one and produces a new versioned artifact. The dashed path shows that reconciliation and everything after it still run when exploration does not.</p>
+</div>
+
+<h3>What crosses each boundary</h3>
+<div class="tw">
+<table>
+<thead><tr><th style="width:22%">Transition</th><th style="width:39%">What is handed over</th><th>What is deliberately not handed over</th></tr></thead>
+<tbody>
+<tr><td>Understanding → Test Design</td><td>A named understanding version and its coverage obligations</td><td>Raw extractor output; provider responses; unreconciled observations</td></tr>
+<tr><td>Test Design → Test Case</td><td>Approved scenarios with technique rationale and obligation links</td><td>Steps, data values, any executable detail</td></tr>
+<tr><td>Test Case → Automation</td><td>Test intent: steps, semantic element references, assertions, declared data requirements, oracle status</td><td>Locators, environments, fixtures, resolved data</td></tr>
+<tr><td>Automation → Execution</td><td>A specification plus an environment-specific binding</td><td>Any ability to alter intent at run time</td></tr>
+<tr><td>Execution → Evaluation</td><td>Attempts, results, artifacts and diagnostics</td><td>A verdict on whether the product is defective</td></tr>
+<tr><td>Evaluation → Understanding</td><td>Confirmed observations and findings as new evidence</td><td>Unclassified failures; anything that has not passed triage</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<!-- ═══════════════ 6 · AUTOMATION & EXECUTION ═══════════════ -->
+<section id="automation">
+<h2><span class="sk">6</span>Automation &amp; Execution</h2>
+
+<p class="lede">Test intent and executable automation are separate artifacts. This separation is what makes automation maintainable and self-healing safe.</p>
+
+<div class="fig">
+<div class="cap">Diagram 6 · Test intent to executable test</div>
+<div class="body">
+<div class="diagram-fallback">Diagram library could not be loaded. The diagram source is shown below and renders in any Mermaid viewer.</div>
+<pre class="mermaid">
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EDF1F3','primaryTextColor':'#15191C','primaryBorderColor':'#8AA3AD','lineColor':'#5C7681','secondaryColor':'#E3EEF1','tertiaryColor':'#F5F7F8','clusterBkg':'#F8FAFB','clusterBorder':'#C4D2D8','fontFamily':'IBM Plex Sans, sans-serif','fontSize':'13px'}}}%%
+flowchart TB
+  TC["&lt;b&gt;Test Case&lt;/b&gt;&lt;br/&gt;what must be true"] --&gt; AS["&lt;b&gt;Automation Specification&lt;/b&gt;&lt;br/&gt;intent · actions · semantic element refs&lt;br/&gt;assertions · expected outcomes · data requirements"]
+  AS --&gt; AB["&lt;b&gt;Automation Binding&lt;/b&gt;&lt;br/&gt;concrete locators · environment&lt;br/&gt;fixtures · resolved data"]
+  UAU2["Unified Understanding"] --&gt; POM["&lt;b&gt;Reusable page &amp; component objects&lt;/b&gt;&lt;br/&gt;projected from the model, shared across tests"]
+  POM --&gt; AB
+  AB --&gt; PW["&lt;b&gt;Executable Playwright test&lt;/b&gt;"]
+  PW --&gt; RUN["Execution"]
+
+  HEAL["Self-healing"] -.may modify.-&gt; AB
+  HEAL -.-&gt;|"cannot reach"| AS
+
+  classDef intent fill:#DAE8ED,stroke:#1F4E5F,stroke-width:2px,color:#12262C
+  classDef bindc fill:#F5E8DA,stroke:#8A5A2B,color:#4A3418
+  classDef norm fill:#EDF1F3,stroke:#8AA3AD,color:#15191C
+  classDef heal fill:#F8E9E7,stroke:#95322C,color:#4E1B17
+  class TC,AS intent
+  class AB,POM bindc
+  class PW,RUN,UAU2 norm
+  class HEAL heal
+</pre>
+</div>
+<p class="fnote">Reuse is structural, not emergent: page and component objects are projected from the understanding, so two test cases touching the same form reference the same object automatically.</p>
+</div>
+
+<div class="tw">
+<table>
+<thead><tr><th style="width:19%">Concern</th><th style="width:38%">Automation Specification — intent</th><th>Automation Binding — resolution</th></tr></thead>
+<tbody>
+<tr><td>Holds</td><td>Actions, semantic element references, assertions, expected outcomes, declared data requirements, oracle status</td><td>Concrete locators with provenance, page and component objects, fixtures, data bindings, environment and secret references, timeouts</td></tr>
+<tr><td>Scope</td><td>One per test case, environment-independent</td><td>One per specification per environment</td></tr>
+<tr><td>Changes when</td><td>Test intent changes — requires regeneration and a governance gate</td><td>Markup, environment or data changes — a routine, audited event</td></tr>
+<tr><td>Healing may modify</td><td><strong>Never</strong></td><td>Locator resolution only, under policy</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="principle">
+<div class="pl">Architecture principle <span class="tag fixed">Fixed</span></div>
+<p>Self-healing may repair how an element is found. It may never change what the test means.</p>
+<div class="sub">Business intent, assertion semantics, acceptance criteria and test purpose live in the specification, which the healing path cannot reach. Every healing action is evidence-backed, policy-controlled, auditable and reviewable. Default policy proposes rather than applies; auto-apply is a per-workspace setting enabled on measured evidence, not a rewrite of the design.</div>
+</div>
+
+<h3>Execution <span class="tag fixed">Fixed</span></h3>
+<p>Real Playwright execution runs in isolated workers, never inside the API process. Four concerns are configured independently of test content:</p>
+
+<div class="deck">
+<div><h4>Environment</h4><p>A first-class entity per workspace: base URL, allowed domains, credential references, data-safety class, reset capability, concurrency ceiling. Automation contains no environment values.</p></div>
+<div><h4>Secrets</h4><p>References everywhere; resolved once inside the worker at job start; redacted from logs; never placed in generated code, artifacts or model prompts.</p></div>
+<div><h4>Workers</h4><p>Container-isolated, holding no database credentials, posting results through a narrow callback. Browser instability cannot reach the platform.</p></div>
+<div><h4>Concurrency</h4><p>Three ceilings compose — global pool, per-environment protection, per-run user setting — and the effective limit is the minimum, so the user-facing control is always safe.</p></div>
+</div>
+
+<p>Retries are classified before they are attempted: infrastructure faults retry automatically, assertion failures never do, and a locator failure may retry once with healing if policy allows — recorded as a distinct attempt so flakiness stays visible rather than being smoothed away. Execution artifacts (traces, video, screenshots, network and console logs) are collected as evidence and stored by reference. Details in <a href="#d-exec">D8</a>.</p>
+</section>
+
+<!-- ═══════════════ 7 · GOVERNANCE & QUALITY ═══════════════ -->
+<section id="quality">
+<h2><span class="sk">7</span>Governance &amp; Quality</h2>
+
+<p class="lede">Coverage, evaluation, confidence and approval are cross-cutting platform mechanisms — defined once and applied to every generated artifact, rather than rebuilt inside each stage.</p>
+
+<h3>Measurable coverage</h3>
+<p>The platform is designed to systematically pursue very high coverage using multiple complementary test-design techniques. Coverage is measured against explicit obligations derived from the understanding and reported with evidence, uncovered areas and insufficient-evidence gaps — rather than presented as an unqualified percentage. No model is asked what the coverage is, and no model can assert it. <span class="tag fixed">Fixed</span></p>
+
+<div class="fig">
+<div class="cap">Diagram 7 · Coverage model</div>
+<div class="body">
+<div class="diagram-fallback">Diagram library could not be loaded. The diagram source is shown below and renders in any Mermaid viewer.</div>
+<pre class="mermaid">
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EDF1F3','primaryTextColor':'#15191C','primaryBorderColor':'#8AA3AD','lineColor':'#5C7681','secondaryColor':'#E3EEF1','tertiaryColor':'#F5F7F8','clusterBkg':'#F8FAFB','clusterBorder':'#C4D2D8','fontFamily':'IBM Plex Sans, sans-serif','fontSize':'13px'}}}%%
+flowchart LR
+  U["Unified Application&lt;br/&gt;Understanding"] --&gt; O["&lt;b&gt;Coverage Obligations&lt;/b&gt;&lt;br/&gt;features · screens · controls · fields&lt;br/&gt;constraints · APIs · rules · decisions&lt;br/&gt;states · transitions · error conditions"]
+  O --&gt; T["&lt;b&gt;Test-design techniques&lt;/b&gt;&lt;br/&gt;selected per obligation, with rationale"]
+  T --&gt; S["Scenarios"]
+  S --&gt; C["Test Cases"]
+  C --&gt;|explicit satisfaction links| L["&lt;b&gt;Obligation ledger&lt;/b&gt;"]
+  O --&gt; L
+  L --&gt; R["&lt;b&gt;Reported state per obligation&lt;/b&gt;&lt;br/&gt;covered · partially covered · uncovered&lt;br/&gt;insufficient evidence · not applicable"]
+
+  classDef hero fill:#DAE8ED,stroke:#1F4E5F,stroke-width:2px,color:#12262C
+  classDef norm fill:#EDF1F3,stroke:#8AA3AD,color:#15191C
+  class O,L hero
+  class U,T,S,C,R norm
+</pre>
+</div>
+<p class="fnote">Coverage is arithmetic over explicit links, always reported with its denominator, its understanding version, and the share of that denominator resting on unverified elements.</p>
+</div>
+
+<h4>Techniques the platform applies <span class="tag flex">Flexible — registry, extensible without redesign</span></h4>
+<p>Equivalence Partitioning · Boundary Value Analysis · Decision Tables · Pairwise · Permutation &amp; Combination · Graph-Based Path Coverage · Metamorphic Testing · Model-Based Testing.</p>
+<p>Each is a registered strategy declaring which parts of the understanding it consumes and which obligation types it can satisfy. A technique becomes selectable only when the understanding actually supports it — decision tables need rule elements, boundary analysis needs constraint elements — which prevents applying a technique with no evidential basis, and records why each was chosen.</p>
+
+<h3>Test data and state provisioning are different things <span class="tag fixed">Fixed</span></h3>
+<p>A test case declares data <em>requirements</em>; it never contains resolved data. Resolution happens at bind time, against a specific environment, through an ordered ladder — and each rung records why the previous one was insufficient.</p>
+
+<div class="tw">
+<table>
+<thead><tr><th style="width:6%">#</th><th style="width:26%">Strategy</th><th>Nature and control</th></tr></thead>
+<tbody>
+<tr><td class="num">1</td><td>Derive from understanding</td><td>Deterministic value generation from schema and constraint elements. Preferred whenever the requirement is a value.</td></tr>
+<tr><td class="num">2</td><td>Approved data source</td><td>Read-only retrieval from a configured test-data source registered per environment.</td></tr>
+<tr><td class="num">3</td><td>Synthetic generation</td><td>Constraint-satisfying, seeded for reproducibility. Must not fabricate values implying real identities or payment instruments.</td></tr>
+<tr><td class="num">4</td><td><strong>State provisioning</strong></td><td><strong>Creates application state.</strong> A state-changing action: risk-classified, policy-gated, environment-restricted and recorded for cleanup. Architecturally distinct from generating a value.</td></tr>
+<tr><td class="num">5</td><td>Human input</td><td>A durable work item stating what is needed, why, what was attempted and why it failed. Supplied values are classified on arrival; anything secret is stored as a reference only.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Evaluation and confidence</h3>
+
+<div class="fig">
+<div class="cap">Diagram 8 · Cross-cutting quality mechanism</div>
+<div class="body">
+<div class="diagram-fallback">Diagram library could not be loaded. The diagram source is shown below and renders in any Mermaid viewer.</div>
+<pre class="mermaid">
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EDF1F3','primaryTextColor':'#15191C','primaryBorderColor':'#8AA3AD','lineColor':'#5C7681','secondaryColor':'#E3EEF1','tertiaryColor':'#F5F7F8','clusterBkg':'#F8FAFB','clusterBorder':'#C4D2D8','fontFamily':'IBM Plex Sans, sans-serif','fontSize':'13px'}}}%%
+flowchart TB
+  ART["Every generated artifact&lt;br/&gt;&lt;i&gt;understanding · scenario · case · data · automation · result&lt;/i&gt;"] --&gt; EV
+
+  subgraph EV[" Evaluators — layered, deterministic first "]
+    direction LR
+    E1["Deterministic&lt;br/&gt;schema · references · duplicates&lt;br/&gt;coverage arithmetic · syntax · secrets"]
+    E2["Derived&lt;br/&gt;cross-artifact consistency&lt;br/&gt;traceability · contradiction"]
+    E3["Semantic&lt;br/&gt;plausibility · missing edge cases&lt;br/&gt;diagnostic interpretation"]
+    E1 --&gt; E2 --&gt; E3
+  end
+
+  EV --&gt; CONF["&lt;b&gt;Confidence&lt;/b&gt;&lt;br/&gt;computed from evidence strength · inference type&lt;br/&gt;oracle status · reconciliation · evaluator verdicts&lt;br/&gt;calibrated extractor reliability"]
+  CONF --&gt; BAND["Mostly Confident · Somewhat Confident&lt;br/&gt;Insufficient Evidence"]
+  BAND --&gt; GATE["Governance Gate"]
+
+  classDef hero fill:#DAE8ED,stroke:#1F4E5F,stroke-width:2px,color:#12262C
+  classDef norm fill:#EDF1F3,stroke:#8AA3AD,color:#15191C
+  class CONF hero
+  class ART,BAND,GATE,E1,E2,E3 norm
+</pre>
+</div>
+<p class="fnote">Deterministic evaluators run first and can fail an artifact outright, so semantic evaluation is never spent on structurally invalid output — and a semantic verdict may never overturn a deterministic one.</p>
+</div>
+
+<p>Five concepts stay distinct in the data model and in the interface. Collapsing them into a single number is the failure mode this design exists to prevent:</p>
+
+<div class="tw">
+<table>
+<thead><tr><th style="width:19%">Concept</th><th style="width:35%">Answers</th><th>Values</th></tr></thead>
+<tbody>
+<tr><td><strong>Evidence</strong></td><td>What supports this?</td><td>Source location, symbol, span · runtime DOM, network event, screenshot, trace · execution result · provider invocation</td></tr>
+<tr><td><strong>Inference type</strong></td><td>How was it established?</td><td>Deterministic · Derived · Semantic</td></tr>
+<tr><td><strong>Oracle status</strong></td><td>Is the expected behaviour known? <em>(expectation-bearing elements only)</em></td><td>Confirmed · Partially confirmed · Unknown</td></tr>
+<tr><td><strong>Reconciliation</strong></td><td>Do static and runtime agree?</td><td>Matched · Runtime-only · Static-only · Different · Conflict · Unverified</td></tr>
+<tr><td><strong>Confidence</strong></td><td>How much weight should this carry?</td><td>Numeric score plus the three user-facing bands. Computed by the platform — never self-reported by a model.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>One governance model, two deciders <span class="tag fixed">Fixed</span></h3>
+
+<div class="fig">
+<div class="cap">Diagram 9 · Human and autonomous governance</div>
+<div class="body">
+<div class="diagram-fallback">Diagram library could not be loaded. The diagram source is shown below and renders in any Mermaid viewer.</div>
+<pre class="mermaid">
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EDF1F3','primaryTextColor':'#15191C','primaryBorderColor':'#8AA3AD','lineColor':'#5C7681','secondaryColor':'#E3EEF1','tertiaryColor':'#F5F7F8','clusterBkg':'#F8FAFB','clusterBorder':'#C4D2D8','fontFamily':'IBM Plex Sans, sans-serif','fontSize':'13px'}}}%%
+flowchart TB
+  GEN["Generate"] --&gt; EVAL["Evaluate"]
+  EVAL --&gt; PKG["Gate package&lt;br/&gt;artifact · verdicts · confidence · oracle coverage&lt;br/&gt;unresolved conflicts · budget"]
+  PKG --&gt; GATE{"&lt;b&gt;Governance Gate&lt;/b&gt;&lt;br/&gt;one implementation"}
+  GATE --&gt;|human mode| H["Approve · Edit · Reject"]
+  GATE --&gt;|autonomous mode| A["Policy: Continue · Stop · Escalate"]
+  H --&gt; D["Decision record&lt;br/&gt;actor · rationale · policy version"]
+  A --&gt; D
+  A --&gt;|escalate| ESC["Escalation work item"]
+  ESC --&gt; H
+  D --&gt; FROZEN["Approved version frozen · immutable"]
+  FROZEN --&gt; NEXT["Next stage"]
+  D --&gt; AUD[("Append-only audit")]
+
+  classDef hero fill:#DAE8ED,stroke:#1F4E5F,stroke-width:2px,color:#12262C
+  classDef norm fill:#EDF1F3,stroke:#8AA3AD,color:#15191C
+  class GATE hero
+  class GEN,EVAL,PKG,H,A,D,ESC,FROZEN,NEXT,AUD norm
+</pre>
+</div>
+<p class="fnote">One escalation mechanism serves three situations: an autonomous gate that cannot proceed, an exploration blocked on a required value, and a test whose expected behaviour is unknown.</p>
+</div>
+
+<p>Autonomous mode substitutes a policy evaluator for a person at an identical decision point. It may not skip evaluation, lower a confidence threshold, bypass safety or environment policy, or approve an artifact carrying an unresolved deterministic failure. Policy versions are recorded on every autonomous decision. A human edit creates a new version that retains the machine original and re-derives confidence rather than inheriting it.</p>
+
+<h3>Security boundary</h3>
+<div class="fig">
+<div class="cap">Diagram 10 · Trust boundaries</div>
+<div class="body">
+<div class="diagram-fallback">Diagram library could not be loaded. The diagram source is shown below and renders in any Mermaid viewer.</div>
+<pre class="mermaid">
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EDF1F3','primaryTextColor':'#15191C','primaryBorderColor':'#8AA3AD','lineColor':'#5C7681','secondaryColor':'#E3EEF1','tertiaryColor':'#F5F7F8','clusterBkg':'#F8FAFB','clusterBorder':'#C4D2D8','fontFamily':'IBM Plex Sans, sans-serif','fontSize':'13px'}}}%%
+flowchart TB
+  UNT["&lt;b&gt;Untrusted inputs&lt;/b&gt;&lt;br/&gt;repository content · live page content&lt;br/&gt;model output · user-supplied values"]
+  UNT --&gt; BND["&lt;b&gt;Security / policy boundary&lt;/b&gt;&lt;br/&gt;structured extraction · content is data, never instruction&lt;br/&gt;classification of supplied values · output sanitisation&lt;br/&gt;single egress point · secret references"]
+  BND --&gt; CORE["&lt;b&gt;Trusted platform core&lt;/b&gt;&lt;br/&gt;domain · understanding · governance · audit"]
+  CORE --&gt; WRK["&lt;b&gt;Isolated workers&lt;/b&gt;&lt;br/&gt;no database credentials · job-scoped secrets&lt;br/&gt;domain allowlists · fresh browser context"]
+  WRK --&gt; EXT["Repositories · AUT environments"]
+
+  classDef unt fill:#F8E9E7,stroke:#95322C,color:#4E1B17
+  classDef bnd fill:#F5E8DA,stroke:#8A5A2B,stroke-width:2px,color:#4A3418
+  classDef core fill:#DAE8ED,stroke:#1F4E5F,stroke-width:2px,color:#12262C
+  classDef norm fill:#EDF1F3,stroke:#8AA3AD,color:#15191C
+  class UNT unt
+  class BND bnd
+  class CORE core
+  class WRK,EXT norm
+</pre>
+</div>
+<p class="fnote">Source confidentiality, egress control, secrets, worker isolation, environment and domain allowlists, generated-content sanitisation, tool authorisation and audit. Implementation detail in <a href="#d-plat">D10</a>.</p>
+</div>
+</section>
+
+<!-- ═══════════════ 8 · INDEPENDENT EVOLUTION ═══════════════ -->
+<section id="evolution">
+<h2><span class="sk">8</span>Independent Evolution by Contract</h2>
+
+<div class="principle">
+<div class="pl">Core architectural principle <span class="tag fixed">Fixed</span></div>
+<p>Every major component must have a clear responsibility boundary, so it can be independently improved, tuned, replaced, scaled or extended without significant impact on the rest of the platform.</p>
+<div class="sub">This is not a licence to create abstractions for their own sake. Each contract below exists because something on the other side of it is expected to change — a provider, a technique, a model, a storage decision or an entire component implementation.</div>
+</div>
+
+<div class="fig">
+<div class="cap">Diagram 11 · Components connected by contracts</div>
+<div class="body">
+<div class="diagram-fallback">Diagram library could not be loaded. The diagram source is shown below and renders in any Mermaid viewer.</div>
+<pre class="mermaid">
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EDF1F3','primaryTextColor':'#15191C','primaryBorderColor':'#8AA3AD','lineColor':'#5C7681','secondaryColor':'#E3EEF1','tertiaryColor':'#F5F7F8','clusterBkg':'#F8FAFB','clusterBorder':'#C4D2D8','fontFamily':'IBM Plex Sans, sans-serif','fontSize':'13px'}}}%%
+flowchart TB
+  UAU["&lt;b&gt;Unified Application Understanding&lt;/b&gt;"]
+
+  SU["Static&lt;br/&gt;Understanding"] --&gt;|understanding contribution| UAU
+  RE["Runtime&lt;br/&gt;Exploration"] --&gt;|observation contract| UAU
+  CIP["CODE_INTELLIGENCE&lt;br/&gt;_PROVIDER"] -.-&gt;|CodeIntelligenceProvider| SU
+  CRP["CRAWLER&lt;br/&gt;_PROVIDER"] -.-&gt;|CrawlerProvider| RE
+  SU --&gt; RC["Reconciliation"]
+  RE --&gt; RC
+  RC --&gt;|reconciliation contract| UAU
+
+  UAU --&gt;|understanding query| TD["Test Design"]
+  TD --&gt;|scenario contract| TCD["Test Case + Data"]
+  TCD --&gt;|test case + data requirement| AS["Automation Specification"]
+  AS --&gt;|specification contract| AB["Automation Binding"]
+  AB --&gt;|execution contract| EXE["Execution"]
+
+  LLM["LLM Providers"] -.-&gt;|LanguageModelProvider| CAP
+  MCP["MCP / Tools / Agents"] -.-&gt;|Capability contract| CAP
+  CAP["Capability Invoker&lt;br/&gt;&lt;i&gt;single integration path&lt;/i&gt;"] -.-&gt; TD
+  CAP -.-&gt; SU
+  CAP -.-&gt; AS
+
+  EVALS["Evaluators"] -.-&gt;|evaluator contract| TD
+  EVALS -.-&gt; TCD
+  EVALS -.-&gt; AS
+  EVALS -.-&gt; EXE
+
+  classDef hero fill:#DAE8ED,stroke:#1F4E5F,stroke-width:2.5px,color:#12262C
+  classDef prov fill:#F5E8DA,stroke:#8A5A2B,stroke-dasharray:5,color:#4A3418
+  classDef norm fill:#EDF1F3,stroke:#8AA3AD,color:#15191C
+  class UAU hero
+  class CIP,CRP,LLM,MCP prov
+  class SU,RE,RC,TD,TCD,AS,AB,EXE,CAP,EVALS norm
+</pre>
+</div>
+<p class="fnote">Solid arrows carry data through domain contracts. Dashed arrows are replaceable implementations behind a port — each can be swapped without touching what sits on the other side.</p>
+</div>
+
+<div class="tw">
+<table>
+<thead><tr><th style="width:21%">Component</th><th style="width:11%" class="c">Independent</th><th style="width:29%">Stable contract</th><th>What can change behind it</th></tr></thead>
+<tbody>
+<tr><td><strong>Static Understanding</strong></td><td class="c">Yes</td><td><code>UnderstandingContribution</code></td><td>Parsers, framework packs, analysis depth, supported stacks</td></tr>
+<tr><td><strong>Code Intelligence</strong></td><td class="c">Yes</td><td><code>CodeIntelligenceProvider</code> <span class="tag place">Placeholder</span></td><td>Which service, or none at all — the platform functions without it</td></tr>
+<tr><td><strong>Runtime Exploration</strong></td><td class="c">Yes</td><td><code>CrawlerProvider</code> <span class="tag place">Placeholder</span></td><td>Crawler implementation, browser driver, exploration heuristics</td></tr>
+<tr><td><strong>Reconciliation</strong></td><td class="c">Yes</td><td><code>Observation / Understanding</code></td><td>Matching strategy, classification rules, mismatch heuristics</td></tr>
+<tr><td><strong>Test Design</strong></td><td class="c">Yes</td><td><code>Scenario</code></td><td>Techniques, decomposition strategy, generation approach</td></tr>
+<tr><td><strong>Test Case &amp; Data</strong></td><td class="c">Yes</td><td><code>TestCase / DataRequirement</code></td><td>Step generation, data strategies, provisioning paths</td></tr>
+<tr><td><strong>Automation</strong></td><td class="c">Yes</td><td><code>AutomationSpecification / Binding</code></td><td>Code generation, object model, locator strategy, healing algorithm</td></tr>
+<tr><td><strong>Execution</strong></td><td class="c">Yes</td><td><code>ExecutionRequest / Result</code></td><td>Worker technology, scheduling, isolation model, scaling</td></tr>
+<tr><td><strong>Evaluators</strong></td><td class="c">Yes</td><td><code>Evaluator</code></td><td>Individual checks added, versioned or retired independently</td></tr>
+<tr><td><strong>LLM Provider</strong></td><td class="c">Yes</td><td><code>LanguageModelProvider</code></td><td>Vendor, model, routing policy, prompt versions</td></tr>
+<tr><td><strong>MCP / Tools / Agents</strong></td><td class="c">Yes</td><td><code>Capability</code></td><td>Any external tool or advisory agent, registered and invoked uniformly</td></tr>
+<tr><td><strong>Storage &amp; projections</strong></td><td class="c">Yes</td><td><code>Understanding query</code></td><td>Graph engine, index technology, projection set — all derived and rebuildable</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="note">
+<span class="nl">The invariant that keeps providers replaceable <span class="tag fixed">Fixed</span></span>
+<p>Providers supply observations, candidates and raw results. Only platform-owned components turn those into understanding. No external service writes to the canonical model, and no provider type appears in domain code. This is what allows Code Intelligence or the Crawler to be introduced, swapped or removed without a data migration or a domain rewrite.</p>
+</div>
+</section>
+
+<!-- ═══════════════ 9 · KEY DECISIONS ═══════════════ -->
+<section id="decisions">
+<h2><span class="sk">9</span>Key Decisions</h2>
+
+<p class="lede">The decisions that constrain implementation, in one place. Full records with context, alternatives and consequences are in <a href="#d-adr">D11</a>.</p>
+
+<div class="tw">
+<table>
+<thead><tr><th style="width:4%">#</th><th style="width:29%">Decision</th><th style="width:11%">Status</th><th>Why it matters</th></tr></thead>
+<tbody>
+<tr><td class="num">1</td><td><strong>Unified Application Understanding is the canonical asset</strong>; everything downstream is generated from it</td><td><span class="tag fixed">Fixed</span></td><td>Makes understanding durable and reusable rather than a by-product of test generation</td></tr>
+<tr><td class="num">2</td><td><strong>No artifact without a named understanding version</strong></td><td><span class="tag fixed">Fixed</span></td><td>The traceability and staleness rule the whole lineage depends on</td></tr>
+<tr><td class="num">3</td><td><strong>Understanding is recorded as versioned, evidence-backed assertions with content-derived identity</strong></td><td><span class="tag flex">Flexible</span></td><td>Makes diff, corroboration and reconciliation set operations; the technique is recommended, not the only admissible one</td></tr>
+<tr><td class="num">4</td><td><strong>Evidence is append-only</strong>; elements are superseded, never silently overwritten</td><td><span class="tag fixed">Fixed</span></td><td>Preserves the static-runtime disagreement that produces findings without external intent</td></tr>
+<tr><td class="num">5</td><td><strong>Projections are derived and rebuildable</strong>; the graph is a view, not the model</td><td><span class="tag fixed">Fixed</span></td><td>Lets graph, index and document representations evolve independently</td></tr>
+<tr><td class="num">6</td><td><strong>Runtime exploration is optional</strong>; static-only operation is fully supported</td><td><span class="tag fixed">Fixed</span></td><td>The platform must be useful where a running instance is unavailable or restricted</td></tr>
+<tr><td class="num">7</td><td><strong>Providers supply observations; only the platform builds understanding</strong></td><td><span class="tag fixed">Fixed</span></td><td>The precondition for replacing any provider without a migration</td></tr>
+<tr><td class="num">8</td><td><strong>Code Intelligence is an advisory contributor</strong>, not an authority</td><td><span class="tag place">Placeholder</span></td><td>External canonical ownership would break revision pinning and reproducibility</td></tr>
+<tr><td class="num">9</td><td><strong>The crawler is an actuator and sensor</strong>; planning, state identity, safety and interpretation stay on the platform</td><td><span class="tag place">Placeholder</span></td><td>Keeps the crawler replaceable and the knowledge model crawler-agnostic</td></tr>
+<tr><td class="num">10</td><td><strong>Relationship extraction under-reports rather than mis-reports</strong></td><td><span class="tag fixed">Fixed</span></td><td>A false relationship silently corrupts scenarios and coverage; a missing one is visible and repairable</td></tr>
+<tr><td class="num">11</td><td><strong>Runtime state identity is a composite fingerprint</strong>, not a URL</td><td><span class="tag flex">Flexible</span></td><td>Tunable per application; the highest-uncertainty decision in the design</td></tr>
+<tr><td class="num">12</td><td><strong>Exploration action risk is classified before acting</strong>, using the understanding</td><td><span class="tag fixed">Fixed</span></td><td>Turns the model into a safety device; unknown targets are denied by default</td></tr>
+<tr><td class="num">13</td><td><strong>Mismatch is not defect</strong>; reconciliation classifies before anything is reported</td><td><span class="tag fixed">Fixed</span></td><td>Confident wrong findings would destroy trust faster than any other failure</td></tr>
+<tr><td class="num">14</td><td><strong>Coverage is computed from explicit obligations</strong></td><td><span class="tag fixed">Fixed</span></td><td>Coverage becomes bookkeeping rather than judgement</td></tr>
+<tr><td class="num">15</td><td><strong>Confidence is computed by the platform</strong> from calibrated inputs; self-reported confidence is rejected</td><td><span class="tag fixed">Fixed</span></td><td>A declared band can contradict actual behaviour; only measurement makes it meaningful</td></tr>
+<tr><td class="num">16</td><td><strong>Specification and binding are separate artifacts</strong></td><td><span class="tag fixed">Fixed</span></td><td>Makes safe healing structural rather than dependent on correct policy configuration</td></tr>
+<tr><td class="num">17</td><td><strong>Page and component objects are projected from the understanding</strong></td><td><span class="tag fixed">Fixed</span></td><td>Reuse becomes structural instead of something the generator must notice</td></tr>
+<tr><td class="num">18</td><td><strong>Self-healing default policy is propose, not apply</strong></td><td><span class="tag flex">Flexible</span></td><td>Full capability is built; auto-apply is enabled per workspace on measured evidence</td></tr>
+<tr><td class="num">19</td><td><strong>One gate implementation</strong> serves human and autonomous modes</td><td><span class="tag fixed">Fixed</span></td><td>Two implementations would guarantee divergence</td></tr>
+<tr><td class="num">20</td><td><strong>Workflow state lives in the product database</strong>, not a separate engine</td><td><span class="tag flex">Flexible</span></td><td>Workflow state is product state the interface must query; revisit if saga complexity appears</td></tr>
+<tr><td class="num">21</td><td><strong>One capability-invocation path</strong> for every external call</td><td><span class="tag fixed">Fixed</span></td><td>Egress control, cost governance, provenance and resilience handled once</td></tr>
+<tr><td class="num">22</td><td><strong>Workers hold no database credentials</strong></td><td><span class="tag fixed">Fixed</span></td><td>A compromised or crashing worker cannot corrupt canonical state</td></tr>
+<tr><td class="num">23</td><td><strong>Repository and page content are untrusted data</strong>, never instructions</td><td><span class="tag fixed">Fixed</span></td><td>Prompt injection and tool abuse are live risks once an agent acts on a real system</td></tr>
+<tr><td class="num">24</td><td><strong>Single-tenant deployment with workspace scoping in the data model</strong></td><td><span class="tag open">Open</span></td><td>Safe under either tenancy answer; scoping now, isolation machinery only if confirmed</td></tr>
+<tr><td class="num">25</td><td><strong>Modular monolith control plane with three worker fleets</strong></td><td><span class="tag fixed">Fixed</span></td><td>Splits where resource and trust profiles genuinely differ, not per domain name</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<!-- ═══════════════ 10 · RISKS & VALIDATION ═══════════════ -->
+<section id="risks">
+<h2><span class="sk">10</span>Major Risks &amp; Validation</h2>
+
+<p class="lede">Five risks could materially change the design. Each has a named experiment and a stated consequence if it fails — full register and plan in <a href="#d-poc">D13</a>.</p>
+
+<div class="tw">
+<table>
+<thead><tr><th style="width:22%">Risk</th><th style="width:30%">Architectural response</th><th style="width:12%">Validation</th><th>If it fails</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>Frontend-to-backend relationships stay unreliable</strong><br/><span class="tag crit">measured today</span></td>
+<td>Extractor rules that under-report; framework packs modelling real route resolution; runtime network observation as the designated repair</td>
+<td><strong>A</strong> — relationship extraction</td>
+<td>Static relationships become hypotheses that gate nothing; exploration becomes the primary relationship source. Pipeline reorders; architecture holds.</td>
+</tr>
+<tr>
+<td><strong>Runtime state identity mis-tuned</strong></td>
+<td>Composite fingerprint with per-application policy; parameterised-variant collapse; hard session budgets</td>
+<td><strong>C</strong> — state stability</td>
+<td>A coarser identity model and correspondingly reduced claims about exploration coverage.</td>
+</tr>
+<tr>
+<td><strong>Exploration safety failure</strong></td>
+<td>Action-risk classification before acting; unknown targets denied; environment and domain allowlists; action budgets; leases</td>
+<td><strong>C</strong> — risk classification</td>
+<td>Write-enabled exploration is blocked entirely until classification recall on destructive actions is total.</td>
+</tr>
+<tr>
+<td><strong>Reconciliation produces unusable noise</strong></td>
+<td>Deterministic classification before semantic judgement; six statuses; defect candidates only after four checks</td>
+<td><strong>D</strong> — reconciliation</td>
+<td>Reconciliation output becomes a diagnostic view rather than a finding source — a product reduction worth knowing before build.</td>
+</tr>
+<tr>
+<td><strong>Locator reliability too low for useful automation</strong></td>
+<td>Candidate ranking by strategy stability; runtime validation before binding; unvalidated locators cap test confidence</td>
+<td><strong>E</strong> — locators and healing</td>
+<td>Runtime-observed locators become mandatory, making exploration a prerequisite for automation rather than an enrichment.</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="note">
+<span class="nl">Smallest sufficient validation before implementation</span>
+<p><strong>Validation A</strong> (does static understanding carry the weight the pipeline places on it?) and <strong>Validation C</strong> (is exploration stable and safe enough to enable?). <strong>Validation B</strong> — the Code Intelligence contribution — should run alongside if provider access arrives, since it changes build priorities without changing architecture. D, E and F can run against the first implemented slice rather than gating its start.</p>
+</div>
+</section>
+
+<!-- ═══════════════ 11 · PHASE 1 BASELINE ═══════════════ -->
+<section id="baseline">
+<h2><span class="sk">11</span>Phase 1 Baseline</h2>
+
+<div class="note">
+<span class="nl">What Phase 1 delivery means</span>
+<p><strong>All Phase 1 capabilities are real and functional.</strong> None is a stub, a placeholder or a future-only seam. Some carry a bounded scope, a supported-stack limitation, an explicit default policy, a measured quality limit, or a dependency on provider availability — and those bounds are stated below rather than hidden. The only intentional placeholders in the architecture are the two external provider bindings, whose <em>contracts</em> are real architecture even though the concrete provider is not yet selected.</p>
+</div>
+
+<div class="tw">
+<table>
+<thead><tr><th style="width:26%">Capability — all functional in Phase 1</th><th style="width:38%">Stated bound</th><th>Why bounded</th></tr></thead>
+<tbody>
+<tr><td>Repository onboarding, multi-repository workspace, revision pinning</td><td>None</td><td>—</td></tr>
+<tr><td>Static application understanding</td><td>Framework packs for the confirmed AUT stack; a second stack is additive work</td><td>Route resolution and client idioms are framework-specific</td></tr>
+<tr><td>Cross-repository relationship understanding</td><td>Quality reported per relationship type; unresolved relationships marked, not guessed</td><td>Measured accuracy limit — see <a href="#d-static">D2</a></td></tr>
+<tr><td>Unified Understanding, versioning, projections, diff</td><td>Heuristic rename detection for routes and endpoints; other churn reported honestly</td><td>Content-derived identity reads a rename as replace</td></tr>
+<tr><td>Runtime exploration and state model</td><td>Budgeted sessions; action classes permitted per environment policy</td><td>Safety and cost containment</td></tr>
+<tr><td>Reconciliation and mismatch classification</td><td>Defect candidates only after deterministic checks pass</td><td>Avoiding confident wrong findings</td></tr>
+<tr><td>Coverage obligations and measurement</td><td>Reported against a stated denominator with an insufficient-evidence share</td><td>The denominator derives from the understanding</td></tr>
+<tr><td>Scenario generation across eight techniques</td><td>Technique selectable only where the understanding supports it</td><td>Prevents technique application with no evidential basis</td></tr>
+<tr><td>Test case and semantic test-data generation</td><td>Data requirements declared; resolution at bind time</td><td>Environment independence</td></tr>
+<tr><td>State provisioning</td><td>Approved paths only; policy-gated and recorded for cleanup</td><td>It changes real application state</td></tr>
+<tr><td>Playwright automation, page/component reuse, locator lifecycle</td><td>Object model regenerates with the understanding</td><td>Reuse derives from the model</td></tr>
+<tr><td>Self-healing</td><td>Detection, candidate resolution, validation and proposal fully implemented; auto-apply ships disabled</td><td>Healing precision unmeasured until Validation E</td></tr>
+<tr><td>Real execution, environments, secrets, workers, concurrency</td><td>Concurrency bounded by the minimum of three ceilings</td><td>Protects the AUT</td></tr>
+<tr><td>Artifact storage, execution history, comparison</td><td>Retention tiered per artifact class</td><td>Trace and video volume</td></tr>
+<tr><td>Evaluators, evidence, provenance, confidence</td><td>Confidence calibrated against a maintained ground-truth corpus</td><td>Calibration is what makes the number mean anything</td></tr>
+<tr><td>Human approval and autonomous mode</td><td>Autonomy constrained by policy, confidence and evaluator verdicts</td><td>Autonomy never bypasses quality control</td></tr>
+<tr><td>Findings, triage, diagnostics</td><td>Failure classified by cause before anything is called a defect</td><td>A failure has at least six possible causes</td></tr>
+<tr><td>Configurable generation limits</td><td>Per workspace: scenarios, depth, coverage target, concurrency, scope, mode</td><td>Product requirement</td></tr>
+<tr><td>Excel export</td><td>Format adapter behind an export contract; runs as a job</td><td>Keeps spreadsheet concerns out of the domain</td></tr>
+<tr><td>Provider extensibility — LLM, MCP, tools, agents</td><td>Registry and one reference binding per port; two LLM adapters required</td><td>A contract with one implementation is an assumption</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Decisions left deliberately configurable <span class="tag flex">Flexible</span></h3>
+<p>Graph projection engine · retrieval and index technology · healing auto-apply policy · model routing per task · exploration budgets, depth and permitted action classes per environment · generation limits · concurrency ceilings · human or autonomous mode per stage · evaluator set and thresholds · retention tiers · enabled extractors and framework packs.</p>
+
+<h3>Open — needs input or validation <span class="tag open">Open</span></h3>
+<div class="tw">
+<table>
+<thead><tr><th style="width:5%">#</th><th style="width:34%">Question</th><th>What it gates</th></tr></thead>
+<tbody>
+<tr><td class="num">1</td><td>May exploration perform state-changing actions, against which environment, with what reset capability?</td><td>The exploration workstream, test-data provisioning strategy, and Validations C, D and E</td></tr>
+<tr><td class="num">2</td><td>May source code and derived context reach an external model provider?</td><td>Provider strategy, hosting model, achievable quality ceiling. Enforceable at one point once answered.</td></tr>
+<tr><td class="num">3</td><td>What is the Phase 1 AUT and its technology stack?</td><td>Framework packs, relationship feasibility, locator strategy. The measured baseline transfers only to a comparable stack.</td></tr>
+<tr><td class="num">4</td><td>Delivery window and team size</td><td>Sequencing of the capability set; nothing in the architecture, everything in the plan</td></tr>
+<tr><td class="num">5</td><td>Code Intelligence API documentation, schema and a sandbox instance</td><td>Validation B; the required inputs are listed in <a href="#d-prov">D5</a></td></tr>
+<tr><td class="num">6</td><td>Do repository-resident specifications, schemas and existing tests count as admissible evidence?</td><td>Rule coverage depth — the most likely source of currently missing behavioural detail</td></tr>
+<tr><td class="num">7</td><td>Tenancy and hosting target</td><td>Infrastructure planning only; the data model is already safe under either answer</td></tr>
+<tr><td class="num">8</td><td>Does the AUT carry stable test attributes, and can they be added?</td><td>Locator reliability — more leverage than any architectural choice available here</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Architecture acceptance criteria</h3>
+<ul class="ck">
+<li><strong>Code Intelligence replaceable</strong> — remove the adapter; understanding builds with reduced breadth and no domain change</li>
+<li><strong>Crawler replaceable</strong> — bind a second implementation; state model, planning and understanding unaffected</li>
+<li><strong>Second model provider</strong> — the same task runs on either adapter with identical typed output; provenance records which</li>
+<li><strong>New tool or MCP server</strong> — registered and invoked with no stage-level code</li>
+<li><strong>Runtime reconciles with static</strong> — an observed call matches its static prediction without a bespoke matching heuristic</li>
+<li><strong>Artifacts trace to evidence</strong> — any finding resolves to repository revision, file, symbol and runtime artifacts in one query</li>
+<li><strong>Everything versioned</strong> — every artifact type has an immutable version chain with typed parents; no orphans</li>
+<li><strong>One governance layer</strong> — human and autonomous decisions produce identical gate packages and audit shapes</li>
+<li><strong>Execution scales independently</strong> — worker count changes with no control-plane change</li>
+<li><strong>Bindings evolve without touching intent</strong> — a locator changes; the specification version does not</li>
+<li><strong>Healing cannot alter intent</strong> — the assertion path is structurally unreachable from healing, not merely denied by policy</li>
+<li><strong>New evidence sources admissible</strong> — a requirements document registers as a context provider and joins the same reconciliation without schema change</li>
+<li><strong>Insufficient evidence is expressible</strong> — an unverified element yields an insufficient-evidence obligation and an unknown-oracle test case, counted as neither covered nor passing</li>
+<li><strong>Static-only operation</strong> — with exploration disabled, the full pipeline still produces scenarios, cases and automation at reduced confidence</li>
+</ul>
+</section>
+
+<!-- ═══════════════ LEVEL 2 ═══════════════ -->
+<div class="tier" id="details"><span class="num">Level 2</span><span class="lbl">Architecture Details</span><span class="rule"></span></div>
+<p class="tier-note">Supporting detail for implementation. Nothing in Level 1 depends on reading any of it. Sections are collapsed by default — open what you need.</p>
+
+<!-- D1 -->
+<details id="d-model">
+<summary><span class="sid">D1</span>Understanding model — internal representation, identity, lineage</summary>
+<div class="dbody">
+<p>The Unified Application Understanding is the canonical model. This section describes how it is physically recorded so that it can carry provenance, versioning and contradiction. <span class="tag flex">Flexible</span> — the technique is recommended and proven, but it implements the model rather than defining it.</p>
+
+<h3>Layers of the representation</h3>
+<div class="tw"><table>
+<thead><tr><th style="width:16%">Layer</th><th style="width:40%">Is</th><th>Is not</th></tr></thead>
+<tbody>
+<tr><td><strong>Evidence</strong></td><td>An immutable, anchored record that something was observed at a point in time, in a version of the world. Static (repository, revision, path, symbol, span, content hash), runtime (session, step, URL, DOM hash, network event, artifact reference), provider (invocation identity and version) or execution (attempt, result, artifact).</td><td>An interpretation. Evidence carries no confidence — it either resolves or it does not.</td></tr>
+<tr><td><strong>Observation</strong></td><td>Structured output from an extractor or provider before normalisation. Retained for reprocessing.</td><td>Canonical. Nothing downstream reads it.</td></tr>
+<tr><td><strong>Assertion</strong></td><td>A normalised statement about the application, supported by one or more evidence records, carrying inference type, oracle status where applicable, reconciliation status and computed confidence.</td><td>A fact. It may be wrong, superseded, contradicted or unverified — and the model records which.</td></tr>
+<tr><td><strong>Understanding version</strong></td><td>A named snapshot pinning the repository tuple, the exploration sessions included, and the assertion set.</td><td>A branch. Versions are linear per workspace and immutable once referenced.</td></tr>
+</tbody>
+</table></div>
+
+<h3>Content-derived identity</h3>
+<p>Each assertion carries an identity computed from its normalised subject, relation and object — a route template, an endpoint method and path, a symbol's qualified name — never from a database key, file offset or extraction order. Four capabilities follow from this one choice:</p>
+<ul>
+<li><strong>Understanding diff</strong> across revisions is a set difference.</li>
+<li><strong>Reconciliation</strong> is the intersection and difference of two populations sharing one key space, so the same fact observed statically and at runtime collides by construction rather than by fuzzy matching.</li>
+<li><strong>Corroboration</strong> is natural — two extractors producing the same key means two independent evidence records on one assertion, which is precisely the signal confidence needs.</li>
+<li><strong>Stable comparison</strong> across regeneration, which removes the identity fragility of index-based matching.</li>
+</ul>
+<div class="note warn"><span class="nl">Known cost</span><p>Identity is only as stable as the normalisation producing it. Renaming a route, endpoint or symbol reads as replace rather than rename. Phase 1 implements heuristic rename detection for routes and endpoints and reports other churn honestly; an incomplete diff is preferable to a misleading one.</p></div>
+
+<h3>Lineage</h3>
+<div class="fig"><div class="cap">Diagram D1 · Lineage chain</div><div class="body">
+<div class="diagram-fallback">Diagram library could not be loaded. The diagram source is shown below and renders in any Mermaid viewer.</div>
+<pre class="mermaid">
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EDF1F3','primaryTextColor':'#15191C','primaryBorderColor':'#8AA3AD','lineColor':'#5C7681','secondaryColor':'#E3EEF1','tertiaryColor':'#F5F7F8','clusterBkg':'#F8FAFB','clusterBorder':'#C4D2D8','fontFamily':'IBM Plex Sans, sans-serif','fontSize':'13px'}}}%%
+flowchart LR
+  RV["Repository version&lt;br/&gt;tuple of revisions"] --&gt; EVD["Evidence"]
+  EVD --&gt; ASR["Assertion"]
+  ASR --&gt; UV["Understanding version"]
+  UV --&gt; OBL["Coverage obligation"]
+  UV --&gt; SC["Scenario"]
+  OBL -.satisfied by.-&gt; SC
+  SC --&gt; TC["Test case"]
+  TC --&gt; DR["Data requirement"]
+  TC --&gt; AS["Automation specification"]
+  AS --&gt; AB["Automation binding"]
+  AB --&gt; EX["Execution attempt"]
+  EX --&gt; TR["Triage"]
+  TR --&gt; FI["Finding"]
+  FI -.becomes new evidence.-&gt; EVD
+
+  classDef hero fill:#DAE8ED,stroke:#1F4E5F,stroke-width:2px,color:#12262C
+  class ASR,UV hero
+</pre>
+</div></div>
+<p>Every artifact version records its content, the understanding version it was generated against, typed parent links, the actor and mechanism that produced it (extractor, agent with model and prompt version, or human), evaluator verdicts, confidence and approval state. Approved versions are immutable. A human edit produces a new version retaining the machine original and re-deriving confidence rather than inheriting it.</p>
+<p>The future extension toward <em>requirement → architecture decision → artifact</em> requires no structural change: a requirement is another evidence source feeding assertions. This is the same mechanism by which backlog items, specifications and wireframes can be admitted later as context providers.</p>
+</div>
+</details>
+
+<!-- D2 -->
+<details id="d-static">
+<summary><span class="sid">D2</span>Static understanding — pipeline, measured limits, framework packs</summary>
+<div class="dbody">
+
+<div class="fig"><div class="cap">Diagram D2 · Static understanding pipeline</div><div class="body">
+<div class="diagram-fallback">Diagram library could not be loaded. The diagram source is shown below and renders in any Mermaid viewer.</div>
+<pre class="mermaid">
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EDF1F3','primaryTextColor':'#15191C','primaryBorderColor':'#8AA3AD','lineColor':'#5C7681','secondaryColor':'#E3EEF1','tertiaryColor':'#F5F7F8','clusterBkg':'#F8FAFB','clusterBorder':'#C4D2D8','fontFamily':'IBM Plex Sans, sans-serif','fontSize':'13px'}}}%%
+flowchart TB
+  ON["Repository registration&lt;br/&gt;url · ref · credential reference · role"] --&gt; PIN["Resolve revision&lt;br/&gt;workspace version tuple"]
+  PIN --&gt; CL["Clone into analysis sandbox"]
+  CL --&gt; DET["Stack detection"] --&gt; PK["Select framework packs"]
+
+  PK --&gt; X1["Inventory&lt;br/&gt;routes · endpoints · tables · fields · components"]
+  PK --&gt; X2["Schema and constraints&lt;br/&gt;types · optionality · enums · validators"]
+  PK --&gt; X3["Rules&lt;br/&gt;guards · role checks · state checks"]
+  PK --&gt; X4["Relationships&lt;br/&gt;navigation · calls · protection · handling"]
+  PK --&gt; X5["Locator candidates&lt;br/&gt;test ids · roles · labels · structure"]
+  PK --&gt; X6["CODE_INTELLIGENCE_PROVIDER&lt;br/&gt;advisory contributor"]
+
+  X1 --&gt; NM["Normalise"]
+  X2 --&gt; NM
+  X3 --&gt; NM
+  X4 --&gt; NM
+  X5 --&gt; NM
+  X6 --&gt; NM
+  NM --&gt; CO["Corroborate&lt;br/&gt;same identity from multiple extractors"] --&gt; CF["Assign inference type&lt;br/&gt;and prior confidence"] --&gt; WR["Contribute to understanding version"]
+
+  classDef weak fill:#F8E9E7,stroke:#95322C,color:#4E1B17
+  classDef opt fill:#F5E8DA,stroke:#8A5A2B,stroke-dasharray:5,color:#4A3418
+  class X4 weak
+  class X6 opt
+</pre>
+</div></div>
+
+<h3>Measured extraction quality</h3>
+<p>Figures below are empirical, produced by the evaluation harness in the workspace (<code>skill-test/</code>) against a hand-written ground truth on a representative full-stack TypeScript application. They are the design baseline until re-measured on the confirmed Phase 1 AUT. They are the reason evidence, confidence and runtime reconciliation are first-class rather than decorative.</p>
+
+<div class="tw"><table>
+<thead><tr><th style="width:22%">Extraction class</th><th class="num" style="width:10%">Precision</th><th class="num" style="width:10%">Recall</th><th>Architectural response</th></tr></thead>
+<tbody>
+<tr><td>Entity inventory — endpoints, screens, tables</td><td class="num">1.000</td><td class="num">0.982</td><td>Trusted as the coverage denominator and the exploration agenda</td></tr>
+<tr><td>Schema semantics — fields, types, optionality, enums</td><td class="num">1.000</td><td class="num">1.000</td><td>Basis for field-level test data and validation obligations; why semantically correct form testing is achievable</td></tr>
+<tr><td>Business rule extraction</td><td class="num">1.000</td><td class="num">0.500</td><td>Precise but incomplete. Rule coverage reported as known-partial rather than implying exhaustiveness</td></tr>
+<tr><td>Workflow and state discovery</td><td class="num">0.750</td><td class="num">1.000</td><td>Over-generous. Enters the state model as hypotheses for runtime confirmation, never as settled structure</td></tr>
+<tr><td><strong>Route to endpoint mapping</strong></td><td class="num">0.414</td><td class="num">0.632</td><td>The weak link, and the empirical case for runtime observation</td></tr>
+</tbody>
+</table></div>
+
+<h4>The four measured failure causes, and the rule each produces</h4>
+<div class="deck">
+<div><h4>Unresolved dynamic segments</h4><p>A template segment collapsed to a wildcard matched every single-segment endpoint; one call site produced six wrong relationships. <strong>Rule:</strong> an unresolvable segment yields an assertion marked unresolved and participates in no match.</p></div>
+<div><h4>Framework routing semantics</h4><p>Literal paths matched a parameterised route the framework would never select, because registration order and first-match-wins were not modelled. <strong>Rule:</strong> route matching is delegated to a framework pack modelling the real resolution algorithm.</p></div>
+<div><h4>Transitive reachability</h4><p>A screen inherited four endpoints through an import chain it never calls. <strong>Rule:</strong> direct calls and transitive reachability are different relations with different confidence; reachability alone never produces a call relation.</p></div>
+<div><h4>Injected services, erased types</h4><p>Five screens produced no relation at all because they receive a running service as a prop and import only types, which vanish at runtime. <strong>Rule:</strong> statically unresolvable by construction — flagged unverified and handed to exploration, where one observed request settles it.</p></div>
+</div>
+
+<h3>Framework packs</h3>
+<p>The extensibility unit for static analysis. A pack bundles, for one framework family, the route-registration model, client-call idioms, component and handler conventions, validation library shapes and locator conventions. Packs are versioned and independently evaluable, so a new stack is an additive unit of work with its own measured quality figure rather than a rewrite of the pipeline.</p>
+
+<h3>Incremental rescan</h3>
+<p>A new revision triggers a diff-scoped rebuild: changed files determine which extractors rerun; unchanged assertions carry forward with evidence re-anchored where content hashes match. Assertions whose supporting evidence no longer resolves become stale and cascade a staleness marker to every artifact derived from them. Staleness is surfaced for a governance decision, never auto-resolved.</p>
+</div>
+</details>
+
+<!-- D3 -->
+<details id="d-runtime">
+<summary><span class="sid">D3</span>Runtime exploration — loop, crawler contract, state identity, safety</summary>
+<div class="dbody">
+
+<div class="fig"><div class="cap">Diagram D3 · Exploration loop</div><div class="body">
+<div class="diagram-fallback">Diagram library could not be loaded. The diagram source is shown below and renders in any Mermaid viewer.</div>
+<pre class="mermaid">
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EDF1F3','primaryTextColor':'#15191C','primaryBorderColor':'#8AA3AD','lineColor':'#5C7681','secondaryColor':'#E3EEF1','tertiaryColor':'#F5F7F8','clusterBkg':'#F8FAFB','clusterBorder':'#C4D2D8','fontFamily':'IBM Plex Sans, sans-serif','fontSize':'13px'}}}%%
+flowchart TB
+  UV["Understanding version"] --&gt; AG["Exploration planner&lt;br/&gt;agenda from unverified and unresolved elements"]
+  AG --&gt; PO{"Safety policy&lt;br/&gt;environment · domains · permitted action classes&lt;br/&gt;action budget · session budget"}
+  PO --&gt;|denied| HALT["Blocked · audited"]
+  PO --&gt;|granted| SESS["Exploration session"]
+  SESS --&gt; OBS["Observe page via provider"]
+  OBS --&gt; SID["Compute state identity"]
+  SID --&gt; SEEN{"State already known?"}
+  SEEN --&gt;|yes| UPD["Update agenda and state graph"]
+  SEEN --&gt;|no| AFF["Enumerate affordances"]
+  AFF --&gt; RISK["Classify action risk&lt;br/&gt;using the understanding:&lt;br/&gt;which endpoint and verb does this control invoke?"]
+  RISK --&gt; SEL["Select next action&lt;br/&gt;deterministic when the agenda predicts it&lt;br/&gt;agentic only when underdetermined"]
+  SEL --&gt; ACT["Execute via CRAWLER_PROVIDER"]
+  ACT --&gt; REC["Record observation and evidence"]
+  REC --&gt; UPD
+  UPD --&gt; MORE{"Agenda remaining and budget left?"}
+  MORE --&gt;|yes| OBS
+  MORE --&gt;|no| DONE["Session complete&lt;br/&gt;observations · coverage · blockers · unreached areas"]
+  SEL -.cannot proceed.-&gt; BLK["Blocker work item"]
+  BLK --&gt; ESCX["Governance escalation"]
+  DONE --&gt; RCX["Reconciliation"]
+
+  classDef risk fill:#F5E8DA,stroke:#8A5A2B,color:#4A3418
+  class RISK,PO risk
+</pre>
+</div></div>
+
+<h3>The CRAWLER_PROVIDER boundary <span class="tag place">Placeholder</span></h3>
+<div class="tw"><table>
+<thead><tr><th style="width:44%">Provider responsibility</th><th>Platform responsibility</th></tr></thead>
+<tbody>
+<tr><td>Establish a session; apply an authentication strategy given secret references</td><td>Decide which environment, which identity, and whether the session is permitted</td></tr>
+<tr><td>Navigate; enumerate interactive affordances; execute a requested action</td><td>Decide which action, in what order, and whether it is allowed</td></tr>
+<tr><td>Capture DOM, accessibility tree, screenshot, network exchanges, console output, validation messages, resulting URL</td><td>Compute state identity, maintain the state graph, derive understanding, assign confidence</td></tr>
+<tr><td>Report action outcome including failure and unexpected navigation</td><td>Interpret outcome, detect blockers, classify differences, decide continuation</td></tr>
+<tr><td>Probe a candidate locator; report existence, uniqueness, visibility, interactability</td><td>Own the locator lifecycle, validation history and healing decisions</td></tr>
+</tbody>
+</table></div>
+<p>Approaches such as state-exploration crawlers and browser-agent frameworks are worth mining for their state-abstraction and action-selection heuristics. Adopting any as a production dependency is a separate decision requiring Validation C.</p>
+
+<h3>State identity <span class="tag flex">Flexible</span></h3>
+<p>The hardest single problem in this workstream. URL alone is insufficient in both directions: two records under one parameterised route are the same state, while the same URL before and after a modal opens is not. Identity is computed from four signals under a per-application policy:</p>
+<div class="tw"><table>
+<thead><tr><th style="width:22%">Signal</th><th style="width:36%">Contributes</th><th>Failure mode alone</th></tr></thead>
+<tbody>
+<tr><td>Route template</td><td>Anchors the observation to a static element, making reconciliation possible</td><td>Collapses genuinely distinct sub-states such as modal or wizard step</td></tr>
+<tr><td>Structural fingerprint</td><td>Hash of the interactive skeleton — roles, test ids, labels, nesting — with text and volatile ids stripped</td><td>Sensitive to incidental markup churn; over-splits on list length unless normalised</td></tr>
+<tr><td>Affordance set</td><td>The available actions — what exploration actually cares about</td><td>Merges visually different pages offering the same actions</td></tr>
+<tr><td>Actor context</td><td>Authenticated role and tenant, since the same route differs by permission</td><td>Role-gated behaviour becomes invisible</td></tr>
+</tbody>
+</table></div>
+<p>States classify as same, parameterised variant, changed or new. Parameterised variants collapse for exploration purposes but persist as data-variation evidence, which later feeds equivalence partitioning. Explosion is controlled by variant collapse, revisit caps, agenda-value frontier prioritisation and hard budgets on actions, wall-clock and artifact volume.</p>
+
+<h3>Action risk classification <span class="tag fixed">Fixed</span></h3>
+<p>Because the understanding already knows which endpoint a control invokes and with which verb, risk is classified <em>before</em> the action occurs. A control whose handler calls a delete endpoint is classified destructive and blocked by policy without being pressed.</p>
+<p>Classes: <strong>read</strong> (navigation, queries) · <strong>benign write</strong> (creates and updates within the workspace) · <strong>destructive</strong> (deletes, cancellations, irreversible transitions) · <strong>external effect</strong> (payments, email, third-party calls) · <strong>unknown</strong> (target undeterminable). Policy sets permitted classes per environment; unknown defaults to not permitted and becomes an agenda item requiring escalation rather than a gamble.</p>
+
+<h3>Blockers</h3>
+<p>When exploration cannot proceed — a required identifier, a one-time code, a document upload, an entity that must already exist — it emits a durable, attributable, resumable work item stating what is required, why, which resolution strategies were attempted and why each was insufficient. Supplied values are classified on arrival as secret, personal data, test data or entity reference and routed accordingly; a value classified secret is stored as a reference and never enters an artifact, a log or a prompt regardless of which field it was typed into.</p>
+</div>
+</details>
+
+<!-- D4 -->
+<details id="d-recon">
+<summary><span class="sid">D4</span>Reconciliation — statuses, classification, downstream effect</summary>
+<div class="dbody">
+<p>Because both populations share one identity space, reconciliation is deterministic set algebra rather than fuzzy matching. That is the reason identity was designed as it was.</p>
+
+<div class="tw"><table>
+<thead><tr><th style="width:15%">Status</th><th style="width:30%">Meaning</th><th style="width:26%">Effect on understanding</th><th>Effect on test design</th></tr></thead>
+<tbody>
+<tr><td><strong>Matched</strong></td><td>Independently corroborated by two evidence families</td><td>Confidence raised; inference effectively promoted</td><td>Preferred basis for scenarios and locator binding</td></tr>
+<tr><td><strong>Runtime-only</strong></td><td>Observed but never predicted — a static extractor gap</td><td>Added with runtime evidence; the gap recorded for calibration</td><td>Generates obligations static analysis would have missed</td></tr>
+<tr><td><strong>Static-only</strong></td><td>Predicted but not reached</td><td>Confidence unchanged; marked unconfirmed</td><td>Usable; anything built on it inherits unconfirmed status and unvalidated locators</td></tr>
+<tr><td><strong>Different</strong></td><td>Same subject and relation, different object — the client expects one response property, the service returns another</td><td>Both retained; neither deleted</td><td>High-value scenario source: an integration mismatch is testable without knowing business intent</td></tr>
+<tr><td><strong>Conflict</strong></td><td>Mutually exclusive — code declares a confirmation step, runtime acts immediately</td><td>Both retained with conflict status; confidence suppressed for both</td><td>The strongest defect-candidate class available without an external oracle</td></tr>
+<tr><td><strong>Unverified</strong></td><td>Outside exploration reach so far</td><td>No change. Explicitly not evidence of absence</td><td>Contributes to the insufficient-evidence bucket rather than counting as covered or uncovered</td></tr>
+</tbody>
+</table></div>
+
+<div class="note crit"><span class="nl">Mismatch is not defect</span>
+<p>Four deterministic checks run before any semantic judgement: was the area within exploration coverage; are both observations from the same revision and environment; is the difference within a declared variation allowance; is there sufficient evidence on both sides. Only what survives all four becomes a defect <em>candidate</em>, carrying its classification, both-sided evidence and confidence into review. The six possible explanations for a difference are incomplete exploration, stale static context, environment or configuration difference, legitimate runtime variation, insufficient evidence, and an actual defect — and the architecture must be able to express all six.</p></div>
+</div>
+</details>
+
+<!-- D5 -->
+<details id="d-prov">
+<summary><span class="sid">D5</span>Provider contracts — Code Intelligence, LLM, tools</summary>
+<div class="dbody">
+
+<h3>CODE_INTELLIGENCE_PROVIDER <span class="tag place">Placeholder</span></h3>
+<p>Defined at the level of responsibilities rather than API shape, because the actual API is not yet available for inspection.</p>
+<div class="tw"><table>
+<thead><tr><th style="width:24%">Capability</th><th style="width:36%">Responsibility</th><th>Platform behaviour when absent or degraded</th></tr></thead>
+<tbody>
+<tr><td><code>analyzeRepository</code></td><td>Accept a repository at a pinned revision; return a handle and status</td><td>Native extractors run alone; understanding proceeds at reduced breadth</td></tr>
+<tr><td><code>listSymbols</code> / <code>listEntities</code></td><td>Declared symbols and entities with file, symbol and span anchors</td><td>Native parsing; the measured recall difference is recorded</td></tr>
+<tr><td><code>getRelationships</code></td><td>Typed relationships with per-relationship evidence and resolution status</td><td>Native extractors only, with the measured accuracy penalty made visible</td></tr>
+<tr><td><code>semanticSearch</code></td><td>Natural-language retrieval returning anchored spans</td><td>Falls back to structured queries; free-text code search is unavailable</td></tr>
+<tr><td><code>getContext</code></td><td>Bounded, anchored context bundle for a target symbol or feature</td><td>Context assembled from the understanding and direct file reads</td></tr>
+<tr><td><code>describeCapabilities</code></td><td>Supported languages, relationship types, anchor granularity, version</td><td>Registration fails closed; the provider is marked unavailable rather than assumed capable</td></tr>
+</tbody>
+</table></div>
+<p><strong>Cross-cutting requirements</strong> on any binding: symbol- or span-level anchors, or results cannot become understanding; attribution to a provider version; expressible partial results with a completeness qualifier rather than silent truncation; addressability per repository revision, since a service that re-indexes and re-points identifiers under a pinned version cannot participate in a reproducible model.</p>
+<p><strong>Positioning:</strong> one advisory contributor among several, plus an optional retrieval provider. Not authoritative — external canonical ownership breaks revision pinning and reproducibility, no single extractor measured uniformly reliable so corroboration beats a single source, and an external model cannot carry runtime evidence. If the service proves strong on relationships specifically, its value is raising the measured floor on the weakest extraction class, which is exactly what Validation B determines.</p>
+<p><strong>Inputs required to evaluate it:</strong> API documentation or specification; the entity and relationship schema it exposes; a sandbox instance or credentials; versioning and re-indexing semantics; multi-repository and cross-repository support; anchor granularity; ingestion and query latency at representative repository size; deployment options.</p>
+
+<h3>Language model provider</h3>
+<p>Model access separates into five concerns that are frequently and damagingly merged:</p>
+<ul>
+<li><strong>Task definition</strong> — the reasoning required, in domain terms, with a typed output contract. Owned by the domain.</li>
+<li><strong>Prompt assembly</strong> — versioned templates plus a context bundle drawn from the understanding. The prompt version is recorded on every artifact produced.</li>
+<li><strong>Model routing</strong> — task-to-model policy with declared fallbacks; a cheaper model for classification, a stronger one for design work.</li>
+<li><strong>Invocation</strong> — the shared gateway: retries, timeouts, structured-output enforcement, deterministic settings where applicable, token accounting against budget, redaction, provenance capture.</li>
+<li><strong>Provider adapter</strong> — the only component aware of a vendor API.</li>
+</ul>
+<p>Two adapters must exist from the start even if only one is used, because a contract with a single implementation is an assumption rather than an abstraction.</p>
+
+<h3>Tools, MCP servers and external agents</h3>
+<p>All reach the platform through one registry and one invoker, carrying declared scopes and a trust level. Two constraints matter more than the mechanics: a tool result is data and never an instruction, so tool output cannot cause further tool invocation without a domain decision; and every invocation is recorded as provenance, so any artifact influenced by an external agent carries that influence.</p>
+</div>
+</details>
+
+<!-- D6 -->
+<details id="d-design">
+<summary><span class="sid">D6</span>Coverage obligations and scenario design</summary>
+<div class="dbody">
+
+<h3>Obligation derivation</h3>
+<div class="tw"><table>
+<thead><tr><th style="width:20%">Coverage unit</th><th style="width:36%">Derived from</th><th>Satisfied when</th></tr></thead>
+<tbody>
+<tr><td>Feature / capability</td><td>Capability grouping over routes, components and endpoints</td><td>An approved scenario references it</td></tr>
+<tr><td>Screen / page</td><td>Screen elements — deterministic, measured recall 1.000</td><td>A case exercises the screen</td></tr>
+<tr><td>Control / field</td><td>Field and affordance elements</td><td>A case interacts with or asserts on it</td></tr>
+<tr><td>Field constraint</td><td>Schema elements: optionality, type, enum, bounds</td><td>Valid and invalid partitions both exercised</td></tr>
+<tr><td>API endpoint</td><td>Endpoint elements — measured recall 0.971</td><td>Exercised directly or via a traced UI path</td></tr>
+<tr><td>Business rule</td><td>Guard and rule elements — recall known near 0.500</td><td>True and false branches both exercised</td></tr>
+<tr><td>Decision</td><td>Guard conditions decomposed into outcomes</td><td>Each outcome covered</td></tr>
+<tr><td>State transition</td><td>State elements; static hypotheses confirmed at runtime</td><td>Transition traversed by a case</td></tr>
+<tr><td>Error condition</td><td>Validation messages and error paths, declared or observed</td><td>A negative case triggers it</td></tr>
+</tbody>
+</table></div>
+<p>Every obligation resolves to covered, partially covered, uncovered, insufficient evidence (the underlying element is unverified or low-confidence, so it cannot honestly be counted either way) or not applicable (excluded with a recorded reason and actor). Reporting always states the denominator, the understanding version and the share of that denominator resting on unverified elements.</p>
+
+<h3>Scenario design workflow</h3>
+<p>Discrete, independently evaluable steps rather than one generation call: scope selection from obligations; feature decomposition; behaviour analysis; technique selection with recorded rationale and supporting evidence; candidate generation per technique; coverage analysis against the ledger; gap discovery; duplicate and overlap detection by content identity; cross-feature and state-path analysis; evaluation; confidence assignment; gate.</p>
+<p>Because technique selection is evidence-gated, a scenario may legitimately carry more than one technique where several apply — the single-technique tagging in the original prototype was a presentation simplification, not a model constraint.</p>
+</div>
+</details>
+
+<!-- D7 -->
+<details id="d-auto">
+<summary><span class="sid">D7</span>Automation internals — locator lifecycle and healing</summary>
+<div class="dbody">
+<h3>Locator lifecycle</h3>
+<div class="tw"><table>
+<thead><tr><th style="width:14%">Stage</th><th style="width:30%">Produced by</th><th style="width:24%">Evidence</th><th>Confidence effect</th></tr></thead>
+<tbody>
+<tr><td><strong>Candidate</strong></td><td>Static extractors: test ids, accessible roles, labels, semantic structure, framework conventions</td><td>Static — file, symbol, span</td><td>Ranked by strategy stability; test id highest, positional structure lowest</td></tr>
+<tr><td><strong>Validated</strong></td><td>Runtime probe during exploration: exists, unique, visible, interactable, produces the expected effect</td><td>Runtime — session, step, DOM hash</td><td>Substantial increase; an unvalidated locator caps the confidence of every test using it</td></tr>
+<tr><td><strong>Bound</strong></td><td>Binding resolution for a specific environment</td><td>References both prior records</td><td>Inherits the weakest locator in the specification</td></tr>
+<tr><td><strong>Verified</strong></td><td>Successful use in a passing execution</td><td>Execution evidence</td><td>Reinforced; repeated success is the strongest available signal</td></tr>
+<tr><td><strong>Healed</strong></td><td>A healing proposal accepted under policy</td><td>Mismatch evidence plus replacement validation</td><td>Reduced and flagged until re-verified by a later pass</td></tr>
+</tbody>
+</table></div>
+
+<h3>Healing algorithm</h3>
+<p>On a locator resolution failure: capture the current DOM as evidence; search alternative candidates for the same semantic element reference, drawing on the understanding and prior runtime observations; probe each candidate; score the best replacement on strategy stability and semantic equivalence to the original reference; apply only if policy permits. The event is recorded either way, with before, after, evidence and score.</p>
+<p><strong>Phase 1 default: propose, do not apply.</strong> The full capability is implemented and exercised; only the application policy is conservative, because healing precision is unmeasured until Validation E and a platform whose promise is evidence should not silently rewrite its own tests before it can show the rewrites are right. Enabling auto-apply later is a per-workspace policy change, not an architectural one.</p>
+</div>
+</details>
+
+<!-- D8 -->
+<details id="d-exec">
+<summary><span class="sid">D8</span>Execution internals — environments, secrets, concurrency</summary>
+<div class="dbody">
+<div class="fig"><div class="cap">Diagram D8 · Execution path</div><div class="body">
+<div class="diagram-fallback">Diagram library could not be loaded. The diagram source is shown below and renders in any Mermaid viewer.</div>
+<pre class="mermaid">
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EDF1F3','primaryTextColor':'#15191C','primaryBorderColor':'#8AA3AD','lineColor':'#5C7681','secondaryColor':'#E3EEF1','tertiaryColor':'#F5F7F8','clusterBkg':'#F8FAFB','clusterBorder':'#C4D2D8','fontFamily':'IBM Plex Sans, sans-serif','fontSize':'13px'}}}%%
+flowchart TB
+  REQ["Execution request&lt;br/&gt;scope · environment · concurrency"] --&gt; EM["Execution manager"]
+  EM --&gt; POL{"Policy gate&lt;br/&gt;environment permitted? secrets allowed?&lt;br/&gt;concurrency available?"}
+  POL --&gt;|denied| STOP["Rejected · audited"]
+  POL --&gt;|granted| LEASE["Environment lease"]
+  LEASE --&gt; Q[["Job queue — one job per test case"]]
+  Q --&gt; CC["Concurrency controller&lt;br/&gt;global · per environment · per run"]
+  CC --&gt; W["Playwright worker&lt;br/&gt;resolve secrets → browser context&lt;br/&gt;apply binding → run → collect artifacts"]
+  W --&gt; OBJ[("Object store&lt;br/&gt;trace · video · DOM · network")]
+  W --&gt; CB["Result callback API&lt;br/&gt;no direct database access"]
+  CB --&gt; TRI["Triage ladder"] --&gt; EV["Evaluators"] --&gt; FI["Findings + run history"]
+  LEASE -.released.-&gt; EM
+
+  classDef wk fill:#F5E8DA,stroke:#8A5A2B,color:#4A3418
+  class W wk
+</pre>
+</div></div>
+
+<h3>Environment</h3>
+<p>A first-class configured entity per workspace: base URL, allowed domains, credentials as references, data-safety class (read-only, mutable, disposable), reset capability, concurrency ceiling. Automation contains no environment values; a binding references an environment and the worker resolves it. The same specification running against two environments through different bindings is the operational proof that the separation is real.</p>
+
+<h3>Secrets</h3>
+<p>References everywhere — bindings, exploration configuration, test data. Resolution happens once, inside the worker, at job start, from the secret manager, using a short-lived job-scoped token. Values live in memory only, are redacted from worker logs by an output filter, and are never returned in the result callback or placed in a prompt. A deterministic secret-pattern scan runs as a blocking evaluator over every generated artifact before storage.</p>
+
+<h3>Concurrency, leases, retries, cancellation</h3>
+<ul>
+<li>Three ceilings compose — global pool, per-environment protection, per-run user setting — and the effective limit is the minimum.</li>
+<li>Environment leases prevent an exploration session and an execution run colliding on a mutable environment.</li>
+<li>Retries are classified before attempted: infrastructure retries automatically; assertion failures never; locator failures retry once with healing if policy allows, recorded as a distinct attempt so flakiness stays visible.</li>
+<li>Cancellation is cooperative at job boundaries and hard after a grace period; partial artifacts are retained and the run is marked partially complete.</li>
+</ul>
+</div>
+</details>
+
+<!-- D9 -->
+<details id="d-eval">
+<summary><span class="sid">D9</span>Evaluators, confidence calibration and failure triage</summary>
+<div class="dbody">
+<h3>Evaluator layers</h3>
+<div class="deck">
+<div><h4>Deterministic</h4><p>Schema validity, required fields, reference integrity, duplicate detection, traceability completeness, coverage arithmetic, locator syntax, generated-code parse and type check, data values against constraints, secret-pattern scanning.</p></div>
+<div><h4>Derived</h4><p>Scenario-to-case consistency, case-to-specification consistency, field-to-data compatibility, understanding-to-artifact consistency, contradiction detection, obligation-link validity, oracle-status propagation.</p></div>
+<div><h4>Semantic</h4><p>Behavioural plausibility, missing edge cases relative to the understanding, expected-result completeness, technique appropriateness, diagnostic interpretation. Confined to judgements no rule can make.</p></div>
+</div>
+<p>Each evaluator declares its input, the assertions it performs, the evidence it consulted, its decision, severity, confidence contribution and remediation output. Deterministic evaluators run first and can fail an artifact outright; a semantic verdict may never overturn a deterministic one. Evaluator effectiveness is itself measured by whether its verdicts predict downstream failures.</p>
+
+<h3>Confidence calibration</h3>
+<div class="note crit"><span class="nl">Why calibration is a platform component, not a script</span>
+<p>The workspace evaluation contains exactly the failure this exists to prevent: a skill was banded <em>high</em> on the strength of a stated rule — that unresolvable paths are dropped rather than guessed — while the implementation did the opposite and mis-reported more than it under-reported. A declared band is a claim about code that may simply be false. The calibration harness is therefore first-class: a maintained ground-truth corpus, per-extractor precision and recall by element type, never averaged into a headline figure, feeding the confidence function as measured priors. The evaluation already built in the workspace is the right instrument, and its refusal to combine scores across evidence classes is the right instinct.</p></div>
+<p>Confidence combines calibrated extractor reliability, evidence strength and independence, inference type, reconciliation status, evaluator verdicts and oracle status. The function is platform-owned and versioned. Bands do not gate autonomous decisions until calibration is reproduced on a second application.</p>
+
+<h3>Failure triage ladder</h3>
+<p>Execution produces results; findings are judgements about results, produced only after deterministic triage. Nothing is a defect on the strength of a failed assertion alone.</p>
+<div class="tw"><table>
+<thead><tr><th style="width:6%">Order</th><th style="width:26%">Check</th><th style="width:24%">Classification</th><th>Basis</th></tr></thead>
+<tbody>
+<tr><td class="num">1</td><td>Worker or browser fault, timeout, resource exhaustion</td><td>Infrastructure</td><td>Deterministic — worker telemetry</td></tr>
+<tr><td class="num">2</td><td>Environment unreachable, wrong version, dependency down</td><td>Environment</td><td>Deterministic — pre-flight probe</td></tr>
+<tr><td class="num">3</td><td>Precondition unmet: identity, data or state missing</td><td>Data / state</td><td>Deterministic — binding resolution log</td></tr>
+<tr><td class="num">4</td><td>Locator failed to resolve or resolved ambiguously</td><td>Automation</td><td>Deterministic — locator probe</td></tr>
+<tr><td class="num">5</td><td>Assertion failed, oracle status unknown</td><td>Insufficient evidence</td><td>Derived — oracle status</td></tr>
+<tr><td class="num">6</td><td>Assertion failed against a confirmed or coded-rule oracle</td><td>Product defect candidate</td><td>Derived, then semantically described</td></tr>
+<tr><td class="num">7</td><td>Reconciliation conflict corroborated by execution</td><td>Product defect candidate — high value</td><td>Internal contradiction; needs no external intent</td></tr>
+</tbody>
+</table></div>
+<p>Result states remain pass, fail, attention and unknown — with one correction the original prototype lacked: an item that was never executed carries an <em>assessment</em>, not a result, and is excluded from pass-rate arithmetic and run-over-run comparison. Mixing the two silently corrupts every trend the run history is meant to show.</p>
+</div>
+</details>
+
+<!-- D10 -->
+<details id="d-plat">
+<summary><span class="sid">D10</span>Storage, API, export, security and deployment</summary>
+<div class="dbody">
+<h3>Storage boundaries</h3>
+<div class="tw"><table>
+<thead><tr><th style="width:19%">Store</th><th style="width:34%">Holds</th><th>Properties required</th></tr></thead>
+<tbody>
+<tr><td><strong>Canonical transactional</strong></td><td>Understanding elements, evidence records, versions, all artifact versions and lineage, obligations and satisfaction links, evaluator verdicts, gates and decisions, audit, registry, run and stage state</td><td>Strong consistency, point-in-time recovery. The only backup-critical store.</td></tr>
+<tr><td><strong>Object storage</strong></td><td>Traces, video, screenshots, DOM snapshots, network and console logs, generated code bundles, exports, raw provider payloads</td><td>Content-addressed, immutable, signed access, retention tiered per artifact class</td></tr>
+<tr><td><strong>Derived projections</strong></td><td>Graph, domain, state, document and read models</td><td>Disposable and reproducible. Never backed up — a projection that cannot be rebuilt is a design error.</td></tr>
+<tr><td><strong>Queue</strong></td><td>Job dispatch and lease state</td><td>At-least-once delivery with idempotent consumers</td></tr>
+</tbody>
+</table></div>
+<p>The split is driven by size and lifecycle, not taxonomy. A DOM snapshot and a schema element are both evidence, but one is megabytes of opaque payload and the other is queryable structure. Evidence records therefore hold anchors and references; payloads live in object storage and are fetched on drill-in. This is what stops evidence turning every artifact into an unmanageable blob, and it lets a finding's evidence outlive the video that supported it.</p>
+
+<h3>API surface</h3>
+<p>The frontend consumes contracts and holds no domain logic, orchestration, secrets or storage access. Principal resources: <code>/workspaces</code>, <code>/repositories</code>, <code>/understanding</code> (build, version, diff, query, traverse, document), <code>/exploration</code> (plan, monitor, blockers), <code>/reconciliation</code>, <code>/coverage</code>, <code>/scenarios</code>, <code>/test-cases</code>, <code>/test-data</code>, <code>/automation</code>, <code>/executions</code>, <code>/findings</code>, <code>/gates</code>, <code>/capabilities</code>, <code>/exports</code>, and <code>/evidence/{ref}</code> — which resolves an anchor to a source location or runtime artifact and is what makes evidence navigable rather than decorative.</p>
+
+<h3>Export</h3>
+<p>A projection service consuming read models. No domain type is aware of a spreadsheet. A format adapter per output type sits behind one export contract, so adding another format or a test-management import is an adapter change. Exports run as jobs and land in object storage with a signed retrieval link, because a full test-case-and-data export is not a request-response payload.</p>
+
+<h3>Security controls</h3>
+<div class="tw"><table>
+<thead><tr><th style="width:22%">Control</th><th>Mechanism</th></tr></thead>
+<tbody>
+<tr><td>Untrusted content</td><td>Repository and page content reach models only as structured, delimited, provenance-tagged data explicitly framed as data. No content-derived text can authorise a tool invocation; tool use is decided by domain code.</td></tr>
+<tr><td>Source confidentiality and egress</td><td>All external traffic passes the single invocation gateway, which enforces workspace egress policy, redacts secret patterns, records what was sent and meters cost. A prohibition on external inference is enforceable at that one point.</td></tr>
+<tr><td>Secrets</td><td>References everywhere; resolution only inside a worker with a short-lived scoped token; log redaction; blocking secret scan on every generated artifact.</td></tr>
+<tr><td>Repository access</td><td>Read-only credentials as references; ephemeral per-job sandboxes; no write-back path exists in Phase 1.</td></tr>
+<tr><td>Browser and session</td><td>Fresh context per test; per-environment domain allowlist enforced at the network layer so a wandering exploration cannot reach a third party; no persistent profile.</td></tr>
+<tr><td>Isolation</td><td>Workers hold no database credentials and reach the platform only through a narrow authenticated callback.</td></tr>
+<tr><td>Workspace scoping</td><td>Workspace identity on every record, enforced at the data-access layer rather than by convention.</td></tr>
+<tr><td>Generated content</td><td>All model-generated strings render as text, never as markup — those strings originate from client source code and are never assumed safe.</td></tr>
+<tr><td>Audit</td><td>Append-only log of every gate decision, policy evaluation, healing event, secret resolution, provider invocation and human edit, attributable to an actor and a policy version.</td></tr>
+</tbody>
+</table></div>
+
+<h3>Tenancy and topology <span class="tag open">Open — safe under either answer</span></h3>
+<p>Single-tenant deployment with workspace isolation enforced in the data model. This is correct whichever way the tenancy question is answered: scoping is cheap now and irreversible if omitted, while isolation machinery is expensive now and speculative. If multi-tenancy is confirmed, the change is deployment topology and identity mapping rather than a data migration.</p>
+<p>Topology is a modular monolith control plane plus three worker fleets. Domain boundaries are enforced by module structure, dependency rules and a static check, but they do not justify network boundaries in Phase 1; the genuine split is between the control plane and browser-driving workers. The evolution path is explicit — any fleet scales horizontally today, and Static Understanding or Execution can be extracted into a service later if measurement justifies it.</p>
+</div>
+</details>
+
+<!-- D11 -->
+<details id="d-adr">
+<summary><span class="sid">D11</span>Decision records</summary>
+<div class="dbody">
+<p>Each entry closes an option, shapes a contract, or accepts a named risk. Trivial implementation choices are excluded. Status labels follow the document convention.</p>
+<div class="tw"><table>
+<thead><tr><th style="width:4%">#</th><th style="width:20%">Decision</th><th style="width:22%">Alternatives rejected</th><th style="width:22%">Consequence accepted</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td class="num">01</td><td>Unified Application Understanding is the canonical asset</td><td>Test-first generation with understanding as a by-product</td><td>Understanding must be built and versioned before downstream value appears</td><td><span class="tag fixed">Fixed</span></td></tr>
+<tr><td class="num">02</td><td>No artifact without a named understanding version</td><td>Implicit latest-context generation</td><td>Version churn must be managed; staleness is surfaced for decision</td><td><span class="tag fixed">Fixed</span></td></tr>
+<tr><td class="num">03</td><td>Evidence-backed assertions as internal representation</td><td>Narrative document as truth; graph as truth; per-stage bespoke models</td><td>Normalisation quality becomes central; a poor ontology propagates</td><td><span class="tag flex">Flexible</span></td></tr>
+<tr><td class="num">04</td><td>Content-derived identity</td><td>Surrogate keys with a matching layer; similarity matching</td><td>Renames read as replace without explicit detection</td><td><span class="tag fixed">Fixed</span></td></tr>
+<tr><td class="num">05</td><td>Append-only evidence; supersession not mutation</td><td>Latest-write-wins; runtime overwrites static</td><td>Monotonic growth; queries filter by supersession; retention policy required</td><td><span class="tag fixed">Fixed</span></td></tr>
+<tr><td class="num">06</td><td>Projections derived and rebuildable; graph is a view</td><td>Graph database as canonical; relational only with no projection</td><td>Projection staleness must be managed; traversal ergonomics in canonical are weaker</td><td><span class="tag fixed">Fixed</span></td></tr>
+<tr><td class="num">07</td><td>Understanding version pins a repository tuple and exploration set</td><td>Per-repository versioning; latest-wins</td><td>Frequent commits in either repository produce version churn</td><td><span class="tag fixed">Fixed</span></td></tr>
+<tr><td class="num">08</td><td>Runtime exploration optional; static-only fully supported</td><td>Exploration as a hard prerequisite</td><td>Downstream components must handle unverified input everywhere</td><td><span class="tag fixed">Fixed</span></td></tr>
+<tr><td class="num">09</td><td>Providers produce observations; platform builds understanding</td><td>Providers write canonical state; provider-shaped storage</td><td>Every provider needs an adapter and a normalisation step</td><td><span class="tag fixed">Fixed</span></td></tr>
+<tr><td class="num">10</td><td>Code Intelligence advisory, not authoritative</td><td>Authoritative owner; retrieval only; not used</td><td>Possible duplicated extraction effort if the service proves strong</td><td><span class="tag place">Placeholder</span></td></tr>
+<tr><td class="num">11</td><td>Crawler is actuator and sensor only</td><td>Crawler owning state model or knowledge</td><td>More platform-side work; full replaceability in exchange</td><td><span class="tag place">Placeholder</span></td></tr>
+<tr><td class="num">12</td><td>Relationship extractors under-report rather than mis-report</td><td>Permissive matching with downstream filtering</td><td>Lower recall pushes load onto exploration</td><td><span class="tag fixed">Fixed</span></td></tr>
+<tr><td class="num">13</td><td>Framework packs as the static extensibility unit</td><td>Generic language-level analysis; per-application rules</td><td>Pack proliferation; quality varies per stack and must be reported per pack</td><td><span class="tag fixed">Fixed</span></td></tr>
+<tr><td class="num">14</td><td>Composite state identity, not URL</td><td>URL only; full DOM hash; model-judged equivalence</td><td>Requires tuning per application; highest-uncertainty decision here</td><td><span class="tag flex">Flexible</span></td></tr>
+<tr><td class="num">15</td><td>Action risk classified before acting</td><td>Post-hoc detection; read-only only; per-action human confirmation</td><td>Exploration reach depends on relationship quality, the weakest area</td><td><span class="tag fixed">Fixed</span></td></tr>
+<tr><td class="num">16</td><td>Reconciliation never auto-labels defects</td><td>All mismatches become findings; suppress below a confidence bar</td><td>Some real defects classified as insufficient evidence</td><td><span class="tag fixed">Fixed</span></td></tr>
+<tr><td class="num">17</td><td>Coverage from explicit obligations</td><td>Model-reported coverage; scenario count as proxy</td><td>Figures always qualified by model completeness</td><td><span class="tag fixed">Fixed</span></td></tr>
+<tr><td class="num">18</td><td>Confidence computed from calibrated priors</td><td>Model self-report; fixed constants; heuristic thresholds</td><td>A ground-truth corpus becomes a permanent maintained component</td><td><span class="tag fixed">Fixed</span></td></tr>
+<tr><td class="num">19</td><td>Specification and binding separate</td><td>Single generated test file; policy-only healing restriction</td><td>Two artifacts to version; generation becomes a join</td><td><span class="tag fixed">Fixed</span></td></tr>
+<tr><td class="num">20</td><td>Object model projected from understanding</td><td>Per-test object generation; hand-written object layer</td><td>Understanding errors propagate into the object model</td><td><span class="tag fixed">Fixed</span></td></tr>
+<tr><td class="num">21</td><td>Healing proposes by default</td><td>Auto-apply above a threshold; no healing in Phase 1</td><td>Users accept proposals until measurement justifies automation</td><td><span class="tag flex">Flexible</span></td></tr>
+<tr><td class="num">22</td><td>One gate for human and autonomous modes</td><td>Separate autonomous pipeline; autonomy as a stage flag</td><td>Policy expressiveness becomes the constraint on autonomy</td><td><span class="tag fixed">Fixed</span></td></tr>
+<tr><td class="num">23</td><td>Workflow state in the product database</td><td>Durable execution engine; agent-framework orchestration</td><td>Idempotency and retry semantics are the team's responsibility</td><td><span class="tag flex">Flexible</span></td></tr>
+<tr><td class="num">24</td><td>Single capability-invocation path</td><td>Per-adapter handling; direct SDK use in stages</td><td>The invoker is a critical-path component</td><td><span class="tag fixed">Fixed</span></td></tr>
+<tr><td class="num">25</td><td>Workers hold no database credentials</td><td>Direct worker database access for throughput</td><td>Results batched through a callback; a round trip accepted deliberately</td><td><span class="tag fixed">Fixed</span></td></tr>
+<tr><td class="num">26</td><td>Repository and page content untrusted</td><td>Trusting repository content as internal</td><td>Structured framing reduces context richness available to models</td><td><span class="tag fixed">Fixed</span></td></tr>
+<tr><td class="num">27</td><td>Single-tenant with workspace scoping</td><td>No scoping; full multi-tenancy now</td><td>If multi-tenant is confirmed, quota and noisy-neighbour work remains</td><td><span class="tag open">Open</span></td></tr>
+<tr><td class="num">28</td><td>Modular monolith plus three worker fleets</td><td>Single process; microservices per context</td><td>Module boundaries must be enforced by tooling, not goodwill</td><td><span class="tag fixed">Fixed</span></td></tr>
+</tbody>
+</table></div>
+</div>
+</details>
+
+<!-- D12 -->
+<details id="d-tech">
+<summary><span class="sid">D12</span>Options considered and technology notes</summary>
+<div class="dbody">
+<div class="note"><span class="nl">Technology is subordinate to architecture</span><p>Every name below can be removed and the architecture in Level 1 still stands. These are recommendations contingent on the open decisions, not part of the design.</p></div>
+
+<h3>Principal options weighed</h3>
+<div class="tw"><table>
+<thead><tr><th style="width:19%">Decision</th><th style="width:27%">Options</th><th>Outcome and reason</th></tr></thead>
+<tbody>
+<tr><td>Knowledge representation</td><td>Graph-first · relational-first · hybrid with derived graph</td><td><strong>Hybrid.</strong> Truth needs versioning, provenance, contradiction and transactionality; traversal needs a graph shape. At the measured scale — roughly 155 elements and 228 relationships for a full application — the projection can be in-process, so no second stateful system is required. The ontology and query patterns proven in the workspace prototype carry forward regardless.</td></tr>
+<tr><td>Workflow</td><td>Durable execution engine · database state machine · agent-framework orchestration</td><td><strong>Database state machine.</strong> Gates are human-scale and workflow state is product state the interface must query; an engine forces either querying it or duplicating state.</td></tr>
+<tr><td>Exploration control</td><td>Deterministic only · agent-driven · hybrid</td><td><strong>Hybrid.</strong> The understanding supplies the agenda and the safety classification; the model is consulted only for genuinely open choices.</td></tr>
+<tr><td>Provider integration</td><td>Direct SDK calls · adapter per provider · ports plus one invoker</td><td><strong>Ports plus one invoker.</strong> Egress, cost, resilience and provenance handled once at one chokepoint.</td></tr>
+<tr><td>Artifact storage</td><td>All relational · metadata plus object store · document store</td><td><strong>Metadata plus object store.</strong> Matches size and lifecycle; enables retention tiers.</td></tr>
+<tr><td>Execution</td><td>In-process · workers on the app host · containerised fleet</td><td><strong>Containerised fleet.</strong> Independent scaling, clean secret scoping, real isolation.</td></tr>
+<tr><td>Evaluators</td><td>Single semantic reviewer · deterministic only · layered registry</td><td><strong>Layered registry.</strong> A single reviewing model produces unfalsifiable output with no remediation signal.</td></tr>
+<tr><td>Retrieval</td><td>Structured queries · plus lexical index · plus vector store</td><td><strong>Structured queries.</strong> A lexical index is adoptable if transcript search needs it. A vector store is deferred — no demonstrated retrieval failure, and approximate search pulls against the evidence promise.</td></tr>
+<tr><td>Async processing</td><td>Database-backed queue · dedicated broker · streaming platform</td><td><strong>Database-backed queue.</strong> Transactional enqueue with the domain write removes the lost-dispatch window; no second stateful system.</td></tr>
+<tr><td>Deployment</td><td>Single process · modular monolith plus workers · microservices</td><td><strong>Modular monolith plus workers.</strong> Splits where resource and trust profiles genuinely differ.</td></tr>
+</tbody>
+</table></div>
+
+<h3>Technology recommendations <span class="tag flex">Flexible</span></h3>
+<div class="tw"><table>
+<thead><tr><th style="width:22%">Area</th><th style="width:34%">Recommendation</th><th>Note</th></tr></thead>
+<tbody>
+<tr><td>Browser automation</td><td>Playwright</td><td>Stated requirement; trace, video and network capture are first-class and the evidence model depends on them</td></tr>
+<tr><td>Canonical store</td><td>A mature relational database with document-typed columns and recursive traversal</td><td>The decision to be most sure of; migration cost is high</td></tr>
+<tr><td>Object storage</td><td>S3-compatible, self-hostable</td><td>Keeps on-premises deployment open while hosting is undecided</td></tr>
+<tr><td>Queue</td><td>Database-backed initially, behind a dispatch port</td><td>Swap to a broker on measured need</td></tr>
+<tr><td>Control plane / workers</td><td>Analysis and domain in the ecosystem with the strongest static-analysis tooling; browser workers in the Playwright-native ecosystem</td><td>The boundary is already a process boundary, so a split costs nothing structurally. Confirm against team composition.</td></tr>
+<tr><td>Static extraction</td><td>Incremental parser plus framework packs; optional deep code-property-graph analysis for rule recall</td><td>Both already trialled in the workspace; packs are the investment, not the parser</td></tr>
+<tr><td>Graph projection</td><td>In-process at current scale</td><td>Externalise only if a measured query need appears; derived, so reversible</td></tr>
+<tr><td>Identity, secrets</td><td>Standards-based identity; pluggable secret provider</td><td>The port matters more than the binding while targets are unconfirmed</td></tr>
+</tbody>
+</table></div>
+<p>Licensing is a genuine consideration for a product deliverable: community editions of leading graph databases are copyleft and enterprise editions commercial, which independently reinforces keeping the graph derived. Deep code-property-graph tooling carries a heavy runtime footprint, acceptable in an optional worker-side extractor and not in the control plane.</p>
+</div>
+</details>
+
+<!-- D13 -->
+<details id="d-poc">
+<summary><span class="sid">D13</span>Validation plan and full risk register</summary>
+<div class="dbody">
+<h3>Six experiments</h3>
+<div class="tw"><table>
+<thead><tr><th style="width:6%">ID</th><th style="width:19%">Hypothesis</th><th style="width:22%">Method</th><th style="width:19%">Pass threshold</th><th>Consequence if it fails</th></tr></thead>
+<tbody>
+<tr><td><strong>A</strong></td><td>Extractor rules plus a framework pack lift relationship precision materially without losing recall</td><td>Re-run extraction under the new rules against hand-written ground truth; classify every residual error to a named cause</td><td>Precision ≥ 0.85 with recall ≥ 0.60</td><td>Below 0.70, static relationships become hypotheses that gate nothing and exploration becomes the primary source — the pipeline reorders, the architecture holds</td></tr>
+<tr><td><strong>B</strong></td><td>Code Intelligence materially improves relationship or symbol quality at acceptable latency with usable anchors</td><td>Native alone, provider alone, both corroborated, against the same ground truth; test re-index and pinned-revision behaviour</td><td>≥ 0.10 improvement on a claim type without degrading others, with symbol or span anchors</td><td>The port stays defined and unbound; native extraction carries Phase 1. No architectural change either way — the point of advisory positioning</td></tr>
+<tr><td><strong>C</strong></td><td>Composite state identity is stable across repeated sessions and agenda-driven exploration reaches most known screens safely</td><td>Three identical read-only sessions, then one write-enabled session under policy; hand-label a control set for risk classification</td><td>State-count variance &lt; 10%; ≥ 60% of known screens reached; destructive-action classification recall 1.00</td><td>High variance forces a coarser identity model and reduced coverage claims. Any missed destructive action blocks write-enabled exploration entirely</td></tr>
+<tr><td><strong>D</strong></td><td>Reconciliation finds seeded discrepancies and classifies them without unusable false-positive volume</td><td>Seed a branch with a removed confirmation step, a renamed response property, an endpoint with no UI path; reconcile and compare</td><td>≥ 80% seeded detection; &lt; 20% false defect candidates; residual reviewable in under an hour</td><td>Reconciliation output becomes a diagnostic view rather than a finding source — a product reduction worth knowing before build</td></tr>
+<tr><td><strong>E</strong></td><td>Static locator candidates validate at a useful rate and healing proposals are correct often enough to justify automation</td><td>Derive candidates, validate at runtime, run a generated suite against a variant branch with realistic markup churn, review proposals by hand</td><td>≥ 70% candidate validation; healing precision ≥ 0.90 before auto-apply is considered</td><td>Runtime-observed locators become mandatory, making exploration a prerequisite for automation rather than an enrichment</td></tr>
+<tr><td><strong>F</strong></td><td>Derived obligations correspond to what an experienced tester independently identifies as worth testing</td><td>Compare the obligation set against an independently authored manual inventory in both directions; classify every difference</td><td>≥ 70% recall against the human inventory; &lt; 20% judged not worth testing</td><td>Coverage is presented strictly as coverage of a known-partial model with the shortfall quantified — reframes the product claim, not the architecture</td></tr>
+</tbody>
+</table></div>
+<p><strong>Sequencing.</strong> A and B share inputs and run first. C follows and gates everything requiring a running application. D depends on A and C; E can run in parallel with D; F is last because it needs a stabilised understanding. A and B are runnable as soon as the AUT and provider access are confirmed; C, D and E require the environment write policy to be settled.</p>
+
+<h3>Full risk register</h3>
+<div class="tw"><table>
+<thead><tr><th style="width:4%">#</th><th style="width:22%">Risk</th><th style="width:9%">Probability</th><th style="width:9%">Impact</th><th>Mitigation</th></tr></thead>
+<tbody>
+<tr><td class="num">1</td><td>Frontend-to-backend relationships stay unreliable</td><td>High <span class="tag crit">measured</span></td><td>Severe</td><td>Four extractor rules; framework packs; runtime repair; unresolved elements visible rather than guessed</td></tr>
+<tr><td class="num">2</td><td>Runtime state identity mis-tuned</td><td>High</td><td>Severe</td><td>Composite fingerprint with tunable policy; variant collapse; Validation C before exploration is trusted</td></tr>
+<tr><td class="num">3</td><td>Exploration safety failure</td><td>Medium</td><td>Severe</td><td>Pre-action risk classification; unknown denied; allowlists; budgets; leases</td></tr>
+<tr><td class="num">4</td><td>Confidence decalibration</td><td>Medium</td><td>High</td><td>Calibration harness with an owner; corpus versioned with packs; bands do not gate autonomy until reproduced</td></tr>
+<tr><td class="num">5</td><td>Test data and state provisioning intractable</td><td>High</td><td>High</td><td>Declared requirements resolved at bind time; provisioning separated with its own policy; human rung as a first-class work item</td></tr>
+<tr><td class="num">6</td><td>Exploration state explosion</td><td>Medium</td><td>High</td><td>Agenda-driven frontier; revisit caps; variant collapse; hard budgets; partial exploration is a valid result</td></tr>
+<tr><td class="num">7</td><td>Evaluators fail to improve quality</td><td>Medium</td><td>High</td><td>Deterministic layer first with outright failure; declared assertions and remediation; effectiveness measured against downstream failures</td></tr>
+<tr><td class="num">8</td><td>Locator reliability too low</td><td>Medium</td><td>High</td><td>Strategy-stability ranking; runtime validation; unvalidated locators cap confidence. Dominated by whether the AUT carries stable test attributes</td></tr>
+<tr><td class="num">9</td><td>Understanding depth insufficient for semantic generation</td><td>Medium</td><td>High</td><td>Rule coverage reported as known-partial; admitting repository-resident specifications and tests as evidence would materially help</td></tr>
+<tr><td class="num">10</td><td>Provider disappoints or destabilises</td><td>Medium</td><td>Medium</td><td>Advisory positioning; degraded-mode behaviour per port; conformance suites gate adapter acceptance</td></tr>
+<tr><td class="num">11</td><td>Evidence volume unmanageable</td><td>Medium</td><td>Medium</td><td>Anchors in the canonical store, payloads in object storage, retention tiered per class</td></tr>
+<tr><td class="num">12</td><td>Artifact and version drift</td><td>Medium</td><td>Medium</td><td>Single transaction boundary; staleness computed and surfaced; regeneration is a gated decision</td></tr>
+<tr><td class="num">13</td><td>Generated-content security</td><td>Low</td><td>High</td><td>Untrusted-content boundary; text-only rendering; injection corpus in the test repository; blocking secret scan</td></tr>
+<tr><td class="num">14</td><td>Execution isolation insufficient</td><td>Low</td><td>High</td><td>Container isolation; no worker database credentials; job-scoped tokens; fresh contexts; network allowlists</td></tr>
+<tr><td class="num">15</td><td>Cost per run exceeds tolerance</td><td>Medium</td><td>Medium</td><td>Budgets at the invoker and planner; deterministic-first ordering; model routing by task</td></tr>
+</tbody>
+</table></div>
+</div>
+</details>
+
+</main>
+</div>
+<script>
+(function () {
+  var root = document.documentElement;
+  var SOURCES = [
+    "https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.6.0/mermaid.min.js",
+    "https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.min.js"
+  ];
+  function reveal(){ root.classList.remove("mermaid-pending"); }
+  function giveUp(){ root.classList.add("no-mermaid"); reveal(); }
+
+  function load(i){
+    if (i >= SOURCES.length) { giveUp(); return; }
+    var s = document.createElement("script");
+    s.src = SOURCES[i];
+    s.onload = function(){ if (window.mermaid) { start(); } else { load(i + 1); } };
+    s.onerror = function(){ load(i + 1); };
+    document.head.appendChild(s);
+  }
+
+  function render(nodes){
+    if (!nodes.length) return;
+    try { window.mermaid.run({ nodes: nodes }); } catch (e) {}
+  }
+
+  function start(){
+    try {
+      window.mermaid.initialize({
+        startOnLoad: false,
+        theme: "base",
+        securityLevel: "loose",
+        flowchart: { htmlLabels: true, useMaxWidth: false, curve: "basis" }
+      });
+      var all = document.querySelectorAll("pre.mermaid");
+      Promise.resolve(window.mermaid.run({ nodes: all })).then(reveal, reveal);
+      setTimeout(reveal, 6000);
+      // Diagrams inside a collapsed <details> render when it is first opened.
+      document.addEventListener("toggle", function (e) {
+        if (!e.target || e.target.tagName !== "DETAILS" || !e.target.open) return;
+        render(e.target.querySelectorAll('pre.mermaid:not([data-processed="true"])'));
+      }, true);
+    } catch (e) { giveUp(); }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function(){ load(0); });
+  } else { load(0); }
+  setTimeout(function(){ if (root.classList.contains("mermaid-pending")) reveal(); }, 12000);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EDF1F3','primaryTextColor':'#15191C','primaryBorderColor':'#8AA3AD','lineColor':'#5C7681','secondaryColor':'#E3EEF1','tertiaryColor':'#F5F7F8','clusterBkg':'#F8FAFB','clusterBorder':'#C4D2D8','fontFamily':'IBM Plex Sans, sans-serif','fontSize':'13px'}}}%%
+flowchart TB
+  subgraph CP[" Platform Control Plane "]
+    direction TB
+    A1["API"]
+    A2["Domain modules<br/>understanding · quality design · automation"]
+    A3["Workflow + Governance"]
+    A4["Evidence + lineage"]
+  end
+
+  Q[["Job Queue"]]
+  CP --> Q
+
+  Q --> W1["Analysis Workers<br/><i>parse untrusted source</i>"]
+  Q --> W2["Exploration Workers<br/><i>drive a real browser</i>"]
+  Q --> W3["Execution Workers<br/><i>run Playwright</i>"]
+
+  W1 -.results via API.-> CP
+  W2 -.results via API.-> CP
+  W3 -.results via API.-> CP
+
+  W2 --> AUT["AUT Environment"]
+  W3 --> AUT
+  W1 --> REPO[("Repositories")]
+
+  classDef cpx fill:#DAE8ED,stroke:#1F4E5F,stroke-width:2px,color:#12262C
+  classDef wk fill:#F5E8DA,stroke:#8A5A2B,color:#4A3418
+  class CP cpx
+  class W1,W2,W3 wk

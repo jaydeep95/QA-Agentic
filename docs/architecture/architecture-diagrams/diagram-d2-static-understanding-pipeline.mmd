@@ -1,0 +1,25 @@
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EDF1F3','primaryTextColor':'#15191C','primaryBorderColor':'#8AA3AD','lineColor':'#5C7681','secondaryColor':'#E3EEF1','tertiaryColor':'#F5F7F8','clusterBkg':'#F8FAFB','clusterBorder':'#C4D2D8','fontFamily':'IBM Plex Sans, sans-serif','fontSize':'13px'}}}%%
+flowchart TB
+  ON["Repository registration<br/>url · ref · credential reference · role"] --> PIN["Resolve revision<br/>workspace version tuple"]
+  PIN --> CL["Clone into analysis sandbox"]
+  CL --> DET["Stack detection"] --> PK["Select framework packs"]
+
+  PK --> X1["Inventory<br/>routes · endpoints · tables · fields · components"]
+  PK --> X2["Schema and constraints<br/>types · optionality · enums · validators"]
+  PK --> X3["Rules<br/>guards · role checks · state checks"]
+  PK --> X4["Relationships<br/>navigation · calls · protection · handling"]
+  PK --> X5["Locator candidates<br/>test ids · roles · labels · structure"]
+  PK --> X6["CODE_INTELLIGENCE_PROVIDER<br/>advisory contributor"]
+
+  X1 --> NM["Normalise"]
+  X2 --> NM
+  X3 --> NM
+  X4 --> NM
+  X5 --> NM
+  X6 --> NM
+  NM --> CO["Corroborate<br/>same identity from multiple extractors"] --> CF["Assign inference type<br/>and prior confidence"] --> WR["Contribute to understanding version"]
+
+  classDef weak fill:#F8E9E7,stroke:#95322C,color:#4E1B17
+  classDef opt fill:#F5E8DA,stroke:#8A5A2B,stroke-dasharray:5,color:#4A3418
+  class X4 weak
+  class X6 opt

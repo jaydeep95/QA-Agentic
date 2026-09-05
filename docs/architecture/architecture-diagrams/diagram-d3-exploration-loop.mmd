@@ -1,0 +1,25 @@
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EDF1F3','primaryTextColor':'#15191C','primaryBorderColor':'#8AA3AD','lineColor':'#5C7681','secondaryColor':'#E3EEF1','tertiaryColor':'#F5F7F8','clusterBkg':'#F8FAFB','clusterBorder':'#C4D2D8','fontFamily':'IBM Plex Sans, sans-serif','fontSize':'13px'}}}%%
+flowchart TB
+  UV["Understanding version"] --> AG["Exploration planner<br/>agenda from unverified and unresolved elements"]
+  AG --> PO{"Safety policy<br/>environment · domains · permitted action classes<br/>action budget · session budget"}
+  PO -->|denied| HALT["Blocked · audited"]
+  PO -->|granted| SESS["Exploration session"]
+  SESS --> OBS["Observe page via provider"]
+  OBS --> SID["Compute state identity"]
+  SID --> SEEN{"State already known?"}
+  SEEN -->|yes| UPD["Update agenda and state graph"]
+  SEEN -->|no| AFF["Enumerate affordances"]
+  AFF --> RISK["Classify action risk<br/>using the understanding:<br/>which endpoint and verb does this control invoke?"]
+  RISK --> SEL["Select next action<br/>deterministic when the agenda predicts it<br/>agentic only when underdetermined"]
+  SEL --> ACT["Execute via CRAWLER_PROVIDER"]
+  ACT --> REC["Record observation and evidence"]
+  REC --> UPD
+  UPD --> MORE{"Agenda remaining and budget left?"}
+  MORE -->|yes| OBS
+  MORE -->|no| DONE["Session complete<br/>observations · coverage · blockers · unreached areas"]
+  SEL -.cannot proceed.-> BLK["Blocker work item"]
+  BLK --> ESCX["Governance escalation"]
+  DONE --> RCX["Reconciliation"]
+
+  classDef risk fill:#F5E8DA,stroke:#8A5A2B,color:#4A3418
+  class RISK,PO risk

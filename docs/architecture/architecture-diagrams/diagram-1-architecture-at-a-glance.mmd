@@ -1,0 +1,35 @@
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EDF1F3','primaryTextColor':'#15191C','primaryBorderColor':'#8AA3AD','lineColor':'#5C7681','secondaryColor':'#E3EEF1','tertiaryColor':'#F5F7F8','clusterBkg':'#F8FAFB','clusterBorder':'#C4D2D8','fontFamily':'IBM Plex Sans, sans-serif','fontSize':'13px'}}}%%
+flowchart TB
+  USER(["QA User"]) --> UIX["QA Platform UI<br/>artifact views + transcript"]
+  UIX --> APIW["Platform API + Workflow + Governance"]
+
+  APIW --> UAU
+
+  subgraph CORE[" "]
+    UAU["<b>UNIFIED APPLICATION UNDERSTANDING</b><br/>entities · screens · components · fields<br/>APIs · services · data · relationships<br/>rules · permissions · states · transitions<br/>─────────────<br/>evidence · provenance · confidence<br/>reconciliation status · versioned"]
+  end
+
+  SU["Static Understanding<br/><i>repositories</i>"] --> UAU
+  RE["Runtime Exploration<br/><i>running AUT — optional</i>"] --> UAU
+  SU --> RC["Reconciliation"]
+  RE --> RC
+  RC --> UAU
+
+  CIP["CODE_INTELLIGENCE_PROVIDER"] -.-> SU
+  CRP["CRAWLER_PROVIDER"] -.-> RE
+
+  UAU --> TD["Test Design<br/>coverage obligations + scenarios"]
+  TD --> TC["Test Case + Test Data"]
+  TC --> AU["Playwright Automation<br/>specification + binding + reuse"]
+  AU --> EX["Execution<br/>workers + environments"]
+  EX --> EV["Evaluation + Findings"]
+  EV -.knowledge update.-> UAU
+
+  classDef hero fill:#DAE8ED,stroke:#1F4E5F,stroke-width:2.5px,color:#12262C
+  classDef src fill:#EDF1F3,stroke:#8AA3AD,color:#15191C
+  classDef prov fill:#F5E8DA,stroke:#8A5A2B,stroke-dasharray:5,color:#4A3418
+  classDef chain fill:#F4F7F8,stroke:#8AA3AD,color:#15191C
+  class UAU hero
+  class SU,RE,RC src
+  class CIP,CRP prov
+  class TD,TC,AU,EX,EV chain

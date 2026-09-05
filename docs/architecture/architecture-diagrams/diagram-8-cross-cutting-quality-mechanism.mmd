@@ -1,0 +1,20 @@
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EDF1F3','primaryTextColor':'#15191C','primaryBorderColor':'#8AA3AD','lineColor':'#5C7681','secondaryColor':'#E3EEF1','tertiaryColor':'#F5F7F8','clusterBkg':'#F8FAFB','clusterBorder':'#C4D2D8','fontFamily':'IBM Plex Sans, sans-serif','fontSize':'13px'}}}%%
+flowchart TB
+  ART["Every generated artifact<br/><i>understanding · scenario · case · data · automation · result</i>"] --> EV
+
+  subgraph EV[" Evaluators — layered, deterministic first "]
+    direction LR
+    E1["Deterministic<br/>schema · references · duplicates<br/>coverage arithmetic · syntax · secrets"]
+    E2["Derived<br/>cross-artifact consistency<br/>traceability · contradiction"]
+    E3["Semantic<br/>plausibility · missing edge cases<br/>diagnostic interpretation"]
+    E1 --> E2 --> E3
+  end
+
+  EV --> CONF["<b>Confidence</b><br/>computed from evidence strength · inference type<br/>oracle status · reconciliation · evaluator verdicts<br/>calibrated extractor reliability"]
+  CONF --> BAND["Mostly Confident · Somewhat Confident<br/>Insufficient Evidence"]
+  BAND --> GATE["Governance Gate"]
+
+  classDef hero fill:#DAE8ED,stroke:#1F4E5F,stroke-width:2px,color:#12262C
+  classDef norm fill:#EDF1F3,stroke:#8AA3AD,color:#15191C
+  class CONF hero
+  class ART,BAND,GATE,E1,E2,E3 norm

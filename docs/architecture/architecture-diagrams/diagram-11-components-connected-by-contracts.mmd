@@ -1,0 +1,35 @@
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EDF1F3','primaryTextColor':'#15191C','primaryBorderColor':'#8AA3AD','lineColor':'#5C7681','secondaryColor':'#E3EEF1','tertiaryColor':'#F5F7F8','clusterBkg':'#F8FAFB','clusterBorder':'#C4D2D8','fontFamily':'IBM Plex Sans, sans-serif','fontSize':'13px'}}}%%
+flowchart TB
+  UAU["<b>Unified Application Understanding</b>"]
+
+  SU["Static<br/>Understanding"] -->|understanding contribution| UAU
+  RE["Runtime<br/>Exploration"] -->|observation contract| UAU
+  CIP["CODE_INTELLIGENCE<br/>_PROVIDER"] -.->|CodeIntelligenceProvider| SU
+  CRP["CRAWLER<br/>_PROVIDER"] -.->|CrawlerProvider| RE
+  SU --> RC["Reconciliation"]
+  RE --> RC
+  RC -->|reconciliation contract| UAU
+
+  UAU -->|understanding query| TD["Test Design"]
+  TD -->|scenario contract| TCD["Test Case + Data"]
+  TCD -->|test case + data requirement| AS["Automation Specification"]
+  AS -->|specification contract| AB["Automation Binding"]
+  AB -->|execution contract| EXE["Execution"]
+
+  LLM["LLM Providers"] -.->|LanguageModelProvider| CAP
+  MCP["MCP / Tools / Agents"] -.->|Capability contract| CAP
+  CAP["Capability Invoker<br/><i>single integration path</i>"] -.-> TD
+  CAP -.-> SU
+  CAP -.-> AS
+
+  EVALS["Evaluators"] -.->|evaluator contract| TD
+  EVALS -.-> TCD
+  EVALS -.-> AS
+  EVALS -.-> EXE
+
+  classDef hero fill:#DAE8ED,stroke:#1F4E5F,stroke-width:2.5px,color:#12262C
+  classDef prov fill:#F5E8DA,stroke:#8A5A2B,stroke-dasharray:5,color:#4A3418
+  classDef norm fill:#EDF1F3,stroke:#8AA3AD,color:#15191C
+  class UAU hero
+  class CIP,CRP,LLM,MCP prov
+  class SU,RE,RC,TD,TCD,AS,AB,EXE,CAP,EVALS norm
