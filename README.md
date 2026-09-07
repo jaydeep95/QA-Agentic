@@ -22,15 +22,17 @@ happens to emit tests. The durable asset is the understanding; tests are regener
 
 ---
 
-## Current status — 2026-09-05
+## Current status — 2026-09-07
 
 | | |
 |---|---|
 | **Phase** | Phase 0 — Repository & Platform Foundation |
-| **Checkpoint** | CP-00 Foundation — `NOT_STARTED` |
+| **Checkpoint** | CP-00 Platform Foundation — `NOT_STARTED` |
 | **Implementation** | **None. No platform source code exists yet.** |
-| **Next step** | `P0-W1-T1` — initialise git repository |
-| **Documentation** | V2 corrected — source-of-truth system + decision register |
+| **Next step** | `P0-W1-T2` — repository structure and module layout, **blocked on DEC-002** (control-plane language and runtime are an OPEN decision and must not be settled silently by whoever writes the first source file) |
+| **Documentation** | V2 corrected — 17 canonical documents, decision register, 13 checkpoints |
+
+Authoritative status is [`docs/12_CURRENT_IMPLEMENTATION_STATE.md`](docs/12_CURRENT_IMPLEMENTATION_STATE.md); this table is a summary of it.
 
 This repository currently contains **architecture and planning documentation only**.
 Nothing is implemented, tested or validated. That is recorded honestly in
@@ -41,6 +43,7 @@ Nothing is implemented, tested or validated. That is recorded honestly in
 ## Repository layout
 
 ```text
+CLAUDE.md                              ← auto-loaded entry hook for AI sessions
 docs/
 ├── 00_PROJECT_SOURCE_OF_TRUTH.md      ← start here
 ├── 01_PRODUCT_VISION_AND_SCOPE.md     what we are building
