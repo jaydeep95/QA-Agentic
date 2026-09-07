@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agentic QA Platform — Phase 1 Understanding Architecture</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+:root{
+  --bg:#f7f8fa; --panel:#fff; --soft:#f0f3f5; --ink:#172026; --muted:#5e6a73;
+  --line:#dfe4e8; --accent:#1f4e5f; --accent-soft:#e5eef1;
+  --green:#2f6b4f; --green-soft:#e7f1eb; --amber:#8a5a2b; --amber-soft:#f6eee4;
+  --red:#96322c; --red-soft:#f8e8e6; --purple:#554a8f; --purple-soft:#eeebf8;
+  --serif: Georgia, "Times New Roman", serif;
+  --sans: Arial, Helvetica, sans-serif;
+  --mono: Consolas, "Liberation Mono", monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55}
+.shell{max-width:1400px;margin:0 auto;display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+nav{position:sticky;top:0;height:100vh;overflow:auto;background:var(--panel);border-right:1px solid var(--line);padding:24px 16px}
+.brand{font-family:var(--serif);font-size:21px;font-weight:700;line-height:1.15}
+.sub{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.09em;text-transform:uppercase;margin:5px 0 22px}
+.navgroup{font-family:var(--mono);font-size:9px;color:var(--accent);text-transform:uppercase;letter-spacing:.1em;margin:18px 0 7px}
+nav a{display:block;color:var(--muted);text-decoration:none;font-size:12.5px;padding:6px 7px;border-radius:4px}
+nav a:hover{background:var(--accent-soft);color:var(--accent)}
+main{padding:42px 50px 100px;min-width:0}
+header{border-bottom:2px solid var(--ink);padding-bottom:22px;margin-bottom:24px}
+.eyebrow{font-family:var(--mono);color:var(--accent);font-size:10px;text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px}
+h1,h2,h3{font-family:var(--serif);letter-spacing:-.015em}
+h1{font-size:40px;line-height:1.1;margin:0 0 12px}
+h2{font-size:28px;border-top:1px solid var(--line);padding-top:24px;margin:44px 0 12px}
+h3{font-size:20px;margin:28px 0 8px}
+p{max-width:84ch;margin:0 0 13px}
+.lede{font-size:17px;color:var(--muted);max-width:78ch}
+.callout,.principle{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);padding:14px 16px;margin:18px 0}
+.callout.warn{border-left-color:var(--amber);background:var(--amber-soft)}
+.callout.red{border-left-color:var(--red);background:var(--red-soft)}
+.principle{background:var(--accent-soft)}
+.principle b{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+.badges{display:flex;flex-wrap:wrap;gap:7px;margin:14px 0 8px}
+.badge{font-family:var(--mono);font-size:10px;padding:4px 8px;border-radius:4px;border:1px solid transparent}
+.fixed{background:var(--green-soft);color:var(--green);border-color:#c9dfd1}
+.flex{background:var(--accent-soft);color:var(--accent);border-color:#c6dade}
+.place{background:var(--amber-soft);color:var(--amber);border-color:#e5d0b6}
+.open{background:var(--purple-soft);color:var(--purple);border-color:#d4cdea}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin:15px 0 22px}
+.card{background:var(--panel);padding:15px}
+.card h4{margin:0 0 6px;font-size:14px}
+.card p{font-size:12.5px;color:var(--muted);margin:0;max-width:none}
+table{border-collapse:collapse;width:100%;font-size:12.5px;background:var(--panel);border:1px solid var(--line);margin:14px 0 22px}
+th{background:var(--soft);font-family:var(--mono);font-size:9px;text-align:left;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);padding:9px 10px;border-bottom:1px solid var(--line)}
+td{padding:9px 10px;border-bottom:1px solid #edf0f2;vertical-align:top}
+tr:last-child td{border-bottom:none}
+.diagram{background:var(--panel);border:1px solid var(--line);margin:16px 0 24px;overflow:auto}
+.diagram .cap{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);background:var(--soft);padding:8px 11px;border-bottom:1px solid var(--line)}
+.diagram .body{padding:16px;min-width:800px}
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0 25px}
+.kpi .box{background:var(--panel);border:1px solid var(--line);padding:13px}
+.kpi .v{font-family:var(--serif);font-size:24px;font-weight:700}
+.kpi .l{font-size:11px;color:var(--muted)}
+details{background:var(--panel);border:1px solid var(--line);margin:9px 0}
+summary{cursor:pointer;padding:11px 13px;background:var(--soft);font-weight:700;font-size:13px}
+.detail{padding:13px 16px}
+ul{max-width:82ch}
+li{margin:4px 0}
+code{font-family:var(--mono);font-size:.9em;background:var(--soft);padding:1px 4px;border-radius:3px}
+.footer{margin-top:45px;padding-top:18px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}
+@media(max-width:900px){.shell{grid-template-columns:1fr}nav{position:static;height:auto;border-right:none;border-bottom:1px solid var(--line)}main{padding:26px 18px}.kpi{grid-template-columns:1fr 1fr}h1{font-size:31px}.diagram .body{min-width:650px}}
+</style>
+</head>
+<body>
+<div class="shell">
+<nav>
+  <div class="brand">Unified Application Understanding</div>
+  <div class="sub">Agentic QA · Phase 1</div>
+  <div class="navgroup">Overview</div>
+  <a href="#review">1. Review Verdict</a>
+  <a href="#glance">2. Architecture at a Glance</a>
+  <a href="#model">3. Understanding Model</a>
+  <a href="#flow">4. End-to-End Flow</a>
+  <a href="#components">5. Major Components</a>
+  <a href="#evolution">6. Independent Evolution</a>
+  <a href="#quality">7. Quality & Governance</a>
+  <a href="#phase1">8. Phase 1 Scope</a>
+  <div class="navgroup">Details</div>
+  <a href="#static">D1. Static Understanding</a>
+  <a href="#runtime">D2. Runtime Exploration</a>
+  <a href="#recon">D3. Reconciliation</a>
+  <a href="#provider">D4. Providers</a>
+  <a href="#trace">D5. Traceability</a>
+  <a href="#decisions">D6. Decisions</a>
+</nav>
+
+<main>
+<header>
+  <div class="eyebrow">Architecture review + proposed baseline</div>
+  <h1>Agentic QA Platform — Phase 1 Understanding Architecture</h1>
+  <p class="lede">A simpler architectural baseline centered on one durable asset: a versioned, evidence-backed <strong>Unified Application Understanding</strong> from which downstream QA capabilities can independently evolve.</p>
+  <div class="badges">
+    <span class="badge fixed">Phase 1 capability scope retained</span>
+    <span class="badge fixed">Static + runtime understanding</span>
+    <span class="badge place">Crawler provider placeholder</span>
+    <span class="badge place">Code Intelligence provider placeholder</span>
+    <span class="badge fixed">Independent component contracts</span>
+  </div>
+</header>
+
+<section id="review">
+<h2>1. Review Verdict on Claude's Current Document</h2>
+<p>The revised Claude document is <strong>substantially aligned</strong> with the original requirement and with the refinement prompt. It correctly moved to a concise overview plus expandable technical details, made Unified Application Understanding the visible center, retained the replaceable crawler and Code Intelligence providers, and kept the major downstream capabilities intact.</p>
+
+<div class="kpi">
+  <div class="box"><div class="v">High</div><div class="l">Product alignment</div></div>
+  <div class="box"><div class="v">High</div><div class="l">Architectural separation</div></div>
+  <div class="box"><div class="v">High</div><div class="l">Runtime/static model</div></div>
+  <div class="box"><div class="v">Medium</div><div class="l">Need to freeze final semantics</div></div>
+</div>
+
+<table>
+<tr><th>Area</th><th>Assessment</th><th>My recommendation</th></tr>
+<tr><td>Central understanding</td><td>Good. Claude now presents Unified Application Understanding as the product asset.</td><td>Keep this as the primary architectural concept.</td></tr>
+<tr><td>Claims / graph</td><td>Improved, but the detailed model still gives claims a very strong canonical role.</td><td>Treat claims/evidence as a core representation inside the semantic model, not as the product definition.</td></tr>
+<tr><td>Static + runtime</td><td>Strong. Runtime exploration is explicitly optional.</td><td>Keep static-only operation and runtime enrichment as two supported modes.</td></tr>
+<tr><td>Reconciliation</td><td>Strong and appropriately separated from defect judgement.</td><td>Keep as an independent capability.</td></tr>
+<tr><td>Provider isolation</td><td>Strong. Both external integrations are behind provider contracts.</td><td>Keep provider-neutral contracts; select actual implementations later.</td></tr>
+<tr><td>Downstream layers</td><td>Strong separation across test design, cases/data, automation, execution and evaluation.</td><td>Keep explicit contracts and independent lifecycle/versioning.</td></tr>
+<tr><td>Phase 1 scope</td><td>Mostly aligned, but "depth" language can blur working capability versus future capability.</td><td>Every Phase 1 capability must function end-to-end within explicitly bounded scope.</td></tr>
+<tr><td>Presentation</td><td>Much better than the prior baseline.</td><td>Use the overview as the architecture-review artifact; keep details secondary.</td></tr>
+</table>
+
+<div class="callout warn">
+<strong>One architectural correction:</strong> do not let the implementation become "a claims system with projections." The product is an <strong>application understanding system</strong>. Claims, evidence, graphs, state models, document views and retrieval indexes are implementation representations that support that asset.
+</div>
+</section>
+
+<section id="glance">
+<h2>2. Architecture at a Glance</h2>
+<p class="lede">The simplest way to understand the system is: <strong>understand the application first, then generate and validate everything else from that understanding.</strong></p>
+
+<div class="diagram">
+<div class="cap">Executive architecture</div>
+<div class="body">
+<pre class="mermaid">
+flowchart TB
+  USER["QA User"] --> UI["QA Platform UI"]
+  UI --> API["Platform API + Workflow + Governance"]
+
+  API --> UAU
+
+  subgraph INPUTS["Application Understanding Inputs"]
+    SRC["Frontend + Backend Repositories"]
+    RUN["Running AUT"]
+    CI["CODE_INTELLIGENCE_PROVIDER"]
+    CR["CRAWLER_PROVIDER"]
+  end
+
+  SRC --> STATIC["Static Understanding"]
+  CI -. optional provider .-> STATIC
+  RUN --> EXP["Runtime Exploration"]
+  CR -. provider .-> EXP
+
+  STATIC --> RECON["Reconciliation"]
+  EXP --> RECON
+  STATIC --> UAU["UNIFIED APPLICATION UNDERSTANDING"]
+  RECON --> UAU
+
+  subgraph DOWN["Independent QA Capabilities"]
+    TD["Test Design"]
+    TC["Test Case + Test Data"]
+    AU["Playwright Automation"]
+    EX["Execution"]
+    EV["Evaluation + Findings"]
+  end
+
+  UAU --> TD --> TC --> AU --> EX --> EV
+  EV -. evidence / knowledge update .-> UAU
+
+  subgraph CROSS["Cross-cutting"]
+    Q["Evidence + Provenance + Confidence"]
+    G["Policy + Human / Autonomous Governance"]
+  end
+  CROSS -. supports .-> API
+  CROSS -. supports .-> UAU
+  CROSS -. supports .-> TD
+  CROSS -. supports .-> AU
+  CROSS -. supports .-> EX
+  CROSS -. supports .-> EV
+</pre>
+</div>
+</div>
+
+<p><strong>Key interpretation:</strong> Static understanding creates the baseline. Runtime exploration is a second evidence source, not a mandatory prerequisite. Reconciliation combines the two. The resulting understanding is the controlled input to downstream QA generation.</p>
+</section>
+
+<section id="model">
+<h2>3. What the Unified Application Understanding Means</h2>
+<p>The Unified Application Understanding is the durable semantic model of the AUT. It should be versioned and tied to evidence. It is not merely a generated "understanding document".</p>
+
+<div class="grid">
+  <div class="card"><h4>Structure</h4><p>Screens, pages, components, fields, APIs, backend services, data entities and configuration.</p></div>
+  <div class="card"><h4>Relationships</h4><p>Frontend → API, API → service, service → data, navigation, dependencies, protection and other meaningful relationships.</p></div>
+  <div class="card"><h4>Behaviour</h4><p>Rules, validations, permissions, states, transitions, conditions, errors and observable runtime behaviour.</p></div>
+  <div class="card"><h4>Grounding</h4><p>Evidence, provenance, inference type, reconciliation state, oracle status and confidence.</p></div>
+</div>
+
+<div class="principle">
+<b>Architecture invariant</b>
+No downstream artifact is generated against an implicit or unversioned application context. Every generated artifact identifies the understanding version from which it was produced.
+</div>
+
+<div class="diagram">
+<div class="cap">Canonical model versus representations</div>
+<div class="body">
+<pre class="mermaid">
+flowchart TB
+  U["Unified Application Understanding<br/>canonical semantic product asset"]
+
+  U --> CLAIM["Claims / normalized facts"]
+  U --> EVID["Evidence + provenance"]
+  U --> GRAPH["Relationship graph projection"]
+  U --> STATE["State / behavior projection"]
+  U --> DOC["Human-readable understanding"]
+  U --> OBL["Coverage / obligation projection"]
+  U --> RET["Retrieval / indexing views"]
+
+  style U stroke-width:4px
+</pre>
+</div>
+</div>
+
+<p>The design should allow any representation to change or be replaced without forcing a redesign of the whole platform.</p>
+</section>
+
+<section id="flow">
+<h2>4. End-to-End Architecture Flow</h2>
+
+<div class="diagram">
+<div class="cap">Lifecycle</div>
+<div class="body">
+<pre class="mermaid">
+flowchart LR
+  A["Repositories"] --> B["Static Understanding"]
+  B --> C["Baseline Understanding"]
+  C --> D["Runtime Exploration<br/>(optional)"]
+  D --> E["Runtime Observations"]
+  B --> F["Reconciliation"]
+  E --> F
+  F --> G["Unified Application Understanding"]
+  C --> G
+  G --> H["Coverage Obligations"]
+  H --> I["Test Scenarios"]
+  I --> J["Test Cases + Data Requirements"]
+  J --> K["Automation Spec"]
+  K --> L["Automation Binding"]
+  L --> M["Playwright Execution"]
+  M --> N["Evaluation + Findings"]
+  N -. new evidence .-> G
+</pre>
+</div>
+</div>
+
+<h3>Supported operating modes</h3>
+<table>
+<tr><th>Mode</th><th>How it works</th><th>Expected outcome</th></tr>
+<tr><td>Static-only</td><td>Repository → static understanding → downstream QA</td><td>Useful output with evidence/confidence reflecting absence of runtime validation.</td></tr>
+<tr><td>Static + runtime</td><td>Static understanding → exploration → reconciliation → downstream QA</td><td>Higher validation, richer behaviour/state evidence and stronger locator confidence.</td></tr>
+<tr><td>Continuous</td><td>New source/runtime evidence feeds updated understanding versions.</td><td>Knowledge and generated artifacts can be re-evaluated as the AUT changes.</td></tr>
+</table>
+</section>
+
+<section id="components">
+<h2>5. Major Architectural Components</h2>
+
+<table>
+<tr><th>Component</th><th>Primary responsibility</th><th>Explicitly not responsible for</th><th>Evolution boundary</th></tr>
+<tr><td><strong>Understanding</strong></td><td>Static analysis, runtime observations, reconciliation and Unified Application Understanding.</td><td>Test semantics or execution policy.</td><td>Understanding/observation contracts.</td></tr>
+<tr><td><strong>Test Design</strong></td><td>Coverage obligations, testing techniques and scenario generation.</td><td>Locator binding or browser execution.</td><td>Scenario + coverage contracts.</td></tr>
+<tr><td><strong>Test Case &amp; Data</strong></td><td>Test steps, expected outcomes and data requirements/state needs.</td><td>Concrete environment secrets and runtime execution.</td><td>Test-case/data contracts.</td></tr>
+<tr><td><strong>Automation</strong></td><td>Automation specification, reusable page/component abstractions, binding and locator lifecycle.</td><td>Business test intent changes through healing.</td><td>Automation spec/binding contracts.</td></tr>
+<tr><td><strong>Execution</strong></td><td>Worker scheduling, browser execution, environments, concurrency and artifacts.</td><td>Semantic judgement of failures.</td><td>Execution/result contract.</td></tr>
+<tr><td><strong>Evaluation</strong></td><td>Quality assessment, triage, confidence contribution and findings.</td><td>Approving artifacts.</td><td>Evaluator contract.</td></tr>
+<tr><td><strong>Governance</strong></td><td>Approval, autonomous policy, escalation and audit.</td><td>Domain interpretation.</td><td>Gate/policy contract.</td></tr>
+<tr><td><strong>Provider Integration</strong></td><td>Adapters and controlled invocation of LLMs, Code Intelligence, Crawler, MCP/tools and future agents.</td><td>Owning canonical application knowledge.</td><td>Provider/capability contracts.</td></tr>
+</table>
+
+<div class="callout">
+The target deployment style remains a <strong>modular control plane with isolated worker execution</strong>. A component does not need to be a microservice to be independently evolvable.
+</div>
+</section>
+
+<section id="evolution">
+<h2>6. Independent Evolution by Contract</h2>
+<p class="lede">The architecture should make change local. A component can be upgraded, replaced, tuned, or extended through its contract without redesigning unrelated layers.</p>
+
+<div class="diagram">
+<div class="cap">Contract-based evolution</div>
+<div class="body">
+<pre class="mermaid">
+flowchart TB
+  U["Unified Application Understanding"]
+
+  S["Static Understanding"] -->|Understanding Contribution| U
+  CI["Code Intelligence Provider"] -->|Provider Contract| S
+  C["Crawler Provider"] -->|Provider Contract| R["Runtime Exploration"]
+  R -->|Runtime Observation| U
+
+  U -->|Understanding Contract| T["Test Design"]
+  T -->|Scenario Contract| TC["Test Case + Data"]
+  TC -->|Test Contract| A["Automation"]
+  A -->|Execution Contract| X["Execution"]
+  X -->|Result Contract| E["Evaluation"]
+
+  P["LLM / MCP / External Agent Providers"] -->|Capability Contracts| T
+  P -->|Capability Contracts| A
+  P -->|Capability Contracts| E
+
+  subgraph CONTROL["Cross-cutting controls"]
+    EV["Evidence / Provenance"]
+    GOV["Governance / Policy"]
+  end
+  EV -.-> U
+  EV -.-> T
+  EV -.-> TC
+  EV -.-> A
+  EV -.-> X
+  EV -.-> E
+  GOV -.-> T
+  GOV -.-> A
+  GOV -.-> X
+</pre>
+</div>
+</div>
+
+<table>
+<tr><th>Layer</th><th>Independent improvement example</th><th>Should not require rewriting</th></tr>
+<tr><td>Static Understanding</td><td>Improve route/API extraction for a framework.</td><td>Scenario or execution components.</td></tr>
+<tr><td>Runtime Exploration</td><td>Replace crawler implementation or improve exploration strategy.</td><td>Canonical understanding schema or test generator.</td></tr>
+<tr><td>Reconciliation</td><td>Improve matching/conflict logic.</td><td>Crawler implementation.</td></tr>
+<tr><td>Test Design</td><td>Add a new test technique.</td><td>Automation/execution.</td></tr>
+<tr><td>Test Case/Data</td><td>Improve semantic form handling or data strategy.</td><td>Scenario generation or Playwright worker infrastructure.</td></tr>
+<tr><td>Automation</td><td>Improve object modeling or locator recovery.</td><td>Approved test intent.</td></tr>
+<tr><td>Execution</td><td>Change worker/queue/concurrency strategy.</td><td>Test cases and automation intent.</td></tr>
+<tr><td>Evaluation</td><td>Add a new evaluator.</td><td>Generation components.</td></tr>
+</table>
+</section>
+
+<section id="quality">
+<h2>7. Quality, Evidence and Governance</h2>
+
+<h3>Evidence and confidence</h3>
+<div class="grid">
+  <div class="card"><h4>Evidence</h4><p>What was actually observed or extracted, with a durable anchor.</p></div>
+  <div class="card"><h4>Inference type</h4><p>Deterministic, derived, or semantic.</p></div>
+  <div class="card"><h4>Reconciliation</h4><p>How static and runtime evidence relate: match, runtime-only, static-only, different, conflict, unverified.</p></div>
+  <div class="card"><h4>Confidence</h4><p>A platform-computed score exposed as Mostly Confident, Somewhat Confident, or Insufficient Evidence.</p></div>
+</div>
+
+<h3>Evaluation is layered</h3>
+<table>
+<tr><th>Layer</th><th>Examples</th></tr>
+<tr><td>Deterministic</td><td>Schema validity, duplicate detection, reference integrity, coverage arithmetic, locator validation, generated-code checks.</td></tr>
+<tr><td>Derived</td><td>Artifact consistency, lineage integrity, contradiction detection, data/constraint compatibility.</td></tr>
+<tr><td>Semantic</td><td>Scenario quality, missing edge cases, expected-result quality, diagnostic interpretation.</td></tr>
+</table>
+
+<h3>One governance model</h3>
+<div class="diagram">
+<div class="cap">Human and autonomous operation</div>
+<div class="body">
+<pre class="mermaid">
+flowchart LR
+  G["Generate"] --> E["Evaluate"]
+  E --> X{"Governance Gate"}
+  X -->|Human| H["Approve / Edit / Reject"]
+  X -->|Autonomous| P["Policy: Continue / Stop / Escalate"]
+  P -->|Escalate| H
+  H --> NEXT["Next stage"]
+  P --> NEXT
+</pre>
+</div>
+</div>
+
+<p>Autonomous mode is not a separate quality path. It changes the decider at the gate while retaining evaluator, evidence, safety and policy controls.</p>
+
+<h3>Coverage</h3>
+<p>The platform should pursue very high coverage through explicit obligations rather than an LLM-generated percentage.</p>
+<div class="diagram">
+<div class="cap">Coverage model</div>
+<div class="body">
+<pre class="mermaid">
+flowchart TB
+  U["Unified Application Understanding"] --> O["Coverage Obligations"]
+  O --> T["Testing Techniques"]
+  T --> S["Scenarios"]
+  S --> C["Test Cases"]
+  C --> R["Coverage Result"]
+  R --> R1["Covered"]
+  R --> R2["Partially covered"]
+  R --> R3["Uncovered"]
+  R --> R4["Insufficient evidence"]
+  R --> R5["Not applicable"]
+</pre>
+</div>
+</div>
+
+<p>Core techniques retained in Phase 1:</p>
+<ul>
+<li>Equivalence Partitioning</li>
+<li>Boundary Value Analysis</li>
+<li>Decision Table Coverage</li>
+<li>Pairwise Testing</li>
+<li>Permutation &amp; Combination</li>
+<li>Graph-Based Path Coverage</li>
+<li>Metamorphic Testing</li>
+<li>Model-Based Testing</li>
+</ul>
+</section>
+
+<section id="phase1">
+<h2>8. Phase 1 Scope and Architectural Position</h2>
+
+<div class="principle">
+<b>Phase 1 rule</b>
+All Phase 1 capabilities are real and functional within a declared scope. "Bounded" means limited, not stubbed.
+</div>
+
+<table>
+<tr><th>Capability</th><th>Phase 1 position</th></tr>
+<tr><td>Repository ingestion</td><td>Functional for the confirmed frontend/backend repository setup.</td></tr>
+<tr><td>Static understanding</td><td>Functional with supported framework packs and measured extraction quality.</td></tr>
+<tr><td>Unified understanding</td><td>Versioned, persistent, evidence-backed and the source for downstream generation.</td></tr>
+<tr><td>Runtime exploration</td><td>Functional where an accessible AUT environment and approved policy exist; optional otherwise.</td></tr>
+<tr><td>Reconciliation</td><td>Functional and independent of the crawler implementation.</td></tr>
+<tr><td>Test design</td><td>Functional agentic workflow using the defined test-design techniques.</td></tr>
+<tr><td>Test case + data</td><td>Functional, with explicit data requirements and state provisioning distinction.</td></tr>
+<tr><td>Automation</td><td>Functional Playwright generation using specification/binding separation and reusable abstractions.</td></tr>
+<tr><td>Execution</td><td>Functional real-browser execution with isolated workers, environment policy, secrets and concurrency.</td></tr>
+<tr><td>Evaluation</td><td>Functional evaluator layers with findings/triage.</td></tr>
+<tr><td>Confidence/evidence</td><td>Functional and visible across generated outcomes.</td></tr>
+<tr><td>Human/autonomous mode</td><td>Functional through one governance model.</td></tr>
+<tr><td>Excel export</td><td>Functional as a projection/export capability.</td></tr>
+<tr><td>Code Intelligence</td><td><span class="badge place">Placeholder provider contract</span>; concrete service binding can be added without changing the core.</td></tr>
+<tr><td>Crawler</td><td><span class="badge place">Placeholder provider contract</span>; concrete crawler can be replaced without changing the understanding model.</td></tr>
+</table>
+</section>
+
+<section id="static">
+<h2>D1. Static Understanding — Architecture Detail</h2>
+<p>Static understanding is the first evidence source and establishes the baseline model before runtime enrichment.</p>
+<div class="diagram">
+<div class="cap">Static understanding</div>
+<div class="body">
+<pre class="mermaid">
+flowchart LR
+  R["Repo set + pinned revisions"] --> I["Ingestion"]
+  I --> D["Stack detection / framework pack"]
+  D --> X1["Entities"]
+  D --> X2["Schema / constraints"]
+  D --> X3["Rules / permissions"]
+  D --> X4["Relationships"]
+  D --> X5["Locator candidates"]
+  CI["Code Intelligence Provider"] -. optional .-> D
+  X1 --> N["Normalize + evidence"]
+  X2 --> N
+  X3 --> N
+  X4 --> N
+  X5 --> N
+  N --> U["Baseline Understanding"]
+</pre>
+</div>
+</div>
+
+<div class="callout">
+Static analysis is expected to be strong for structural inventory and schema extraction, while cross-layer relationships and some business behaviour remain more uncertain. The architecture therefore preserves uncertainty instead of flattening all output into "facts".
+</div>
+</section>
+
+<section id="runtime">
+<h2>D2. Runtime Exploration — Architecture Detail</h2>
+<p>The platform owns the exploration agenda, state model and safety decisions. The crawler provider owns browser actuation and observation collection.</p>
+<div class="diagram">
+<div class="cap">Runtime exploration</div>
+<div class="body">
+<pre class="mermaid">
+flowchart TB
+  U["Baseline Understanding"] --> P["Exploration Planner"]
+  P --> G["Safety / Environment Policy"]
+  G -->|allowed| S["Exploration Session"]
+  S --> O["Observe state"]
+  O --> A["Select next action"]
+  A --> C["CRAWLER_PROVIDER"]
+  C --> R["Runtime observation"]
+  R --> SI["State identity"]
+  SI --> UP["Update runtime model + agenda"]
+  UP --> O
+  P -->|blocked| B["Blocker / Escalation"]
+  UP --> FIN["Session result"]
+</pre>
+</div>
+</div>
+
+<p>Runtime exploration should default to safe behaviour for unknown or destructive actions. It should be possible to stop, resume, audit and explain why an exploration step was or was not attempted.</p>
+</section>
+
+<section id="recon">
+<h2>D3. Reconciliation — Architecture Detail</h2>
+<div class="diagram">
+<div class="cap">Static versus runtime</div>
+<div class="body">
+<pre class="mermaid">
+flowchart TB
+  S["Static evidence"] --> R["Reconciliation"]
+  T["Runtime evidence"] --> R
+  R --> M1["Match"]
+  R --> M2["Runtime only"]
+  R --> M3["Static only"]
+  R --> M4["Different"]
+  R --> M5["Conflict"]
+  R --> M6["Unverified"]
+  M2 --> U["Extend understanding"]
+  M3 --> H["Hold / explore further"]
+  M4 --> Q["Quality / mismatch analysis"]
+  M5 --> F["Defect candidate when corroborated"]
+</pre>
+</div>
+</div>
+
+<div class="callout red">
+<strong>Mismatch ≠ defect.</strong> A mismatch is first a reconciliation result. It becomes a defect candidate only after the platform establishes that the evidence is comparable and the difference is not explained by incomplete exploration, stale context, environment/configuration or declared variation.
+</div>
+</section>
+
+<section id="provider">
+<h2>D4. External Provider Boundaries</h2>
+<table>
+<tr><th>Provider</th><th>Platform asks for</th><th>Platform retains ownership of</th></tr>
+<tr><td><code>CODE_INTELLIGENCE_PROVIDER</code></td><td>Code analysis, symbols, relationships, semantic retrieval, contextual code evidence.</td><td>Understanding model, evidence model, versioning, reconciliation and downstream QA semantics.</td></tr>
+<tr><td><code>CRAWLER_PROVIDER</code></td><td>Session control, browser actions, DOM/accessibility/network observations, screenshots, locator probing.</td><td>Exploration planning, state identity, action policy, safety, interpretation and knowledge.</td></tr>
+<tr><td><code>LANGUAGE_MODEL_PROVIDER</code></td><td>Semantic generation/classification according to typed tasks.</td><td>Task definition, context assembly, output validation, governance, provenance and artifact versioning.</td></tr>
+<tr><td><code>TOOL / MCP PROVIDER</code></td><td>Approved external tool capabilities.</td><td>Tool authorization, invocation policy, provenance and use of the returned data.</td></tr>
+</table>
+
+<div class="principle">
+<b>Replacement rule</b>
+Replacing any one provider must not require changes to the canonical understanding model or unrelated downstream components.
+</div>
+</section>
+
+<section id="trace">
+<h2>D5. Traceability and Artifact Lineage</h2>
+<div class="diagram">
+<div class="cap">Artifact lineage</div>
+<div class="body">
+<pre class="mermaid">
+flowchart LR
+  RV["Repository / runtime evidence"] --> U["Understanding Version"]
+  U --> SC["Scenario"]
+  SC --> TC["Test Case"]
+  TC --> DR["Data Requirement"]
+  TC --> AS["Automation Specification"]
+  AS --> AB["Automation Binding"]
+  AB --> EX["Execution"]
+  EX --> EV["Evaluation"]
+  EV --> FN["Finding"]
+  FN -. new evidence .-> U
+</pre>
+</div>
+</div>
+
+<p>Each artifact is versioned and carries its parent/context version. A human edit creates a new version rather than mutating the machine-generated original. Approved artifacts are immutable.</p>
+
+<h3>Why this matters</h3>
+<ul>
+<li>Impact analysis when application source changes.</li>
+<li>Explanation of why a test exists.</li>
+<li>Reproducibility of generation.</li>
+<li>Safe regeneration when understanding changes.</li>
+<li>Run-over-run comparison without relying on array position or UI ordering.</li>
+</ul>
+</section>
+
+<section id="decisions">
+<h2>D6. Key Architectural Decisions for Review</h2>
+<table>
+<tr><th>Decision</th><th>Position</th><th>Status</th></tr>
+<tr><td>Central asset</td><td>Versioned Unified Application Understanding.</td><td><span class="badge fixed">Fixed</span></td></tr>
+<tr><td>Knowledge representation</td><td>Semantic model with evidence/claims plus replaceable projections; not graph-first by mandate.</td><td><span class="badge fixed">Fixed</span></td></tr>
+<tr><td>Static/runtime</td><td>Two evidence sources with reconciliation; runtime exploration optional.</td><td><span class="badge fixed">Fixed</span></td></tr>
+<tr><td>Crawler</td><td>External, replaceable provider.</td><td><span class="badge place">Placeholder</span></td></tr>
+<tr><td>Code Intelligence</td><td>External, replaceable provider.</td><td><span class="badge place">Placeholder</span></td></tr>
+<tr><td>Platform style</td><td>Modular control plane + isolated workers, not premature microservices.</td><td><span class="badge fixed">Fixed</span></td></tr>
+<tr><td>Coverage</td><td>Explicit obligation model and measurable coverage; no unqualified AI percentage.</td><td><span class="badge fixed">Fixed</span></td></tr>
+<tr><td>Automation</td><td>Intent/specification separated from binding and self-healing.</td><td><span class="badge fixed">Fixed</span></td></tr>
+<tr><td>Governance</td><td>One gate model with human and autonomous deciders.</td><td><span class="badge fixed">Fixed</span></td></tr>
+<tr><td>Evidence/confidence</td><td>Evidence, inference type, oracle status, reconciliation and confidence remain separate concepts.</td><td><span class="badge fixed">Fixed</span></td></tr>
+<tr><td>Technology selection</td><td>Chosen after conceptual architecture; provider implementations remain replaceable where practical.</td><td><span class="badge flex">Flexible</span></td></tr>
+</table>
+
+<div class="callout warn">
+<strong>Recommended next review gate:</strong> approve the simplified architecture and these principles first. After that, create the detailed development roadmap and requirement-to-component traceability matrix. Only then should implementation work be decomposed into engineering epics/tasks.
+</div>
+</section>
+
+<div class="footer">
+Prepared as a simplified architectural baseline for joint review by Product Owner, Solution Architect and Engineering Lead. This document intentionally emphasizes architectural boundaries and decisions over implementation detail.
+</div>
+</main>
+</div>
+<script>
+mermaid.initialize({
+  startOnLoad:true,
+  theme:"base",
+  securityLevel:"loose",
+  flowchart:{htmlLabels:true,useMaxWidth:false,curve:"basis"}
+});
+</script>
+</body>
+</html>

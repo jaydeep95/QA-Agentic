@@ -1,0 +1,3371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QA Agent — Quality Context Fabric</title>
+<style>
+  :root{
+    --bg:#FAFAF7;
+    --surface:#FFFFFF;
+    --sidebar:#F5F4EE;
+    --ink:#171B1E;
+    --ink-soft:#5B6670;
+    --ink-faint:#8B939B;
+    --line:#E4E1D6;
+    --line-soft:#EEECE3;
+
+    --teal:#0F6B5C;
+    --teal-tint:#E5F1EE;
+    --amber:#9C6F1E;
+    --amber-tint:#FAF1DD;
+    --red:#AE3B34;
+    --red-tint:#FBE9E6;
+    --gray:#71787E;
+    --gray-tint:#EFEEEA;
+    --purple:#453D82;
+    --purple-tint:#EDEAF6;
+
+    --font-display:'Fraunces', ui-serif, Georgia, serif;
+    --font-body:'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-mono:'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font-body);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--teal-tint); color:var(--teal);}
+  button{font-family:inherit;}
+  textarea, input{font-family:inherit;}
+
+  .shell{display:flex; height:100vh; min-height:600px;}
+
+  /* ---------------- Sidebar ---------------- */
+  .sidebar{width:208px; flex-shrink:0; background:var(--sidebar); border-right:1px solid var(--line); display:flex; flex-direction:column; padding:18px 12px;}
+  .brand{padding:4px 8px 18px;}
+  .brand-mark{font-family:var(--font-display); font-size:18px; font-weight:560; letter-spacing:-0.01em; display:block;}
+  .brand-sub{font-family:var(--font-mono); font-size:10px; color:var(--ink-faint); letter-spacing:.03em;}
+  .nav-item{
+    display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:7px;
+    font-size:13.5px; font-weight:500; color:var(--ink-soft); cursor:pointer; margin-bottom:2px;
+    transition:background .15s ease, color .15s ease; border:none; background:transparent; width:100%; text-align:left;
+  }
+  .nav-item .ic{font-size:14px; width:16px; flex-shrink:0; text-align:center;}
+  .nav-item:hover{background:var(--line-soft);}
+  .nav-item.active{background:var(--surface); color:var(--ink); box-shadow:0 1px 2px rgba(20,20,15,.06);}
+  .nav-item .badge{margin-left:auto; font-family:var(--font-mono); font-size:10px; color:var(--ink-faint); background:var(--line-soft); padding:1px 6px; border-radius:999px;}
+  .sidebar-foot{margin-top:auto; padding:10px 10px 4px; border-top:1px solid var(--line);}
+  .sidebar-foot .app-name{font-size:12.5px; font-weight:500;}
+  .sidebar-foot .app-sub{font-family:var(--font-mono); font-size:10px; color:var(--ink-faint); margin-top:2px;}
+
+  /* ---------------- Content ---------------- */
+  .content{flex:1; min-width:0; display:flex; flex-direction:column;}
+  .context-strip{display:flex; align-items:center; gap:8px; padding:9px 18px; border-bottom:1px solid var(--line); flex-wrap:wrap; background:var(--surface);}
+  .ctx-label{font-family:var(--font-mono); font-size:10px; color:var(--ink-faint); letter-spacing:.03em; margin-right:2px;}
+  .pill{display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:500; padding:5px 10px; border-radius:999px; background:var(--line-soft); color:var(--ink-soft); white-space:nowrap;}
+  .pill.primary{background:#EFE4DC; color:#8A4B2A;}
+  .pill.accent{background:var(--teal-tint); color:var(--teal);}
+  .add-source{font-family:var(--font-mono); font-size:11.5px; color:var(--ink-faint); background:transparent; border:1px dashed var(--line); border-radius:999px; padding:5px 10px; cursor:pointer;}
+  .ctx-meter{margin-left:auto; display:flex; align-items:center; gap:8px; font-family:var(--font-mono); font-size:10.5px; color:var(--ink-faint);}
+  .ctx-meter .bar{width:70px; height:5px; background:var(--line-soft); border-radius:99px; overflow:hidden;}
+  .ctx-meter .bar-fill{height:100%; background:var(--teal); width:0%; transition:width .6s ease;}
+
+  .main-area{flex:1; min-width:0; display:flex; overflow:hidden;}
+  .main-scroll{flex:1; overflow-y:auto; padding:28px 30px 20px; min-width:0;}
+
+  .view{display:none;}
+  .view.active{display:block; animation:fade .3s ease;}
+  @keyframes fade{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }
+
+  /* ---------------- Right rail ---------------- */
+  .rightrail{width:250px; flex-shrink:0; border-left:1px solid var(--line); background:var(--surface); padding:20px 18px; overflow-y:auto;}
+  .rr-sync{font-family:var(--font-mono); font-size:9.5px; color:var(--ink-faint); letter-spacing:.04em; margin-bottom:8px;}
+  .rr-title{font-family:var(--font-display); font-size:17px; font-weight:560; margin-bottom:8px;}
+  .status-tag{display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:500; padding:3px 9px; border-radius:999px; margin-bottom:16px;}
+  .status-tag.active{background:var(--teal-tint); color:var(--teal);}
+  .status-tag.pending{background:var(--gray-tint); color:var(--gray);}
+  .status-tag .dot2{width:5px; height:5px; border-radius:50%; background:currentColor;}
+  .rr-section-label{font-family:var(--font-mono); font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-faint); margin:18px 0 10px;}
+  .rr-fact{margin-bottom:11px;}
+  .rr-fact-label{font-size:10.5px; color:var(--ink-faint); margin-bottom:2px;}
+  .rr-fact-val{font-size:13px; font-weight:500;}
+  .prog-row{margin-bottom:13px;}
+  .prog-head{display:flex; justify-content:space-between; font-size:11.5px; margin-bottom:5px;}
+  .prog-head b{font-family:var(--font-mono); font-weight:500;}
+  .prog-track{height:5px; background:var(--line-soft); border-radius:99px; overflow:hidden;}
+  .prog-fill{height:100%; border-radius:99px; width:0%; transition:width .8s ease;}
+  .prog-fill.teal{background:var(--teal);}
+  .prog-fill.amber{background:var(--amber);}
+  .prog-fill.gray{background:var(--ink-faint);}
+
+  /* ---------------- Phase 1 workflow ---------------- */
+  .workflow-strip{display:flex; align-items:center; gap:5px; padding:8px 22px; border-bottom:1px solid var(--line); background:var(--bg); overflow-x:auto;}
+  .workflow-label{font-family:var(--font-mono); font-size:9.5px; color:var(--ink-faint); letter-spacing:.05em; margin-right:5px; white-space:nowrap;}
+  .workflow-step{display:inline-flex; align-items:center; gap:6px; border:1px solid transparent; background:transparent; color:var(--ink-faint); border-radius:7px; padding:5px 8px; font-size:11.5px; white-space:nowrap; cursor:pointer;}
+  .workflow-step span{font-family:var(--font-mono); font-size:9px;}
+  .workflow-step:hover{background:var(--surface); color:var(--ink);}
+  .workflow-step.active{background:var(--teal-tint); color:var(--teal); border-color:#D1E6E1; font-weight:600;}
+  .workflow-arrow{font-family:var(--font-mono); color:var(--line); font-size:11px;}
+  .evidence-legend{display:flex; flex-wrap:wrap; gap:7px; margin:0 0 18px;}
+  .evidence-chip{font-family:var(--font-mono); font-size:9.5px; padding:4px 8px; border-radius:5px; border:1px solid var(--line); background:var(--surface); color:var(--ink-faint);}
+  .evidence-chip.observed{color:var(--teal); background:var(--teal-tint); border-color:#D1E6E1;}
+  .evidence-chip.inferred{color:var(--amber); background:var(--amber-tint); border-color:#EDE0C4;}
+  .evidence-chip.validation{color:var(--gray); background:var(--gray-tint);}
+  .decision-banner{display:flex; align-items:flex-start; gap:8px; background:var(--amber-tint); color:var(--ink-soft); border:1px solid #EDE0C4; border-radius:8px; padding:9px 11px; margin-bottom:18px; font-size:12px;}
+  .outcome-box{border:1px solid var(--line); background:var(--surface); border-radius:9px; padding:12px 14px; margin-bottom:18px;}
+  .outcome-label{font-family:var(--font-mono); font-size:9.5px; color:var(--ink-faint); letter-spacing:.05em; text-transform:uppercase; margin-bottom:4px;}
+  .outcome-text{font-size:13px; color:var(--ink-soft);}
+  
+  /* ---------------- Assistant home ---------------- */
+  .hero-sm h1{font-family:var(--font-display); font-weight:560; font-size:26px; letter-spacing:-0.01em; margin:0 0 8px;}
+  .hero-sm p{color:var(--ink-soft); font-size:14px; max-width:56ch; margin:0 0 22px;}
+  .skill-cards{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:22px;}
+  .skill-card{background:var(--surface); border:1px solid var(--line); border-radius:9px; padding:14px 15px; cursor:pointer; transition:border-color .15s ease, transform .1s ease;}
+  .skill-card:hover{border-color:var(--ink-faint); transform:translateY(-1px);}
+  .skill-card .sc-title{font-size:13.5px; font-weight:600; margin-bottom:3px; display:flex; align-items:center; gap:7px;}
+  .skill-card .sc-sub{font-size:12px; color:var(--ink-faint);}
+
+  /* ---------------- Chat transcript ---------------- */
+  .transcript{margin-bottom:14px;}
+  .msg{display:flex; gap:10px; margin-bottom:18px; animation:fade .25s ease;}
+  .avatar{width:26px; height:26px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-size:10.5px; font-weight:500; color:#fff; margin-top:2px;}
+  .avatar.user{background:#8A4B2A;}
+  .avatar.agent{background:var(--ink);}
+  .msg-body{flex:1; min-width:0;}
+  .msg-name{font-size:11.5px; font-weight:600; margin-bottom:3px; display:flex; align-items:center; gap:8px;}
+  .msg-name .model-tag{font-family:var(--font-mono); font-weight:400; font-size:10px; color:var(--ink-faint);}
+  .msg-text{font-size:14px; color:var(--ink);}
+
+  .skill-run-card{background:var(--surface); border:1px solid var(--line); border-radius:9px; margin:10px 0 12px; overflow:hidden;}
+  .src-head{display:flex; align-items:center; gap:8px; padding:10px 14px; border-bottom:1px solid var(--line-soft); background:var(--bg); font-size:12.5px; font-weight:500;}
+  .src-head .timing{margin-left:auto; font-family:var(--font-mono); font-size:10.5px; color:var(--teal);}
+  .src-body{padding:14px;}
+  .stat-row{display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--ink-soft); margin-bottom:9px; font-family:var(--font-mono);}
+  .stat-row b{color:var(--ink); font-weight:600;}
+
+  .save-btn{margin-top:4px; font-family:var(--font-body); font-size:12.5px; font-weight:600; color:#8A4B2A; background:#F5EAE1; border:none; border-radius:7px; padding:8px 14px; cursor:pointer; display:inline-flex; align-items:center; gap:6px;}
+  .save-btn:hover{background:#F0DFCF;}
+  .save-btn.done{color:var(--teal); background:var(--teal-tint); cursor:default;}
+  .fix-btn{margin-top:2px; font-family:var(--font-body); font-size:12.5px; font-weight:600; color:var(--ink); background:var(--line-soft); border:1px solid var(--line); border-radius:7px; padding:8px 14px; cursor:pointer; display:inline-flex; align-items:center; gap:6px;}
+  .fix-btn:hover{border-color:var(--ink-faint);}
+  .fix-actions{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
+  .fix-actions .save-btn{margin-top:0;}
+  .suggest-chip{display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:500; padding:7px 13px; border-radius:999px; border:1px solid var(--line); background:var(--surface); cursor:pointer; margin-top:4px; margin-right:8px;}
+  .suggest-chip:hover{border-color:var(--ink-faint);}
+  .rr-summary{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;}
+  .sum-chip{display:flex; align-items:center; gap:6px; font-size:12px; font-weight:500; padding:6px 11px; border-radius:999px;}
+  .sum-chip b{font-family:var(--font-mono); font-weight:500;}
+  .sum-chip .d{font-family:var(--font-mono); font-size:10px; opacity:.8;}
+  .sum-chip.pass{background:var(--teal-tint); color:var(--teal);}
+  .sum-chip.fail{background:var(--red-tint); color:var(--red);}
+  .sum-chip.attn{background:var(--amber-tint); color:var(--amber);}
+  .sum-chip.unk{background:var(--gray-tint); color:var(--gray);}
+
+  .finding-card{border:1px solid var(--line); border-radius:8px; margin-bottom:8px; overflow:hidden;}
+  .finding-head{display:flex; align-items:center; gap:10px; padding:11px 13px; cursor:pointer;}
+  .status-pill{font-family:var(--font-mono); font-size:10px; font-weight:500; letter-spacing:.02em; padding:2px 8px; border-radius:5px; flex-shrink:0; text-transform:uppercase;}
+  .status-pill.pass{background:var(--teal-tint); color:var(--teal);}
+  .status-pill.fail{background:var(--red-tint); color:var(--red);}
+  .status-pill.attn{background:var(--amber-tint); color:var(--amber);}
+  .status-pill.unk{background:var(--gray-tint); color:var(--gray);}
+  .finding-title{font-size:13px; font-weight:500; flex:1;}
+  .chevron{color:var(--ink-faint); transition:transform .2s ease; flex-shrink:0; font-size:13px;}
+  .finding-card.open .chevron{transform:rotate(90deg);}
+  .finding-body{max-height:0; overflow:hidden; transition:max-height .28s ease; border-top:1px solid var(--line-soft);}
+  .finding-card.open .finding-body{max-height:700px;}
+  .finding-body-inner{padding:14px;}
+  .fb-row{margin-bottom:12px;}
+  .fb-row:last-child{margin-bottom:0;}
+  .fb-label{font-family:var(--font-mono); font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-faint); margin-bottom:4px;}
+  .fb-text{font-size:13px; color:var(--ink);}
+  .evidence-chain{display:flex; align-items:center; flex-wrap:wrap; font-family:var(--font-mono); font-size:11px;}
+  .ec-node{background:var(--bg); border:1px solid var(--line); border-radius:6px; padding:4px 8px; color:var(--ink); white-space:nowrap;}
+  .ec-arrow{color:var(--ink-faint); padding:0 5px; font-size:11px;}
+  .ec-arrow.inferred{color:var(--amber);}
+  .passed-list{list-style:none; margin:0; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:5px 16px;}
+  .passed-list li{font-size:12.5px; display:flex; align-items:baseline; gap:6px;}
+  .passed-list li::before{content:"✓"; color:var(--teal); font-size:10px; font-family:var(--font-mono);}
+
+  /* ---------------- Confidence review system ---------------- */
+  .judge-banner{display:flex; align-items:center; gap:8px; background:var(--line-soft); border-radius:8px; padding:9px 12px; font-size:12px; color:var(--ink-soft); margin-bottom:14px;}
+  .judge-banner.light{background:transparent; padding:0 0 12px; color:var(--ink-faint); font-size:11.5px;}
+  .review-note{margin-top:10px; font-family:var(--font-mono); font-size:11px; color:var(--teal); background:var(--teal-tint); border-radius:6px; padding:7px 10px;}
+  .conf-chip{font-family:var(--font-mono); font-size:10.5px; font-weight:600; padding:2px 7px; border-radius:5px; flex-shrink:0;}
+  .conf-chip.high{background:var(--teal-tint); color:var(--teal);}
+  .conf-chip.medium{background:var(--amber-tint); color:var(--amber);}
+  .conf-chip.low{background:var(--gray-tint); color:var(--gray);}
+  .cat-tag{font-family:var(--font-mono); font-size:9.5px; font-weight:600; padding:2px 7px; border-radius:5px; background:var(--purple-tint); color:var(--purple); flex-shrink:0; white-space:nowrap;}
+  .conf-bucket{margin-bottom:6px;}
+  .bucket-head{display:flex; align-items:center; gap:8px; cursor:pointer; padding:9px 2px; border-bottom:1px solid var(--line-soft);}
+  .band-dot{width:8px; height:8px; border-radius:50%; flex-shrink:0;}
+  .band-dot.teal{background:var(--teal);}
+  .band-dot.amber{background:var(--amber);}
+  .band-dot.gray{background:var(--gray);}
+  .bucket-title{font-size:12.5px; font-weight:600; flex:1;}
+  .bucket-count{font-family:var(--font-mono); font-size:10.5px; color:var(--ink-faint); background:var(--line-soft); padding:1px 7px; border-radius:999px;}
+  .bucket-chevron{color:var(--ink-faint); font-size:11px; width:12px; text-align:center; flex-shrink:0;}
+  .bucket-items{padding:4px 2px 8px;}
+  .review-item{padding:9px 2px; border-bottom:1px solid var(--line-soft);}
+  .review-item:last-child{border-bottom:none;}
+  .ri-main-row{display:flex; align-items:flex-start; gap:8px; flex-wrap:wrap;}
+  .ri-text{flex:1; min-width:160px; font-size:13px; color:var(--ink); line-height:1.4; padding-top:2px;}
+  .ri-actions{display:flex; gap:1px; flex-shrink:0;}
+  .ri-icon{border:none; background:transparent; cursor:pointer; font-size:12px; color:var(--ink-faint); padding:3px 5px; border-radius:4px;}
+  .ri-icon:hover{background:var(--line-soft); color:var(--ink);}
+  .ri-reasoning{font-size:11.5px; color:var(--ink-faint); margin-top:3px; padding-left:52px;}
+  .trace-tag{font-family:var(--font-mono); font-size:10.5px; color:var(--ink-faint); margin-top:4px; padding-left:52px;}
+  .ri-detail{margin-top:8px; margin-left:52px; padding:11px; background:var(--bg); border-radius:7px;}
+  .ri-edit-input{width:100%; font-family:var(--font-body); font-size:13px; color:var(--ink); border:1px solid var(--ink-faint); border-radius:5px; padding:4px 7px; resize:vertical; background:var(--surface);}
+  .review-wrap.approved .ri-editable{display:none;}
+  .review-footer{margin-top:14px; padding-top:12px; border-top:1px dashed var(--line);}
+  .context-box{width:100%; min-height:50px; font-family:var(--font-body); font-size:12.5px; color:var(--ink); border:1px solid var(--line); border-radius:7px; padding:9px 11px; resize:vertical; background:var(--bg); outline:none; margin-bottom:10px;}
+  .context-box:focus{border-color:var(--ink-faint); background:var(--surface);}
+  .review-actions{display:flex; gap:8px; flex-wrap:wrap;}
+  .btn-outline{font-size:12.5px; font-weight:600; color:var(--ink); background:transparent; border:1px solid var(--line); border-radius:7px; padding:8px 14px; cursor:pointer;}
+  .btn-outline:hover{border-color:var(--ink-faint);}
+  .btn-outline:disabled{opacity:.55; cursor:default;}
+  .btn-approve{font-size:12.5px; font-weight:600; color:#fff; background:var(--teal); border:none; border-radius:7px; padding:8px 14px; cursor:pointer;}
+  .btn-approve:hover{background:#0C5A4D;}
+  .btn-approve:disabled{opacity:.55; cursor:default;}
+  .approved-note{font-family:var(--font-mono); font-size:11.5px; color:var(--teal); background:var(--teal-tint); border-radius:7px; padding:8px 12px; display:inline-block;}
+  .next-steps{margin-top:12px;}
+  .next-steps-label{font-family:var(--font-mono); font-size:10px; color:var(--ink-faint); margin-bottom:7px; text-transform:uppercase; letter-spacing:.05em;}
+
+  .steps-table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  .steps-table th{text-align:left; font-family:var(--font-mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-faint); padding:6px 8px; border-bottom:1px solid var(--line);}
+  .steps-table td{padding:7px 8px; border-bottom:1px solid var(--line-soft); vertical-align:top;}
+  .steps-table td.step-no{font-family:var(--font-mono); color:var(--ink-faint); width:26px;}
+  .steps-table td.step-data{font-family:var(--font-mono); font-size:11px; color:var(--ink-soft); width:32%;}
+  .code-block{background:#171B1E; color:#E7E9EA; font-family:var(--font-mono); font-size:11.5px; border-radius:7px; padding:12px 14px; white-space:pre-wrap; line-height:1.6; overflow-x:auto;}
+
+  /* ---------------- Composer ---------------- */
+  .composer{border-top:1px solid var(--line); padding:14px 22px 18px; background:var(--surface);}
+  .composer-box{border:1px solid var(--line); border-radius:12px; padding:12px 14px 10px; background:var(--bg); position:relative;}
+  .composer-box:focus-within{border-color:var(--ink-faint);}
+  .composer-input{width:100%; border:none; background:transparent; outline:none; font-family:var(--font-body); font-size:14px; color:var(--ink); resize:none; padding:0 0 10px;}
+  .composer-toolbar{display:flex; align-items:center; gap:8px;}
+  .tool-chip{display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-soft); background:var(--surface); border:1px solid var(--line); border-radius:7px; padding:5px 9px; cursor:pointer;}
+  .tool-chip:hover{border-color:var(--ink-faint);}
+  .send-btn{margin-left:auto; width:30px; height:30px; border-radius:8px; border:none; background:var(--ink); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:14px;}
+  .send-btn:hover{background:#000;}
+  .skills-popover{position:absolute; bottom:52px; left:14px; background:var(--surface); border:1px solid var(--line); border-radius:9px; box-shadow:0 8px 24px rgba(20,20,15,.12); width:280px; padding:6px; display:none; z-index:20; max-height:340px; overflow-y:auto;}
+  .skills-popover.open{display:block;}
+  .sp-item{padding:8px 10px; border-radius:6px; cursor:pointer; font-size:12.5px;}
+  .sp-item:hover{background:var(--line-soft);}
+  .sp-item .sp-name{font-weight:500;}
+  .sp-item .sp-desc{font-size:11px; color:var(--ink-faint); margin-top:1px;}
+
+  /* ---------------- Findings / History view ---------------- */
+  .findings-empty, .history-empty{border:1px dashed var(--line); border-radius:10px; padding:36px 20px; text-align:center; color:var(--ink-soft); font-size:13.5px;}
+  .findings-meta{display:flex; align-items:center; gap:10px; font-size:12px; color:var(--ink-faint); margin-bottom:16px;}
+  .history-card{background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin-bottom:10px;}
+  .history-head{display:flex; align-items:center; gap:10px; margin-bottom:10px;}
+  .history-run-label{font-family:var(--font-display); font-size:14px; font-weight:600;}
+  .history-time{font-family:var(--font-mono); font-size:10.5px; color:var(--ink-faint); margin-left:auto;}
+
+  /* ---------------- Capabilities ---------------- */
+  .skills-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .lib-card{background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:15px 16px;}
+  .lib-card-head{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:6px;}
+  .lib-card-title{font-size:14px; font-weight:600;}
+  .lib-tag{font-family:var(--font-mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.03em; padding:2px 7px; border-radius:5px; flex-shrink:0; background:var(--line-soft); color:var(--ink-faint);}
+  .lib-desc{font-size:12.5px; color:var(--ink-soft); margin-bottom:12px; min-height:32px;}
+  .lib-run{font-size:12.5px; font-weight:600; padding:6px 13px; border-radius:7px; border:1px solid var(--line); background:transparent; cursor:pointer;}
+  .lib-run:hover{border-color:var(--ink-faint);}
+
+
+  /* ---------------- Run history: expandable per-run detail ---------------- */
+  .history-expand-hint{font-family:var(--font-mono); font-size:10.5px; color:var(--ink-faint); margin-top:8px;}
+  .history-body{max-height:0; overflow:hidden; transition:max-height .3s ease;}
+  .history-body.open{max-height:1400px; margin-top:10px; padding-top:10px; border-top:1px dashed var(--line);}
+  .history-item-row{display:flex; align-items:center; gap:8px; padding:7px 0; border-bottom:1px solid var(--line-soft); font-size:12.5px; flex-wrap:wrap;}
+  .history-item-row:last-child{border-bottom:none;}
+  .hi-text{flex:1; min-width:140px;}
+  .change-tag{font-family:var(--font-mono); font-size:9px; font-weight:600; padding:2px 7px; border-radius:5px; text-transform:uppercase; letter-spacing:.02em;}
+  .change-tag.fixed{background:var(--teal-tint); color:var(--teal);}
+  .change-tag.changed{background:var(--red-tint); color:var(--red);}
+  .change-tag.new{background:var(--purple-tint); color:var(--purple);}
+  .change-tag.same{background:var(--gray-tint); color:var(--gray);}
+
+  @media (max-width:820px){
+    .sidebar{display:none;}
+    .rightrail{display:none;}
+    .skill-cards, .skills-grid{grid-template-columns:1fr;}
+  }
+
+  /* ---------------- Add source modal ---------------- */
+  .pill.two-line{flex-direction:column; align-items:flex-start; gap:1px; padding:6px 11px;}
+  .pill.two-line .pill-title{font-size:12px; font-weight:600; line-height:1.3;}
+  .pill.two-line .pill-detail{font-size:10px; color:var(--ink-faint); font-family:var(--font-mono); line-height:1.3;}
+  .pill-remove{align-self:flex-end; margin-top:-14px; opacity:.45; cursor:pointer; font-size:11px;}
+  .pill-remove:hover{opacity:1;}
+  .modal-overlay{display:none; position:fixed; inset:0; background:rgba(23,27,30,.35); z-index:100; align-items:center; justify-content:center;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--surface); border-radius:12px; width:400px; max-width:92vw; box-shadow:0 20px 60px rgba(20,20,15,.25); overflow:hidden;}
+  .modal-head{display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid var(--line); font-family:var(--font-display); font-size:16px; font-weight:560;}
+  .modal-head .modal-close{border:none; background:transparent; font-size:16px; color:var(--ink-faint); cursor:pointer; line-height:1;}
+  .modal-close:hover{color:var(--ink);}
+  .modal-body{padding:18px;}
+  .modal-body .field{margin-bottom:14px;}
+  .modal-body .field label{display:block; font-size:12px; font-weight:500; margin-bottom:6px; color:var(--ink);}
+  .modal-body .field input{width:100%; font-family:var(--font-mono); font-size:13px; padding:9px 11px; border:1px solid var(--line); border-radius:7px; background:var(--bg); color:var(--ink); outline:none;}
+  .modal-body .field input:focus{border-color:var(--ink-faint); background:var(--surface);}
+  .modal-hint{font-size:11.5px; color:var(--ink-faint); margin:-6px 0 14px;}
+  .modal-foot{display:flex; justify-content:flex-end; gap:10px; padding:14px 18px; border-top:1px solid var(--line); background:var(--bg);}
+  .modal-error{font-size:11.5px; color:var(--red); margin-top:-6px; margin-bottom:12px; display:none;}
+  .modal-error.show{display:block;}
+  .btn-primary, .btn-secondary{font-family:var(--font-body); font-weight:600; font-size:13px; border-radius:7px; padding:9px 16px; cursor:pointer;}
+  .btn-primary{background:var(--ink); color:#fff; border:none;}
+  .btn-primary:hover{background:#000;}
+  .btn-secondary{background:transparent; color:var(--ink); border:1px solid var(--line);}
+  .btn-secondary:hover{border-color:var(--ink-faint);}
+</style>
+
+<style id="phase1-compact-visuals">
+  /* ---------- Phase 1 compact visual system ---------- */
+  :root{
+    --compact-gap: 14px;
+    --compact-radius: 9px;
+  }
+
+  html{font-size:14px;}
+  body{font-size:13px; line-height:1.42;}
+
+  /* Navigation / chrome */
+  .sidebar{width:220px !important;}
+  .topbar{height:66px !important; min-height:66px !important; padding:0 22px !important;}
+  .workflow-strip{padding:6px 18px !important; min-height:46px !important;}
+  .workflow-step{padding:4px 7px !important; font-size:11px !important;}
+  .workflow-label{font-size:9px !important;}
+  .source-strip{padding:0 18px !important;}
+
+  /* Main content: narrower readable measure and less vertical padding */
+  .main, .content, .page, .view, .workspace{
+    max-width:1180px;
+  }
+  .main-content, .content-area{
+    padding:18px 24px !important;
+  }
+  .hero-sm{
+    padding:14px 18px !important;
+    margin-bottom:14px !important;
+  }
+  .hero-sm h1{
+    font-size:24px !important;
+    line-height:1.15 !important;
+    margin-bottom:5px !important;
+  }
+  .hero-sm p{
+    font-size:12px !important;
+    max-width:780px;
+  }
+
+  /* Evidence / decision areas */
+  .decision-banner{
+    padding:7px 10px !important;
+    margin-bottom:12px !important;
+    font-size:11px !important;
+  }
+  .evidence-legend{
+    gap:5px !important;
+    margin-bottom:12px !important;
+  }
+  .evidence-chip{
+    font-size:8.5px !important;
+    padding:3px 6px !important;
+  }
+  .outcome-box{
+    padding:10px 12px !important;
+    margin-bottom:14px !important;
+  }
+  .outcome-label{font-size:8.5px !important;}
+  .outcome-text{font-size:12px !important;}
+
+  /* Cards: compact, consistent, less empty space */
+  .card, .panel, .section-card, .skill-card, .source-card,
+  .result-card, .finding-card, .test-card, .scenario-card,
+  .review-card, .run-card{
+    border-radius:var(--compact-radius) !important;
+  }
+
+  .skill-card{
+    min-height:0 !important;
+    padding:15px 16px !important;
+  }
+  .skill-card h3{
+    font-size:15px !important;
+    margin-bottom:4px !important;
+  }
+  .skill-card p{
+    font-size:11.5px !important;
+    line-height:1.35 !important;
+  }
+
+  /* Reduce common card padding wherever these patterns exist */
+  .card{padding:14px 16px !important;}
+  .panel{padding:14px 16px !important;}
+  .section-card{padding:13px 15px !important;}
+  .result-card{padding:13px 15px !important;}
+  .finding-card{padding:13px 15px !important;}
+  .test-card{padding:12px 14px !important;}
+  .scenario-card{padding:12px 14px !important;}
+  .review-card{padding:12px 14px !important;}
+
+  /* Smaller headings across generated output */
+  .src-head{font-size:13px !important; padding:10px 13px !important;}
+  .src-body{padding:12px 14px !important;}
+  .section-title{font-size:15px !important;}
+  .section-subtitle{font-size:11px !important;}
+  .stat-row{font-size:12px !important; padding:5px 0 !important;}
+
+  /* Dense data presentation */
+  table{font-size:11.5px !important;}
+  th{padding:7px 9px !important;}
+  td{padding:7px 9px !important;}
+  .badge, .chip, .tag{font-size:9px !important; padding:3px 6px !important;}
+
+  /* Buttons: lighter visual weight */
+  button, .btn, .btn-outline, .btn-approve, .fix-btn, .save-btn{
+    min-height:30px !important;
+    padding:6px 10px !important;
+    border-radius:7px !important;
+    font-size:11px !important;
+  }
+
+  /* Main chat is the only chat: compact and visually subordinate */
+  .composer{
+    padding:10px 14px !important;
+    border-radius:10px !important;
+  }
+  .composer textarea, .composer input{
+    font-size:12px !important;
+    min-height:34px !important;
+  }
+  .composer button{min-height:32px !important;}
+
+  /* Right information rail */
+  .right-rail{
+    width:255px !important;
+  }
+  .right-rail .rail-inner{
+    padding:16px !important;
+  }
+
+  /* Reduce excessive vertical gaps */
+  .grid, .cards-grid, .skill-grid, .two-col, .three-col{
+    gap:12px !important;
+  }
+  .section{margin-bottom:16px !important;}
+  .block{margin-bottom:12px !important;}
+
+  /* Keep important content above the fold */
+  .assistant-grid{
+    gap:12px !important;
+  }
+  .assistant-grid > *{
+    min-width:0;
+  }
+
+  /* Avoid oversized empty states / hero areas */
+  .empty-state{padding:24px 16px !important;}
+  .empty-state h2{font-size:18px !important;}
+  .empty-state p{font-size:11.5px !important;}
+
+  /* Subtle hierarchy: fewer heavy borders, tighter dividers */
+  hr{margin:12px 0 !important;}
+  .divider{margin:10px 0 !important;}
+
+  /* Responsive: preserve readability on smaller desktop windows */
+  @media (max-width:1100px){
+    .sidebar{width:200px !important;}
+    .right-rail{width:230px !important;}
+    .main-content, .content-area{padding:16px 18px !important;}
+  }
+</style>
+
+
+<style id="phase1-compact-visuals-v2">
+/* =========================================================
+   FINAL COMPACT PASS
+   Goal: materially reduce visual scale, whitespace and card
+   footprint across every screen without changing workflow.
+   ========================================================= */
+
+html{font-size:13px !important;}
+body{
+  font-size:12px !important;
+  line-height:1.38 !important;
+}
+
+/* ---------- Application chrome ---------- */
+.sidebar{
+  width:190px !important;
+  padding:14px 10px !important;
+}
+.brand{padding:2px 7px 13px !important;}
+.brand-mark{font-size:16px !important;}
+.brand-sub{font-size:9px !important;}
+.nav-item{
+  padding:7px 8px !important;
+  font-size:12px !important;
+  gap:8px !important;
+}
+.nav-item .ic{font-size:13px !important; width:15px !important;}
+.sidebar-foot{padding:8px 8px 3px !important;}
+.sidebar-foot .app-name{font-size:11.5px !important;}
+.sidebar-foot .app-sub{font-size:9px !important;}
+
+.context-strip{
+  min-height:52px !important;
+  padding:8px 16px !important;
+  gap:6px !important;
+}
+.ctx-label{font-size:9px !important;}
+.pill{
+  font-size:11px !important;
+  padding:4px 8px !important;
+}
+.add-source{
+  font-size:10px !important;
+  padding:4px 8px !important;
+}
+.ctx-meter{font-size:9px !important; gap:6px !important;}
+.ctx-meter .bar{width:55px !important; height:4px !important;}
+
+/* ---------- Workflow ---------- */
+.workflow-strip{
+  min-height:40px !important;
+  padding:4px 14px !important;
+  gap:2px !important;
+}
+.workflow-label{font-size:8px !important; margin-right:3px !important;}
+.workflow-step{
+  padding:3px 6px !important;
+  font-size:10px !important;
+  gap:4px !important;
+}
+.workflow-step span{font-size:8px !important;}
+.workflow-arrow{font-size:9px !important;}
+
+/* ---------- Main canvas: deliberately narrower ---------- */
+.main-scroll{
+  padding:14px 18px 12px !important;
+}
+.view{
+  width:100% !important;
+  max-width:1060px !important;
+  margin:0 auto !important;
+}
+
+/* ---------- Global typography ---------- */
+.hero-sm{
+  padding:10px 14px !important;
+  margin-bottom:10px !important;
+}
+.hero-sm h1{
+  font-size:20px !important;
+  line-height:1.12 !important;
+  margin-bottom:4px !important;
+}
+.hero-sm p{
+  font-size:11px !important;
+  line-height:1.35 !important;
+  margin-bottom:8px !important;
+  max-width:82ch !important;
+}
+
+/* ---------- Source/evidence messaging ---------- */
+.decision-banner{
+  padding:6px 9px !important;
+  margin-bottom:9px !important;
+  font-size:10px !important;
+  line-height:1.35 !important;
+}
+.evidence-legend{
+  gap:4px !important;
+  margin-bottom:9px !important;
+}
+.evidence-chip{
+  font-size:8px !important;
+  padding:3px 5px !important;
+}
+.outcome-box{
+  padding:8px 10px !important;
+  margin-bottom:10px !important;
+}
+.outcome-label{
+  font-size:8px !important;
+  margin-bottom:2px !important;
+}
+.outcome-text{
+  font-size:10.5px !important;
+  line-height:1.35 !important;
+}
+
+/* ---------- Home action cards: materially smaller ---------- */
+.skill-cards{
+  gap:8px !important;
+  margin-bottom:12px !important;
+}
+.skill-card{
+  padding:10px 12px !important;
+  min-height:0 !important;
+  height:auto !important;
+  border-radius:7px !important;
+}
+.skill-card .sc-title{
+  font-size:12px !important;
+  line-height:1.2 !important;
+  gap:5px !important;
+  margin-bottom:2px !important;
+}
+.skill-card .sc-sub{
+  font-size:9.5px !important;
+  line-height:1.25 !important;
+}
+
+/* ---------- Generated-output cards across all screens ---------- */
+.src-head{
+  padding:7px 10px !important;
+  font-size:11px !important;
+}
+.src-head .timing{font-size:9px !important;}
+.src-body{
+  padding:9px 10px !important;
+}
+.review-footer{
+  margin-top:9px !important;
+  padding-top:8px !important;
+}
+
+.stat-row{
+  font-size:10.5px !important;
+  margin-bottom:5px !important;
+  gap:6px !important;
+}
+.section-title{
+  font-size:13px !important;
+}
+.section-subtitle{
+  font-size:9.5px !important;
+}
+.card,.panel,.section-card,.result-card,.finding-card,.test-card,
+.scenario-card,.review-card,.run-card{
+  padding:9px 11px !important;
+  border-radius:7px !important;
+}
+.result-card{margin-bottom:7px !important;}
+.finding-card{margin-bottom:6px !important;}
+.finding-head{
+  padding:8px 10px !important;
+  gap:7px !important;
+}
+.finding-title{font-size:11px !important;}
+.finding-body{font-size:10.5px !important;}
+
+.scenario-card{padding:9px 11px !important;}
+.test-card{padding:9px 11px !important;}
+.review-card{padding:9px 11px !important;}
+.run-card{padding:9px 11px !important;}
+
+/* ---------- Tables ---------- */
+.steps-table{
+  font-size:10.5px !important;
+}
+.steps-table th{
+  font-size:8px !important;
+  padding:5px 6px !important;
+}
+.steps-table td{
+  padding:5px 6px !important;
+}
+.steps-table td.step-data{
+  font-size:9px !important;
+}
+table{
+  font-size:10px !important;
+}
+th{
+  padding:5px 7px !important;
+}
+td{
+  padding:5px 7px !important;
+}
+
+/* ---------- Tags / buttons ---------- */
+.badge,.chip,.tag{
+  font-size:8px !important;
+  padding:2px 5px !important;
+}
+button,.btn,.btn-outline,.btn-approve,.fix-btn,.save-btn{
+  min-height:27px !important;
+  padding:5px 8px !important;
+  border-radius:6px !important;
+  font-size:10px !important;
+}
+
+/* ---------- Right rail: reduce width and visual density ---------- */
+.rightrail{
+  width:210px !important;
+  padding:14px 12px !important;
+}
+.rr-sync{font-size:8px !important; margin-bottom:6px !important;}
+.rr-title{font-size:15px !important; margin-bottom:6px !important;}
+.status-tag{
+  font-size:9px !important;
+  padding:2px 7px !important;
+  margin-bottom:11px !important;
+}
+.rr-section-label{
+  font-size:8px !important;
+  margin:12px 0 7px !important;
+}
+.rr-fact{margin-bottom:8px !important;}
+.rr-fact-label{font-size:9px !important;}
+.rr-fact-val{font-size:11px !important;}
+
+/* ---------- Main chat: keep, but make it compact ---------- */
+.composer{
+  padding:7px 10px !important;
+}
+.composer-box{
+  padding:8px 10px 7px !important;
+  border-radius:9px !important;
+}
+.composer-input{
+  font-size:11px !important;
+  padding-bottom:6px !important;
+}
+.composer-toolbar{gap:5px !important;}
+.composer button{
+  min-height:28px !important;
+}
+
+/* ---------- Reduce generic whitespace ---------- */
+.section{margin-bottom:11px !important;}
+.block{margin-bottom:9px !important;}
+hr,.divider{margin:8px 0 !important;}
+.empty-state{padding:18px 12px !important;}
+.empty-state h2{font-size:16px !important;}
+.empty-state p{font-size:10px !important;}
+
+/* ---------- Responsive desktop ---------- */
+@media (max-width:1100px){
+  .sidebar{width:175px !important;}
+  .rightrail{width:195px !important;}
+  .main-scroll{padding:12px 14px 10px !important;}
+  .view{max-width:100% !important;}
+}
+</style>
+
+
+<style id="pwc-theme-visual-only">
+/* =========================================================
+   PwC Agentic QA — VISUAL-ONLY THEME PASS
+   Purpose: styling, typography, states, chips and theme only.
+   No workflow, data, event-handler or functional logic changes.
+   ========================================================= */
+
+:root{
+  --bg:#F4F5F6;
+  --surface:#FFFFFF;
+  --sidebar:#FFFFFF;
+  --ink:#252525;
+  --ink-soft:#555B61;
+  --ink-faint:#7A8086;
+  --line:#D9DDE1;
+  --line-soft:#E9EBED;
+
+  --teal:#2E7D5B;
+  --teal-tint:#E8F4EE;
+  --amber:#B7791F;
+  --amber-tint:#FFF4DE;
+  --red:#B42318;
+  --red-tint:#FDECEA;
+  --gray:#6B7280;
+  --gray-tint:#F0F1F2;
+  --purple:#6B4FA1;
+  --purple-tint:#F1ECF8;
+
+  --pwc-orange:#D04A02;
+  --pwc-orange-dark:#B83F00;
+  --pwc-orange-soft:#FFF1E8;
+  --pwc-orange-soft-2:#FBE7D9;
+
+  --font-display:Arial, Helvetica, sans-serif;
+  --font-body:Arial, Helvetica, sans-serif;
+  --font-mono:"Arial Narrow", Arial, Helvetica, sans-serif;
+
+  --radius:6px;
+}
+
+/* ---------- Base typography ---------- */
+html{font-size:14px !important;}
+body{
+  background:var(--bg) !important;
+  color:var(--ink) !important;
+  font-family:var(--font-body) !important;
+  font-size:13px !important;
+  line-height:1.45 !important;
+}
+button,input,textarea{font-family:var(--font-body) !important;}
+::selection{background:var(--pwc-orange-soft-2) !important;color:var(--pwc-orange-dark) !important;}
+
+/* ---------- Enterprise chrome ---------- */
+.sidebar{
+  width:210px !important;
+  background:var(--sidebar) !important;
+  border-right:1px solid var(--line) !important;
+  padding:16px 11px !important;
+}
+.brand{
+  padding:4px 9px 16px !important;
+  border-bottom:1px solid var(--line-soft);
+  margin-bottom:10px;
+}
+.brand-mark{
+  font-family:Georgia, "Times New Roman", serif !important;
+  font-size:18px !important;
+  font-weight:700 !important;
+  color:var(--pwc-orange) !important;
+  letter-spacing:-.02em !important;
+}
+.brand-sub{
+  font-family:var(--font-body) !important;
+  font-size:9px !important;
+  color:var(--ink-faint) !important;
+  letter-spacing:.08em !important;
+  text-transform:uppercase;
+}
+.nav-item{
+  min-height:32px !important;
+  padding:7px 9px !important;
+  margin-bottom:3px !important;
+  border-radius:5px !important;
+  color:var(--ink-soft) !important;
+  font-size:12px !important;
+  font-weight:600 !important;
+  transition:background .15s ease,color .15s ease,border-color .15s ease !important;
+}
+.nav-item .ic{font-size:12px !important;}
+.nav-item:hover{
+  background:#F6F7F8 !important;
+  color:var(--ink) !important;
+}
+.nav-item:focus-visible{
+  outline:2px solid var(--pwc-orange) !important;
+  outline-offset:1px !important;
+}
+.nav-item.active{
+  background:var(--pwc-orange-soft) !important;
+  color:var(--pwc-orange-dark) !important;
+  box-shadow:none !important;
+}
+.nav-item .badge{
+  background:#F0F1F2 !important;
+  color:var(--ink-faint) !important;
+  border:1px solid var(--line-soft);
+  padding:1px 6px !important;
+}
+.nav-item.active .badge{
+  background:#FFF8F4 !important;
+  color:var(--pwc-orange-dark) !important;
+  border-color:#F2C8AF;
+}
+.sidebar-foot{
+  padding:10px 9px 3px !important;
+  border-top:1px solid var(--line) !important;
+}
+.sidebar-foot .app-name{
+  font-size:11.5px !important;
+  font-weight:700 !important;
+}
+.sidebar-foot .app-sub{
+  font-size:9px !important;
+  color:var(--ink-faint) !important;
+}
+
+/* ---------- Context/source strip ---------- */
+.context-strip{
+  min-height:52px !important;
+  padding:8px 18px !important;
+  gap:7px !important;
+  background:var(--surface) !important;
+  border-bottom:1px solid var(--line) !important;
+}
+.ctx-label{
+  color:var(--ink-faint) !important;
+  font-size:9px !important;
+  font-weight:700 !important;
+  letter-spacing:.08em !important;
+}
+.pill{
+  font-size:11px !important;
+  font-weight:600 !important;
+  padding:4px 9px !important;
+  border:1px solid var(--line-soft) !important;
+  background:#F5F6F7 !important;
+  color:var(--ink-soft) !important;
+  border-radius:999px !important;
+  transition:background .15s ease,border-color .15s ease,color .15s ease,box-shadow .15s ease !important;
+}
+.pill:hover{
+  background:#FFF !important;
+  border-color:#C8CDD2 !important;
+}
+.pill.primary{
+  background:var(--pwc-orange-soft) !important;
+  color:var(--pwc-orange-dark) !important;
+  border-color:#F2C8AF !important;
+}
+.pill.accent{
+  background:var(--teal-tint) !important;
+  color:var(--teal) !important;
+  border-color:#CBE6D8 !important;
+}
+.add-source{
+  font-size:10px !important;
+  font-weight:600 !important;
+  color:var(--pwc-orange-dark) !important;
+  border:1px dashed #D8A98D !important;
+  background:#FFF9F6 !important;
+  border-radius:999px !important;
+  transition:background .15s ease,border-color .15s ease,color .15s ease !important;
+}
+.add-source:hover{
+  background:var(--pwc-orange-soft) !important;
+  border-color:var(--pwc-orange) !important;
+}
+.add-source:focus-visible{
+  outline:2px solid var(--pwc-orange) !important;
+  outline-offset:1px !important;
+}
+.ctx-meter{color:var(--ink-faint) !important;}
+.ctx-meter .bar{
+  background:#E6E8EA !important;
+  height:4px !important;
+}
+.ctx-meter .bar-fill{background:var(--pwc-orange) !important;}
+
+/* ---------- Workflow strip ---------- */
+.workflow-strip{
+  min-height:43px !important;
+  padding:5px 18px !important;
+  gap:3px !important;
+  background:#FAFAFA !important;
+  border-bottom:1px solid var(--line) !important;
+}
+.workflow-label{
+  color:var(--ink-faint) !important;
+  font-size:8px !important;
+  font-weight:700 !important;
+  letter-spacing:.09em !important;
+}
+.workflow-step{
+  padding:5px 8px !important;
+  border:1px solid transparent !important;
+  border-radius:5px !important;
+  color:#8A9096 !important;
+  font-size:10.5px !important;
+  font-weight:600 !important;
+  background:transparent !important;
+  transition:background .15s ease,color .15s ease,border-color .15s ease !important;
+}
+.workflow-step span{
+  font-size:8px !important;
+  color:inherit !important;
+}
+.workflow-step:hover{
+  background:#FFFFFF !important;
+  border-color:var(--line) !important;
+  color:var(--ink) !important;
+}
+.workflow-step:focus-visible{
+  outline:2px solid var(--pwc-orange) !important;
+  outline-offset:1px !important;
+}
+.workflow-step.active{
+  background:var(--pwc-orange-soft) !important;
+  color:var(--pwc-orange-dark) !important;
+  border-color:#F2C8AF !important;
+  font-weight:700 !important;
+}
+/* State styling is CSS-only; existing JS remains unchanged. */
+.workflow-step.completed,
+.workflow-step.complete{
+  background:var(--teal-tint) !important;
+  color:var(--teal) !important;
+  border-color:#CBE6D8 !important;
+}
+.workflow-arrow{color:#C6CACD !important;}
+
+/* ---------- Main workspace / cards ---------- */
+.main-scroll{
+  padding:18px 22px 14px !important;
+}
+.view{max-width:1080px !important;}
+.hero-sm{
+  padding:12px 14px !important;
+  margin-bottom:12px !important;
+}
+.hero-sm h1{
+  font-family:var(--font-body) !important;
+  color:var(--ink) !important;
+  font-size:21px !important;
+  line-height:1.18 !important;
+  font-weight:700 !important;
+  letter-spacing:-.015em !important;
+}
+.hero-sm p{
+  color:var(--ink-soft) !important;
+  font-size:11.5px !important;
+  line-height:1.45 !important;
+}
+.skill-cards,.skills-grid{gap:10px !important;}
+.skill-card{
+  background:var(--surface) !important;
+  border:1px solid var(--line) !important;
+  border-radius:6px !important;
+  padding:12px 13px !important;
+  box-shadow:none !important;
+  transition:border-color .15s ease,background .15s ease,box-shadow .15s ease,transform .12s ease !important;
+}
+.skill-card:hover{
+  border-color:#D5A58B !important;
+  background:#FFFCFA !important;
+  box-shadow:0 2px 7px rgba(37,37,37,.05) !important;
+  transform:translateY(-1px);
+}
+.skill-card:active{transform:translateY(0);}
+.skill-card:focus-visible{
+  outline:2px solid var(--pwc-orange) !important;
+  outline-offset:1px;
+}
+.skill-card .sc-title{
+  color:var(--ink) !important;
+  font-size:12.5px !important;
+  font-weight:700 !important;
+}
+.skill-card .sc-sub{
+  color:var(--ink-faint) !important;
+  font-size:10px !important;
+}
+
+/* ---------- Evidence / confidence / technique chips ---------- */
+.evidence-legend{gap:5px !important;}
+.evidence-chip{
+  font-size:8.5px !important;
+  font-weight:700 !important;
+  padding:3px 7px !important;
+  border-radius:4px !important;
+  letter-spacing:.02em;
+}
+.evidence-chip.observed{
+  color:var(--teal) !important;
+  background:var(--teal-tint) !important;
+  border-color:#CBE6D8 !important;
+}
+.evidence-chip.inferred{
+  color:var(--amber) !important;
+  background:var(--amber-tint) !important;
+  border-color:#F0D9A8 !important;
+}
+.evidence-chip.validation{
+  color:var(--gray) !important;
+  background:var(--gray-tint) !important;
+  border-color:#DDE0E3 !important;
+}
+.conf-chip{
+  font-size:9px !important;
+  font-weight:700 !important;
+  border-radius:4px !important;
+}
+.conf-chip.high{
+  background:var(--teal-tint) !important;
+  color:var(--teal) !important;
+}
+.conf-chip.medium{
+  background:var(--amber-tint) !important;
+  color:var(--amber) !important;
+}
+.conf-chip.low{
+  background:var(--gray-tint) !important;
+  color:var(--gray) !important;
+}
+.cat-tag{
+  background:var(--purple-tint) !important;
+  color:var(--purple) !important;
+  border-radius:4px !important;
+  font-size:8.5px !important;
+  font-weight:700 !important;
+}
+.decision-banner{
+  background:var(--amber-tint) !important;
+  color:var(--ink-soft) !important;
+  border:1px solid #F0D9A8 !important;
+  border-radius:6px !important;
+}
+.outcome-box{
+  background:var(--surface) !important;
+  border:1px solid var(--line) !important;
+  border-left:3px solid var(--pwc-orange) !important;
+  border-radius:6px !important;
+}
+.outcome-label{
+  color:var(--ink-faint) !important;
+  font-size:8px !important;
+  font-weight:700 !important;
+}
+.outcome-text{color:var(--ink-soft) !important;}
+
+/* ---------- Transcript / messages ---------- */
+.msg{gap:9px !important;}
+.avatar{
+  width:25px !important;
+  height:25px !important;
+  font-size:9px !important;
+  font-weight:700 !important;
+}
+.avatar.user{background:var(--pwc-orange) !important;}
+.avatar.agent{background:#3B3F42 !important;}
+.msg-name{
+  color:var(--ink) !important;
+  font-size:11px !important;
+  font-weight:700 !important;
+}
+.msg-name .model-tag{
+  color:var(--ink-faint) !important;
+  font-size:8.5px !important;
+}
+.msg-text{
+  color:var(--ink) !important;
+  font-size:12.5px !important;
+}
+
+/* ---------- Generated cards / expandable components ---------- */
+.skill-run-card,.finding-card,.history-card,.lib-card{
+  background:var(--surface) !important;
+  border:1px solid var(--line) !important;
+  border-radius:6px !important;
+  box-shadow:none !important;
+}
+.src-head{
+  background:#F8F9FA !important;
+  border-bottom:1px solid var(--line-soft) !important;
+  color:var(--ink) !important;
+  font-size:11px !important;
+  font-weight:700 !important;
+}
+.src-head .timing{color:var(--teal) !important;}
+.src-body{padding:10px 12px !important;}
+.finding-head{
+  padding:9px 10px !important;
+  transition:background .15s ease !important;
+}
+.finding-head:hover{background:#FAFBFB !important;}
+.finding-title{
+  color:var(--ink) !important;
+  font-size:11.5px !important;
+  font-weight:600 !important;
+}
+.finding-body-inner{padding:12px !important;}
+.chevron{color:#90969C !important;}
+.status-pill{
+  font-size:8.5px !important;
+  font-weight:700 !important;
+  border-radius:4px !important;
+}
+.status-pill.pass{
+  background:var(--teal-tint) !important;color:var(--teal) !important;
+}
+.status-pill.fail{
+  background:var(--red-tint) !important;color:var(--red) !important;
+}
+.status-pill.attn{
+  background:var(--amber-tint) !important;color:var(--amber) !important;
+}
+.status-pill.unk{
+  background:var(--gray-tint) !important;color:var(--gray) !important;
+}
+.sum-chip{
+  font-size:10.5px !important;
+  font-weight:700 !important;
+  border:1px solid transparent;
+}
+.sum-chip.pass{background:var(--teal-tint) !important;color:var(--teal) !important;border-color:#CBE6D8;}
+.sum-chip.fail{background:var(--red-tint) !important;color:var(--red) !important;border-color:#F4C7C3;}
+.sum-chip.attn{background:var(--amber-tint) !important;color:var(--amber) !important;border-color:#F0D9A8;}
+.sum-chip.unk{background:var(--gray-tint) !important;color:var(--gray) !important;border-color:#DDE0E3;}
+
+/* ---------- Review controls / inline interactions ---------- */
+.suggest-chip{
+  font-size:10.5px !important;
+  font-weight:600 !important;
+  padding:6px 10px !important;
+  border:1px solid var(--line) !important;
+  background:var(--surface) !important;
+  color:var(--ink-soft) !important;
+  border-radius:999px !important;
+  transition:background .15s ease,border-color .15s ease,color .15s ease,transform .1s ease !important;
+}
+.suggest-chip:hover{
+  background:var(--pwc-orange-soft) !important;
+  color:var(--pwc-orange-dark) !important;
+  border-color:#E7B99E !important;
+}
+.suggest-chip:active{transform:translateY(1px);}
+.ri-icon:hover{
+  background:#F3F4F5 !important;
+  color:var(--pwc-orange-dark) !important;
+}
+.review-note,.approved-note{
+  color:var(--teal) !important;
+  background:var(--teal-tint) !important;
+}
+.btn-outline,.fix-btn{
+  background:var(--surface) !important;
+  color:var(--ink) !important;
+  border:1px solid #C9CDD1 !important;
+  border-radius:5px !important;
+  font-size:10.5px !important;
+  font-weight:700 !important;
+  transition:background .15s ease,border-color .15s ease,color .15s ease,box-shadow .15s ease !important;
+}
+.btn-outline:hover,.fix-btn:hover{
+  background:#F8F9FA !important;
+  border-color:#9EA4A9 !important;
+}
+.btn-approve,.save-btn{
+  background:var(--pwc-orange) !important;
+  color:#FFFFFF !important;
+  border:none !important;
+  border-radius:5px !important;
+  font-size:10.5px !important;
+  font-weight:700 !important;
+}
+.btn-approve:hover,.save-btn:hover{
+  background:var(--pwc-orange-dark) !important;
+}
+.btn-approve:focus-visible,.save-btn:focus-visible,.btn-outline:focus-visible,.fix-btn:focus-visible{
+  outline:2px solid var(--pwc-orange) !important;
+  outline-offset:1px;
+}
+
+/* ---------- Tables / dense data ---------- */
+table{font-size:10.5px !important;}
+th{
+  color:var(--ink-faint) !important;
+  background:#F8F9FA;
+  font-size:8px !important;
+  font-weight:700 !important;
+  letter-spacing:.05em !important;
+  border-bottom:1px solid var(--line) !important;
+}
+td{
+  color:var(--ink) !important;
+  border-bottom:1px solid var(--line-soft) !important;
+}
+.steps-table td.step-data{color:var(--ink-soft) !important;}
+.code-block{
+  background:#252525 !important;
+  color:#F4F5F6 !important;
+  border-radius:5px !important;
+}
+
+/* ---------- Right contextual rail ---------- */
+.rightrail{
+  width:230px !important;
+  background:var(--surface) !important;
+  border-left:1px solid var(--line) !important;
+  padding:16px 14px !important;
+}
+.rr-sync{
+  color:var(--ink-faint) !important;
+  font-size:8px !important;
+  font-weight:700 !important;
+  letter-spacing:.08em !important;
+}
+.rr-title{
+  font-family:var(--font-body) !important;
+  font-size:15px !important;
+  font-weight:700 !important;
+}
+.status-tag.active{
+  background:var(--pwc-orange-soft) !important;
+  color:var(--pwc-orange-dark) !important;
+}
+.status-tag.pending{
+  background:var(--gray-tint) !important;
+  color:var(--gray) !important;
+}
+.rr-section-label{
+  color:var(--ink-faint) !important;
+  font-size:8px !important;
+  font-weight:700 !important;
+  letter-spacing:.08em !important;
+}
+.rr-fact-label{color:var(--ink-faint) !important;}
+.rr-fact-val{color:var(--ink) !important;font-weight:600 !important;}
+.prog-track{background:#E7E9EB !important;}
+.prog-fill.teal{background:var(--teal) !important;}
+.prog-fill.amber{background:var(--amber) !important;}
+.prog-fill.gray{background:#9AA0A6 !important;}
+
+/* ---------- Composer ---------- */
+.composer{
+  background:var(--surface) !important;
+  border-top:1px solid var(--line) !important;
+  padding:9px 14px 12px !important;
+}
+.composer-box{
+  background:#FAFAFA !important;
+  border:1px solid #C9CDD1 !important;
+  border-radius:7px !important;
+  box-shadow:none !important;
+  transition:border-color .15s ease,box-shadow .15s ease,background .15s ease !important;
+}
+.composer-box:hover{border-color:#AEB4B9 !important;}
+.composer-box:focus-within{
+  border-color:var(--pwc-orange) !important;
+  background:#FFFFFF !important;
+  box-shadow:0 0 0 2px rgba(208,74,2,.08) !important;
+}
+.composer-input{
+  color:var(--ink) !important;
+  font-size:11.5px !important;
+}
+.composer-input::placeholder{color:#969CA1 !important;}
+.tool-chip{
+  background:var(--surface) !important;
+  color:var(--ink-soft) !important;
+  border:1px solid var(--line) !important;
+  border-radius:5px !important;
+  font-size:10px !important;
+  font-weight:600 !important;
+  transition:background .15s ease,border-color .15s ease,color .15s ease !important;
+}
+.tool-chip:hover{
+  background:var(--pwc-orange-soft) !important;
+  color:var(--pwc-orange-dark) !important;
+  border-color:#E7B99E !important;
+}
+.send-btn{
+  background:var(--pwc-orange) !important;
+  border-radius:5px !important;
+  transition:background .15s ease,transform .1s ease !important;
+}
+.send-btn:hover{background:var(--pwc-orange-dark) !important;}
+.send-btn:active{transform:translateY(1px);}
+.send-btn:focus-visible{
+  outline:2px solid var(--pwc-orange) !important;
+  outline-offset:2px;
+}
+.skills-popover{
+  border:1px solid var(--line) !important;
+  border-radius:7px !important;
+  box-shadow:0 8px 24px rgba(37,37,37,.10) !important;
+}
+.sp-item{
+  font-size:11px !important;
+  border-radius:5px !important;
+}
+.sp-item:hover{background:var(--pwc-orange-soft) !important;}
+.sp-item .sp-desc{color:var(--ink-faint) !important;}
+
+/* ---------- Modal ---------- */
+.modal-overlay{background:rgba(37,37,37,.34) !important;}
+.modal{
+  border-radius:7px !important;
+  box-shadow:0 18px 45px rgba(37,37,37,.18) !important;
+}
+.modal-head{
+  font-family:var(--font-body) !important;
+  font-size:15px !important;
+  font-weight:700 !important;
+}
+.modal-body .field label{font-size:11px !important;font-weight:700 !important;}
+.modal-body .field input{
+  background:#FAFAFA !important;
+  border:1px solid #C9CDD1 !important;
+  border-radius:5px !important;
+  font-size:11.5px !important;
+}
+.modal-body .field input:focus{
+  border-color:var(--pwc-orange) !important;
+  background:#FFFFFF !important;
+  box-shadow:0 0 0 2px rgba(208,74,2,.08) !important;
+}
+.modal-foot{background:#F8F9FA !important;}
+.btn-primary{
+  background:var(--pwc-orange) !important;
+  border-radius:5px !important;
+  font-size:11px !important;
+}
+.btn-primary:hover{background:var(--pwc-orange-dark) !important;}
+.btn-secondary{
+  border-radius:5px !important;
+  font-size:11px !important;
+}
+.btn-secondary:hover{background:#F3F4F5 !important;}
+
+/* ---------- Generic chips / badges / tags ---------- */
+.badge,.chip,.tag{
+  border-radius:4px !important;
+  font-size:8px !important;
+  font-weight:700 !important;
+}
+.badge{background:#F0F1F2 !important;color:var(--ink-faint) !important;}
+.chip,.tag{background:#F5F6F7 !important;color:var(--ink-soft) !important;border:1px solid var(--line-soft) !important;}
+
+/* ---------- Responsive visual behavior ---------- */
+@media (max-width:1100px){
+  .sidebar{width:190px !important;}
+  .rightrail{width:215px !important;}
+  .main-scroll{padding:14px 16px 12px !important;}
+}
+@media (max-width:820px){
+  .sidebar{display:none;}
+  .rightrail{display:none;}
+  .skill-cards,.skills-grid{grid-template-columns:1fr !important;}
+}
+</style>
+
+
+<style id="v2-interaction-overrides">
+/* Top action controls */
+.top-actions{display:flex;align-items:center;gap:7px;margin-left:4px;flex-wrap:wrap}
+.top-action{font-family:var(--font-mono);font-size:10.5px;line-height:1;color:var(--ink-soft);background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:7px 10px;cursor:pointer;white-space:nowrap}
+.top-action:hover{border-color:#C9CDD0;color:var(--ink);background:#FBFAF8}
+.top-action.crawler-action{color:#9B3B00;border-color:#E7B78E;background:#FFF7F1}
+.top-action.crawler-action.running{color:#A3261A;border-color:#E3A5A0;background:#FFF5F4}
+.ctx-meter{margin-left:auto}
+
+/* Compact version affordance */
+.view-version-btn,.version-control-btn{font-family:var(--font-mono);font-size:10px;color:var(--ink-soft);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:5px 8px;cursor:pointer}
+.view-version-btn:hover,.version-control-btn:hover{border-color:#C9CDD0;color:var(--ink)}
+.findings-meta,.history-meta{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.history-meta{margin:-2px 0 10px}
+
+/* Generated card version affordance */
+.src-head{display:flex;align-items:center;gap:8px}
+.src-head .timing{margin-left:auto}
+.generated-version{font-family:var(--font-mono);font-size:9px;color:var(--ink-faint);border:1px solid var(--line);background:var(--bg);border-radius:5px;padding:4px 6px;cursor:pointer}
+.generated-version:hover{color:var(--ink);border-color:#C9CDD0}
+
+/* Crawler */
+.modal-wide{width:min(650px,calc(100vw - 36px))}
+.crawler-complete{display:flex;gap:12px;align-items:flex-start;padding:12px;border:1px solid #DCE8E4;background:#F7FBF9;border-radius:8px}
+.crawler-status-dot{width:9px;height:9px;border-radius:50%;background:#14836F;margin-top:5px;box-shadow:0 0 0 4px #E2F1ED}
+.crawler-title{font-size:15px;font-weight:650;color:var(--ink)}
+.crawler-sub{font-size:12px;color:var(--ink-soft);margin-top:3px}
+.crawler-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:12px 0}
+.crawler-metric{border:1px solid var(--line);background:var(--bg);border-radius:7px;padding:10px}
+.crawler-metric b{display:block;font-size:18px;font-weight:600}
+.crawler-metric span{font-family:var(--font-mono);font-size:9px;text-transform:uppercase;color:var(--ink-faint);letter-spacing:.04em}
+.crawler-section-label{font-family:var(--font-mono);font-size:10px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.05em;margin:13px 0 7px}
+.crawler-finding{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-top:1px solid var(--line-soft);font-size:12px;color:var(--ink-soft)}
+.crawler-finding .cf-dot{width:6px;height:6px;border-radius:50%;margin-top:5px;background:#D04A02;flex:0 0 auto}
+.crawler-finding b{color:var(--ink);font-weight:600}
+
+/* User data */
+.user-data-intro{font-size:12px;color:var(--ink-soft);margin-bottom:11px}
+.data-table-wrap{border:1px solid var(--line);border-radius:8px;overflow:auto}
+.data-table{width:100%;border-collapse:collapse;min-width:520px}
+.data-table th{font-family:var(--font-mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;text-align:left;color:var(--ink-faint);background:#F7F6F3;padding:8px 9px;border-bottom:1px solid var(--line)}
+.data-table td{padding:6px 7px;border-bottom:1px solid var(--line-soft)}
+.data-table tr:last-child td{border-bottom:none}
+.data-table .comments-cell{position:relative;padding-right:34px}
+.data-table .comments-cell input{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:5px;background:var(--surface);padding:7px 8px;font:12px var(--font-body);color:var(--ink);outline:none}
+.data-table input:focus{border-color:#B9BDC0}
+.data-delete{border:0;background:transparent;color:var(--ink-faint);cursor:pointer;font-size:14px}
+.add-data-row{margin-top:9px;border:1px dashed var(--line);background:transparent;color:var(--ink-soft);border-radius:6px;padding:6px 9px;font-size:11px;cursor:pointer}
+.add-data-row:hover{border-color:#B8BDC0;color:var(--ink)}
+
+/* Version modal */
+.modal-version{width:min(560px,calc(100vw - 36px))}
+.version-context{font-size:12px;color:var(--ink-soft);margin-bottom:10px}
+.version-list{display:grid;gap:7px}
+.version-option{display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;width:100%;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:11px 12px;cursor:pointer}
+.version-option:hover{border-color:#C4C8CA}
+.version-option.current{border-color:#E8B38E;background:#FFF8F3}
+.version-option b{display:block;font-size:12.5px;color:var(--ink)}
+.version-option small{display:block;font-size:10.5px;color:var(--ink-faint);margin-top:3px}
+.version-badge{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.04em;color:#A34209;border:1px solid #E8B38E;border-radius:999px;padding:4px 6px}
+.version-badge.muted{color:var(--ink-faint);border-color:var(--line)}
+.version-compare{margin-top:12px;padding:10px 11px;background:#F8F8F6;border:1px solid var(--line-soft);border-radius:7px}
+.version-compare-title{font-family:var(--font-mono);font-size:9.5px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:5px}
+#version-compare-body{font-size:11.5px;line-height:1.5;color:var(--ink-soft)}
+
+/* Responsive */
+@media(max-width:900px){
+  .top-actions{width:100%;margin-left:0}
+  .ctx-meter{margin-left:0}
+  .crawler-metrics{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+
+
+<style id="v3-navigation-version-overrides">
+/* ---------- V3: workflow remains reachable from every secondary page ---------- */
+.workflow-return{
+  display:none;
+  align-items:center;
+  gap:7px;
+  margin-left:8px;
+  font:10px var(--font-mono);
+  color:var(--ink-soft);
+  border:1px solid var(--line);
+  background:var(--surface);
+  border-radius:6px;
+  padding:5px 8px;
+  cursor:pointer;
+}
+.workflow-return:hover{color:var(--ink);border-color:#BFC3C5}
+body.secondary-view .workflow-return{display:inline-flex}
+
+/* ---------- V3: persistent, unobtrusive generation control ---------- */
+.generation-switch{
+  display:inline-flex;
+  align-items:center;
+  gap:3px;
+  border:1px solid var(--line);
+  background:var(--surface);
+  border-radius:7px;
+  padding:2px;
+  margin-left:7px;
+}
+.generation-switch button{
+  border:0;
+  background:transparent;
+  border-radius:5px;
+  padding:5px 7px;
+  font:9px var(--font-mono);
+  color:var(--ink-faint);
+  cursor:pointer;
+}
+.generation-switch button:hover{color:var(--ink)}
+.generation-switch button.active{
+  background:#FFF4EB;
+  color:#A63F08;
+  box-shadow:inset 0 0 0 1px #E9C0A3;
+}
+.generation-label{
+  font:9px var(--font-mono);
+  color:var(--ink-faint);
+  margin-right:2px;
+}
+.generation-drawer{
+  position:fixed;
+  z-index:10001;
+  top:58px;
+  right:18px;
+  width:350px;
+  max-width:calc(100vw - 36px);
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:9px;
+  box-shadow:0 12px 34px rgba(20,24,27,.12);
+  display:none;
+}
+.generation-drawer.open{display:block}
+.generation-drawer-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:11px 12px;
+  border-bottom:1px solid var(--line-soft);
+}
+.generation-drawer-head b{font-size:12px}
+.generation-drawer-head span{font:9px var(--font-mono);color:var(--ink-faint)}
+.generation-item{
+  width:100%;
+  border:0;
+  border-bottom:1px solid var(--line-soft);
+  background:transparent;
+  padding:11px 12px;
+  display:flex;
+  justify-content:space-between;
+  text-align:left;
+  gap:10px;
+  cursor:pointer;
+}
+.generation-item:hover{background:#FAF9F7}
+.generation-item:last-child{border-bottom:0}
+.generation-item b{display:block;font-size:11.5px;color:var(--ink)}
+.generation-item small{display:block;margin-top:3px;font-size:10px;color:var(--ink-faint)}
+.generation-item .gen-state{
+  align-self:flex-start;
+  font:8px var(--font-mono);
+  color:var(--ink-faint);
+  border:1px solid var(--line);
+  border-radius:999px;
+  padding:4px 6px;
+  white-space:nowrap;
+}
+.generation-item.current{background:#FFF9F5}
+.generation-item.current .gen-state{color:#A63F08;border-color:#E9C0A3}
+
+/* Put version controls in the same visual row as page metadata */
+.page-generation-bar{
+  display:flex;
+  align-items:center;
+  gap:5px;
+  margin-left:auto;
+}
+.page-generation-bar .history-trigger{
+  font:9px var(--font-mono);
+  color:var(--ink-soft);
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:6px;
+  padding:5px 7px;
+  cursor:pointer;
+}
+.page-generation-bar .history-trigger:hover{color:var(--ink);border-color:#BFC3C5}
+
+/* Generated output cards: keep version indicator but make it functional */
+.generated-version{
+  cursor:pointer !important;
+  user-select:none;
+}
+</style>
+
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ============ SIDEBAR ============ -->
+  <div class="sidebar">
+    <div class="brand">
+      <span class="brand-mark">QA Agent</span>
+      <span class="brand-sub">QUALITY CONTEXT FABRIC</span>
+    </div>
+    <button class="nav-item active" id="nav-assistant" onclick="showView('assistant')">
+      <span class="ic">◆</span> QA workspace
+    </button>
+    <button class="nav-item" id="nav-findings" onclick="showView('findings')">
+      <span class="ic">▤</span> Findings <span class="badge" id="findings-badge">0</span>
+    </button>
+    <button class="nav-item" id="nav-history" onclick="showView('history')">
+      <span class="ic">↻</span> Run history <span class="badge" id="history-badge">0</span>
+    </button>
+    <button class="nav-item" id="nav-skills" onclick="showView('skills')">
+      <span class="ic">✦</span> Capabilities <span class="badge">6</span>
+    </button>
+
+    <div class="sidebar-foot">
+      <div class="app-name">Project Name</div>
+      <div class="app-sub" id="sidebar-status">not scanned yet</div>
+    </div>
+  </div>
+
+  <!-- ============ CONTENT ============ -->
+  <div class="content">
+
+    <div class="context-strip" id="context-strip">
+      <span class="ctx-label">SOURCE OF TRUTH</span>
+      <span class="pill primary">Project Name</span>
+      <span class="pill accent">Backend repo</span>
+      <span class="pill">Frontend repo</span>
+      <div class="top-actions">
+        <button class="top-action" id="add-source-btn" onclick="openAddSourceModal()">App detail</button>
+        <button class="top-action crawler-action" id="crawler-btn" onclick="toggleCrawler()">Start Crawler</button>
+        <button class="top-action" onclick="openUserDataModal()">User data input</button>
+      </div>
+      <div class="ctx-meter">
+        understanding
+        <div class="bar"><div class="bar-fill" id="ctx-bar"></div></div>
+        <span id="ctx-pct">0%</span>
+      </div>
+    </div>
+
+    <!-- ============ PHASE 1 WORKFLOW ============ -->
+    <div class="workflow-strip" id="workflow-strip">
+      <span class="workflow-label">QA WORKFLOW</span>
+      <button class="workflow-step active" id="wf-understand" onclick="v7NavigateToWorkflow('understand')"><span>01</span> Understand</button>
+      <span class="workflow-arrow">→</span>
+      <button class="workflow-step" id="wf-testdesign" onclick="v7NavigateToWorkflow('testdesign')"><span>02</span> Test design</button>
+      <span class="workflow-arrow">→</span>
+      <button class="workflow-step" id="wf-testcases" onclick="v7NavigateToWorkflow('testcases')"><span>03</span> Test cases</button>
+      <span class="workflow-arrow">→</span>
+      <button class="workflow-step" id="wf-automation" onclick="v7NavigateToWorkflow('automation')"><span>04</span> Automation</button>
+      <span class="workflow-arrow">→</span>
+      <button class="workflow-step" id="wf-execute" onclick="v7NavigateToWorkflow('execute')"><span>05</span> Execute</button>
+      <span class="workflow-arrow">→</span>
+      <button class="workflow-step" id="wf-findings" onclick="v7NavigateToWorkflow('findings')"><span>06</span> Findings</button>
+    </div>
+
+    <!-- ============ ADD SOURCE MODAL ============ -->
+    <div class="modal-overlay" id="add-source-modal">
+      <div class="modal">
+        <div class="modal-head">
+          Add app details
+          <button class="modal-close" onclick="closeAddSourceModal()">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="field"><label>App / repository name</label><input id="source-title" type="text" placeholder="e.g. Payments application"></div>
+          <div class="field"><label>Git/App URL</label><input id="source-url" type="text" placeholder="github.com/org/repo or app URL"></div>
+          
+          <div class="modal-error" id="source-error">Add a Git/App URL to continue.</div>
+        </div>
+        <div class="modal-foot">
+          <button class="btn-secondary" onclick="closeAddSourceModal()">Cancel</button>
+          <button class="btn-primary" onclick="addSource()">Save app details</button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ============ CRAWLER SUMMARY MODAL ============ -->
+    <div class="modal-overlay" id="crawler-modal">
+      <div class="modal modal-wide">
+        <div class="modal-head">
+          Crawler scan summary
+          <button class="modal-close" onclick="closeCrawlerModal()">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="crawler-complete">
+            <div class="crawler-status-dot"></div>
+            <div>
+              <div class="crawler-title" id="crawler-summary-title">Scan completed</div>
+              <div class="crawler-sub" id="crawler-summary-sub">The crawler finished mapping the application.</div>
+            </div>
+          </div>
+          <div class="crawler-metrics" id="crawler-metrics"></div>
+          <div class="crawler-findings">
+            <div class="crawler-section-label">What the crawler found</div>
+            <div id="crawler-findings-list"></div>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button class="btn-secondary" onclick="closeCrawlerModal()">Close</button>
+          <button class="btn-primary" onclick="closeCrawlerModal(); runSkill('understand')">Review application understanding</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ USER DATA MODAL ============ -->
+    <div class="modal-overlay" id="user-data-modal">
+      <div class="modal modal-wide">
+        <div class="modal-head">
+          User data input
+          <button class="modal-close" onclick="closeUserDataModal()">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="user-data-intro">Provide data the agent may need when a journey cannot be completed from repository evidence alone.</div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Name</th><th>Value</th><th>Comments</th></tr></thead>
+              <tbody id="user-data-body"></tbody>
+            </table>
+          </div>
+          <button class="add-data-row" onclick="addUserDataRow()">+ Add row</button>
+        </div>
+        <div class="modal-foot">
+          <button class="btn-secondary" onclick="closeUserDataModal()">Cancel</button>
+          <button class="btn-primary" onclick="saveUserData()">Save user data</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ GENERATION VERSION MODAL ============ -->
+    <div class="modal-overlay" id="version-modal">
+      <div class="modal modal-version">
+        <div class="modal-head">
+          Generation history
+          <button class="modal-close" onclick="closeVersionModal()">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="version-context" id="version-context">Current QA output</div>
+          <div class="version-list">
+            <button class="version-option current" onclick="selectGeneration('current')">
+              <span><b>v2 · Current generation</b><small>Latest output · active in this workspace</small></span>
+              <span class="version-badge">CURRENT</span>
+            </button>
+            <button class="version-option" onclick="selectGeneration('previous')">
+              <span><b>v1 · Previous generation</b><small>Retained for comparison and rollback reference</small></span>
+              <span class="version-badge muted">PREVIOUS</span>
+            </button>
+          </div>
+          <div class="version-compare">
+            <div class="version-compare-title">What changed</div>
+            <div id="version-compare-body">Current generation includes the latest evidence review, generated output and execution state.</div>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button class="btn-secondary" onclick="closeVersionModal()">Close</button>
+          <button class="btn-primary" onclick="compareGenerations()">Compare v1 → v2</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="main-area">
+      <div class="main-scroll" id="main-scroll">
+
+        <!-- ============ ASSISTANT VIEW ============ -->
+        <div class="view active" id="view-assistant">
+          <div class="hero-sm" id="assistant-hero">
+            <h1 id="greeting">Good day.</h1>
+            <p>Your QA workspace for <strong>Project Name</strong>. Start with what the code tells us, then move through test design, execution, and findings.</p>
+          </div>
+          <div class="decision-banner"><span>⚠</span><span><b>Source code only.</b> The agent can identify implemented behaviour and testable paths, but cannot prove business intent where the code is ambiguous.</span></div>
+          <div class="evidence-legend">
+            <span class="evidence-chip observed">OBSERVED · directly supported by code</span>
+            <span class="evidence-chip inferred">INFERRED · reasonable from code, not confirmed</span>
+            <span class="evidence-chip validation">VALIDATION NEEDED · expected outcome is unknown</span>
+          </div>
+          <div class="outcome-box">
+            <div class="outcome-label">Phase 1 outcome</div>
+            <div class="outcome-text">A traceable QA baseline: code-supported behaviours, prioritized test scenarios, executable tests, findings, and explicit validation gaps.</div>
+          </div>
+
+          <div class="skill-cards" id="home-skill-cards">
+            <div class="skill-card" onclick="runSkill('understand')">
+              <div class="sc-title">🔎 Understand application</div>
+              <div class="sc-sub">Read the connected repos and map what's there</div>
+            </div>
+            <div class="skill-card" onclick="runSkill('scenarios')">
+              <div class="sc-title">📋 Design test scenarios</div>
+              <div class="sc-sub">Derive scenarios using standard test-design techniques</div>
+            </div>
+            <div class="skill-card" onclick="runSkill('diff')">
+              <div class="sc-title">↻ What changed since last scan</div>
+              <div class="sc-sub">Diff against the previous understanding</div>
+            </div>
+            <div class="skill-card" onclick="runSkill('defect')">
+              <div class="sc-title">✎ Summarize findings</div>
+              <div class="sc-sub">Summarize flagged issues for the team</div>
+            </div>
+          </div>
+
+          <div class="transcript" id="transcript"></div>
+        </div>
+
+        <!-- ============ FINDINGS VIEW ============ -->
+        <div class="view" id="view-findings">
+          <div class="hero-sm">
+            <h1 style="font-size:22px;">Findings</h1>
+            <p>Approved results from the latest test run on <strong>Project Name</strong>, traced back to their scenarios.</p>
+          </div>
+          <div id="findings-empty" class="findings-empty">
+            No findings yet — run the test from Assistant and approve the results.
+          </div>
+          <div id="findings-content" style="display:none;">
+            <div class="findings-meta"><span id="findings-updated">Last updated: —</span><button class="view-version-btn" onclick="openVersionModal('Findings')">v2 · Versions</button></div>
+            <div class="rr-summary" id="findings-summary"></div>
+            <div id="findings-list"></div>
+          </div>
+        </div>
+
+        <!-- ============ RUN HISTORY VIEW ============ -->
+        <div class="view" id="view-history">
+          <div class="hero-sm">
+            <h1 style="font-size:22px;">Run history</h1>
+            <p>Every execution of the automation script against <strong>Project Name</strong>, so you can compare runs over time.</p>
+          </div>
+          <div class="history-meta"><button class="view-version-btn" onclick="openVersionModal('Run history')">v2 · Versions</button></div><div id="history-empty" class="history-empty">No runs yet — run the test at least once to see history here.</div>
+          <div id="history-list" style="display:none;"></div>
+        </div>
+
+        <!-- ============ SKILLS LIBRARY VIEW ============ -->
+        <div class="view" id="view-skills">
+          <div class="hero-sm">
+            <h1 style="font-size:22px;">Capabilities</h1>
+            <p>The QA activities the agent can run for you, organized around the end-to-end workflow.</p>
+          </div>
+          <div class="skills-grid" id="skills-grid"></div>
+        </div>
+
+      </div>
+
+      <!-- ============ RIGHT RAIL ============ -->
+      <div class="rightrail">
+        <div class="rr-sync">◐ SYNCED FROM REPOSITORY</div>
+        <div class="rr-title">Project Name</div>
+        <span class="status-tag pending" id="app-status-tag"><span class="dot2"></span> Not scanned</span>
+
+        <div class="rr-section-label">Application info</div>
+        <div class="rr-fact"><div class="rr-fact-label">Screens &amp; pages</div><div class="rr-fact-val" id="fact-components">—</div></div>
+        <div class="rr-fact"><div class="rr-fact-label">Things it can do</div><div class="rr-fact-val" id="fact-endpoints">—</div></div>
+        <div class="rr-fact"><div class="rr-fact-label">Connections mapped</div><div class="rr-fact-val" id="fact-relationships">—</div></div>
+        <div class="rr-fact"><div class="rr-fact-label">Common journeys</div><div class="rr-fact-val" id="fact-workflows">—</div></div>
+
+        <div class="rr-section-label">Workstream progress</div>
+        <div class="prog-row">
+          <div class="prog-head"><span>Understanding</span><b id="p-understand-n">0%</b></div>
+          <div class="prog-track"><div class="prog-fill teal" id="p-understand"></div></div>
+        </div>
+        <div class="prog-row">
+          <div class="prog-head"><span>Test coverage</span><b id="p-coverage-n">0%</b></div>
+          <div class="prog-track"><div class="prog-fill amber" id="p-coverage"></div></div>
+        </div>
+        <div class="prog-row">
+          <div class="prog-head"><span>Evidence strength</span><b id="p-confidence-n">0%</b></div>
+          <div class="prog-track"><div class="prog-fill gray" id="p-confidence"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ COMPOSER ============ -->
+    <div class="composer">
+      <div class="composer-box">
+        <textarea class="composer-input" id="composer-input" rows="1" placeholder="Ask the agent, or type / to run a skill…"></textarea>
+        <div class="composer-toolbar">
+          <span class="tool-chip">◆ Claude Opus 4.8</span>
+          <span class="tool-chip" onclick="toggleSkillsPopover(event)">✦ Skills</span>
+          <span class="tool-chip" onclick="attachToast()">📎 Attach</span>
+          <button class="send-btn" onclick="handleSend()">→</button>
+        </div>
+        <div class="skills-popover" id="skills-popover">
+          <div class="sp-item" onclick="runSkill('understand'); closeSkillsPopover();">
+            <div class="sp-name">Understand the application</div>
+            <div class="sp-desc">See what this app does, in plain terms</div>
+          </div>
+          <div class="sp-item" onclick="runSkill('scenarios'); closeSkillsPopover();">
+            <div class="sp-name">Design test scenarios</div>
+            <div class="sp-desc">By test-design technique, with confidence</div>
+          </div>
+          <div class="sp-item" onclick="runSkill('testcases'); closeSkillsPopover();">
+            <div class="sp-name">Generate test cases</div>
+            <div class="sp-desc">Step-by-step, traced to each scenario</div>
+          </div>
+          <div class="sp-item" onclick="runSkill('automation'); closeSkillsPopover();">
+            <div class="sp-name">Generate automation script</div>
+            <div class="sp-desc">One script per approved test case</div>
+          </div>
+          <div class="sp-item" onclick="runSkill('testpass'); closeSkillsPopover();">
+            <div class="sp-name">Run the test</div>
+            <div class="sp-desc">Execute the script and report back</div>
+          </div>
+          <div class="sp-item" onclick="runSkill('defect'); closeSkillsPopover();">
+            <div class="sp-name">Summarize findings</div>
+            <div class="sp-desc">Summarize flagged findings</div>
+          </div>
+          <div class="sp-item" onclick="showView('skills'); closeSkillsPopover();">
+            <div class="sp-name">View all skills →</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const state = { understood:false, scenariosApproved:false, testCasesApproved:false, automationApproved:false, tested:false, resultsApproved:false };
+  let reviewCounter = 0;
+  const reviewRegistry = {};
+  let approvedScenarioIds = [];
+  let approvedTestCaseIds = [];
+  let approvedAutomationIds = [];
+  let runHistory = [];
+
+  const skillDefs = [
+    {id:'understand', name:'Understand the application', category:'1. Discover', desc:'Looks at the frontend and backend repos and works out what the app does.'},
+    {id:'scenarios', name:'Design test scenarios', category:'2. Plan', desc:'Derives scenarios using standard test-design techniques, with evidence strength per item.'},
+    {id:'testcases', name:'Generate test cases', category:'3. Design', desc:'Turns each approved scenario into a step-by-step test case, traced back to it.'},
+    {id:'automation', name:'Generate automation script', category:'4. Automate', desc:'Writes a script for each approved test case, traced back through it.'},
+    {id:'testpass', name:'Run the test', category:'5. Execute', desc:'Runs the automation script and reports what passed, failed, or needs a look.'},
+    {id:'defect', name:'Summarize findings', category:'6. Report', desc:'Turns whatever was flagged into a short write-up for the team.'}
+  ];
+
+  // Unified item model — one entry per scenario, carrying it through every stage:
+  // plan (scenario) → test case steps → automation script → execution result.
+  const qaItems = [
+    {id:0, text:'Submit loan application with valid inputs', category:'Model-Based Testing', knownOracle:true,
+      planBand:'high', planScore:94, planReason:'Directly observed as a complete screen-to-backend flow with a clear success path.',
+      result:'pass', resultBand:'high', resultScore:96, resultReason:'Confirmed by the automation script — strong, repeatable evidence.',
+      chain:[{n:'New Application form',det:true},{n:'Required field validation',det:true},{n:'POST /applications',det:true},{n:'"Submit new application" journey',det:true}],
+      steps:[{n:1,detail:'Log in as an applicant and open "New Application".',data:'applicant test user'},{n:2,detail:'Fill in all required fields with valid values.',data:'Income=₹8,00,000; Loan=₹5,00,000'},{n:3,detail:'Submit the application.',data:'—'},{n:4,detail:'Verify it appears in "My Applications" with status "Submitted".',data:'—'}]
+    },
+    {id:1, text:'Log in with valid credentials', category:'Equivalence Partitioning', knownOracle:true,
+      planBand:'high', planScore:96, planReason:'Standard, clearly defined authentication flow with no ambiguity.',
+      result:'pass', resultBand:'high', resultScore:97, resultReason:'Confirmed by the automation script — strong, repeatable evidence.',
+      chain:[{n:'Login form',det:true},{n:'POST /auth/login',det:true},{n:'Session token issued',det:true}],
+      steps:[{n:1,detail:'Open the login screen.',data:'—'},{n:2,detail:'Enter a valid username and password.',data:'demo.user@project.com'},{n:3,detail:'Submit the login form.',data:'—'},{n:4,detail:'Verify the user lands on the dashboard.',data:'—'}]
+    },
+    {id:2, text:'Filter applications by status', category:'Decision Table Coverage', knownOracle:true,
+      planBand:'high', planScore:91, planReason:'Filter control maps directly to a parameter in the backend code.',
+      result:'pass', resultBand:'high', resultScore:93, resultReason:'Confirmed by the automation script — strong, repeatable evidence.',
+      chain:[{n:'Applications list screen',det:true},{n:'Status filter control',det:true},{n:'GET /applications?status=',det:true}],
+      steps:[{n:1,detail:'Open the Applications list.',data:'—'},{n:2,detail:'Set the status filter.',data:'status = Approved'},{n:3,detail:'Apply the filter.',data:'—'},{n:4,detail:'Verify only matching applications are shown.',data:'—'}]
+    },
+    {id:3, text:'Export applications report as CSV', category:'Metamorphic Relations', knownOracle:true,
+      planBand:'high', planScore:89, planReason:'Export action and handler are explicit; the row-count relation holds regardless of filter order.',
+      result:'pass', resultBand:'high', resultScore:90, resultReason:'Confirmed by the automation script — strong, repeatable evidence.',
+      chain:[{n:'Applications list screen',det:true},{n:'Export button',det:true},{n:'GET /applications/export',det:true},{n:'Row-count consistency check',det:false}],
+      steps:[{n:1,detail:'Apply a filter and note the on-screen result count.',data:'status = Approved'},{n:2,detail:'Export the filtered list as CSV.',data:'format = CSV'},{n:3,detail:'Re-apply the same filter with fields in a different order.',data:'sorted by date instead'},{n:4,detail:'Verify the exported row count matches the on-screen count both times.',data:'—'}]
+    },
+    {id:4, text:'Approve application as underwriter', category:'Decision Table Coverage', knownOracle:true,
+      planBand:'high', planScore:88, planReason:'Role-gated action with a single, clear path through the code.',
+      result:'pass', resultBand:'high', resultScore:92, resultReason:'Confirmed by the automation script — strong, repeatable evidence.',
+      chain:[{n:'Underwriter role check',det:true},{n:'Approve button',det:true},{n:'PUT /applications/{id}/approve',det:true}],
+      steps:[{n:1,detail:'Log in as an underwriter.',data:'role = Underwriter'},{n:2,detail:'Open a submitted application.',data:'—'},{n:3,detail:'Select "Approve".',data:'—'},{n:4,detail:'Verify status changes to "Approved".',data:'—'}]
+    },
+    {id:5, text:'Search applications by applicant name', category:'Pairwise Testing', knownOracle:true,
+      planBand:'high', planScore:92, planReason:'Search field maps directly to a query parameter; tested in combination with a status filter.',
+      result:'pass', resultBand:'high', resultScore:94, resultReason:'Confirmed by the automation script — strong, repeatable evidence.',
+      chain:[{n:'Applications list screen',det:true},{n:'Search field',det:true},{n:'GET /applications?name=&status=',det:true}],
+      steps:[{n:1,detail:'Open the Applications list.',data:'—'},{n:2,detail:'Enter a partial applicant name plus a status filter.',data:'name="Sharma", status=Pending'},{n:3,detail:'Run the search.',data:'—'},{n:4,detail:'Verify only matching applications are returned.',data:'—'}]
+    },
+    {id:6, text:'Paginate the applications list', category:'Boundary Value Coverage', knownOracle:true,
+      planBand:'high', planScore:95, planReason:'Pagination controls and their backend parameters are both explicit.',
+      result:'pass', resultBand:'high', resultScore:95, resultReason:'Confirmed by the automation script — strong, repeatable evidence.',
+      chain:[{n:'Applications list screen',det:true},{n:'Pagination control',det:true},{n:'GET /applications?page=&pageSize=',det:true}],
+      steps:[{n:1,detail:'Open a list with more than one page of results.',data:'records > page size'},{n:2,detail:'Set the page size to boundary values visible in the code.',data:'pageSize=1, pageSize=50'},{n:3,detail:'Navigate to the last page.',data:'—'},{n:4,detail:'Verify counts and controls behave correctly at each boundary.',data:'—'}]
+    },
+    {id:7, text:'Cancel application as submitter', category:'Permutation & Combination', knownOracle:true,
+      planBand:'high', planScore:90, planReason:'Single, well-defined action tested across every allowed state combination.',
+      result:'pass', resultBand:'high', resultScore:91, resultReason:'Confirmed by the automation script — strong, repeatable evidence.',
+      chain:[{n:'Submitter role check',det:true},{n:'Cancel button (state-gated)',det:true},{n:'PUT /applications/{id}/cancel',det:true}],
+      steps:[{n:1,detail:'Log in as the original submitter.',data:'role = Submitter'},{n:2,detail:'Open an application in each allowed state.',data:'state = Submitted / Pending'},{n:3,detail:'Select "Cancel" for each.',data:'—'},{n:4,detail:'Verify it moves to "Cancelled" in every allowed state.',data:'—'}]
+    },
+    {
+      id:8, text:'Check that invalid date ranges are rejected with a clear message', category:'Boundary Value Coverage', knownOracle:true,
+      planBand:'medium', planScore:55, planReason:'Inferred as an edge case from the date filter\'s code path — not confirmed as an explicit requirement.',
+      result:'fail', resultBand:'high', resultScore:91, resultReason:'Reproduced via the automation script — strong evidence, though the outcome is a failure.',
+      title:'Invalid date range is accepted instead of rejected',
+      reason:'Setting an end date before the start date on the applications filter causes an error instead of a clear message telling the user to fix their input.',
+      likely:'The application isn\'t checking the dates before using them, so it fails instead of asking the user to correct the range.',
+      fix:'Add a check that stops the search when the end date is before the start date, and shows the user a clear message instead of letting it fail. This is a small, low-risk change to the applications filter.',
+      chain:[{n:'Date filter on Applications screen',det:true},{n:'Date range field',det:true},{n:'Applications search action',det:true},{n:'"Filter applications by date" journey',det:false},{n:'Automated check — assertion failed',det:true}],
+      steps:[{n:1,detail:'Open the Applications list and expand the date filter.',data:'—'},{n:2,detail:'Set the end date one day before the start date.',data:'start=2026-08-20, end=2026-08-19'},{n:3,detail:'Apply the filter.',data:'—'},{n:4,detail:'Verify a validation message is shown instead of an error.',data:'—'}]
+    },
+    {
+      id:9, text:'Check that large result sets are handled safely', category:'Boundary Value Coverage', knownOracle:true,
+      planBand:'medium', planScore:58, planReason:'Inferred from the pagination code — no explicit limit is visible in the source, so this is a reasonable but unconfirmed edge case.',
+      result:'attn', resultBand:'medium', resultScore:58, resultReason:'Based on reading the code path; not yet executed or confirmed by a test.',
+      title:'Maximum result set size isn\'t enforced',
+      reason:'The applications list allows far more results per page than the assumed limit of 1,000, without being capped.',
+      likely:'Not confirmed as something broken — but worth a decision, since very large requests could slow things down for everyone.',
+      fix:'Set a hard limit on how many results can be requested at once, so it can\'t be pushed past 1,000 regardless of what\'s asked for. This closes the gap without changing how the feature works normally.',
+      chain:[{n:'Applications list screen',det:true},{n:'Page size control',det:true},{n:'Applications search action',det:true},{n:'"Browse large portfolios" journey',det:false},{n:'No automated check found',det:false}],
+      steps:[{n:1,detail:'Open the Applications list.',data:'—'},{n:2,detail:'Manually request a page size above the assumed limit.',data:'pageSize=5000'},{n:3,detail:'Apply the request.',data:'—'},{n:4,detail:'Verify the server caps the response at 1,000 rows.',data:'—'}]
+    },
+    {
+      id:10, text:'Check that loan/trade approval behaves as expected', category:'Graph-Based Path Coverage', knownOracle:false,
+      planBand:'low', planScore:18, planReason:'No written rule or clear expected behavior exists to base this scenario on with confidence.',
+      result:'unk', resultBand:'low', resultScore:20, resultReason:'No written rule and no test exists to verify this — can\'t be confirmed from available evidence.',
+      title:'Trade approval — expected behavior can\'t be confirmed',
+      reason:'There\'s no written rule, and no existing check, for what "correctly approved" means here — and the approval step appears to depend on another system this application doesn\'t show.',
+      likely:'This can\'t be tested with confidence until someone confirms what the correct behavior should be.',
+      fix:'Ask the relevant product or business stakeholder to confirm what a correct approval looks like, and record the rule. Once that\'s clear, this can be tested properly.',
+      chain:[{n:'Approval screen',det:true},{n:'"Approve" action',det:true},{n:'Approval request sent',det:true},{n:'Approval journey — unconfirmed',det:false},{n:'No written rule or check found',det:false}],
+      steps:[{n:1,detail:'Attempt to trace every state the approval can be in.',data:'Requested → ? → Approved'},{n:2,detail:'Attempt to identify the transition rule from the code.',data:'—'},{n:3,detail:'Note where the path becomes unclear or depends on an external system.',data:'—'},{n:4,detail:'Flag for business confirmation rather than asserting an outcome.',data:'—'}]
+    }
+  ];
+
+  // Extra scenarios unlocked via "Generate more scenarios"
+  const extraScenarios = [
+    {id:11, text:'Check that a rejected loan application can be resubmitted with corrected details', category:'Model-Based Testing', knownOracle:true,
+      planBand:'high', planScore:85, planReason:'Resubmission is a natural extension of the modeled application lifecycle.',
+      result:'pass', resultBand:'high', resultScore:89, resultReason:'Confirmed by the automation script — strong, repeatable evidence.',
+      chain:[{n:'Rejected application view',det:true},{n:'Resubmit button',det:true},{n:'PUT /applications/{id}/resubmit',det:true},{n:'"Resubmission" journey',det:false}],
+      steps:[{n:1,detail:'Log in as the applicant and open a Rejected application.',data:'status = Rejected'},{n:2,detail:'Select "Resubmit" and correct the flagged field.',data:'e.g. corrected income figure'},{n:3,detail:'Submit the corrected application.',data:'—'},{n:4,detail:'Verify it re-enters the queue as "Submitted (Resubmission)".',data:'—'}]
+    },
+    {
+      id:12, text:'Check that concurrent status updates by two underwriters don\'t conflict', category:'Pairwise Testing', knownOracle:true,
+      planBand:'medium', planScore:52, planReason:'Inferred from the approval code path — concurrency isn\'t explicitly addressed in any spec.',
+      result:'attn', resultBand:'medium', resultScore:60, resultReason:'Based on reading the code path; not yet confirmed by a live concurrency test.',
+      title:'Concurrent underwriter updates can silently overwrite each other',
+      reason:'Two underwriters approving or rejecting the same application at nearly the same time can both succeed, with the last write silently winning.',
+      likely:'There\'s no version check on the application record, so the second update simply overwrites the first without warning.',
+      fix:'Add a version check (optimistic locking) so a second update to a stale record is rejected, and show the second underwriter a clear conflict message.',
+      chain:[{n:'Application record',det:true},{n:'Underwriter approve/reject action',det:true},{n:'Two near-simultaneous update requests',det:false},{n:'"Application review" journey',det:false},{n:'No automated check found',det:false}],
+      steps:[{n:1,detail:'Open the same application in two underwriter sessions.',data:'2 underwriter accounts'},{n:2,detail:'Approve it from session A.',data:'—'},{n:3,detail:'Reject it from session B without refreshing.',data:'—'},{n:4,detail:'Verify the second action is blocked with a conflict message.',data:'—'}]
+    }
+  ];
+
+  function getItem(id){ return qaItems.find(q=>q.id===id); }
+
+  const nextStepHandlers = {
+    'share-scenarios': () => pushAgentText('Noted — in a real workflow, you\'d now share this list with your QA team or attach it to the test plan document.'),
+    'assign-dev': () => pushAgentText('Noted — in a real workflow, you\'d now assign the failed and flagged items to a developer for a fix.'),
+    'schedule-retest': () => pushAgentText('Noted — in a real workflow, you\'d schedule a retest once the fixes land.'),
+    'notify-team': () => pushAgentText('Noted — in a real workflow, you\'d now notify the team that these defects are logged and being tracked.')
+  };
+  function runNextStep(key){ if(nextStepHandlers[key]) nextStepHandlers[key](); }
+
+  function tcReasonFor(band){
+    if(band==='high') return 'Steps are directly derivable from the observed screen and backend flow.';
+    if(band==='medium') return 'Steps are reasonable but rely on an inferred edge case, not an explicit spec.';
+    return 'Steps can outline the actions, but there\'s no confirmed expected result to assert against.';
+  }
+  function asReasonFor(it){
+    if(!it.knownOracle) return 'The script can drive the steps, but there\'s no confirmed expected result to assert — flagged for manual verification.';
+    if(it.planBand==='high') return 'Every step maps to a stable screen element and a clear expected outcome.';
+    return 'Steps are automatable, but this checks an inferred edge case rather than a documented one.';
+  }
+
+  // ---------- greeting ----------
+  (function(){
+    const h = new Date().getHours();
+    const g = h < 12 ? 'Good morning.' : h < 18 ? 'Good afternoon.' : 'Good evening.';
+    document.getElementById('greeting').textContent = g;
+  })();
+
+  // ---------- add source modal ----------
+  function openAddSourceModal(){
+    document.getElementById('add-source-modal').classList.add('open');
+    document.getElementById('source-title').focus();
+  }
+  function closeAddSourceModal(){
+    document.getElementById('add-source-modal').classList.remove('open');
+    document.getElementById('source-title').value = '';
+    document.getElementById('source-url').value = '';
+    document.getElementById('source-error').classList.remove('show');
+  }
+  document.getElementById('add-source-modal').addEventListener('click', (e)=>{
+    if(e.target.id === 'add-source-modal') closeAddSourceModal();
+  });
+  function addSource(){
+    const title = document.getElementById('source-title').value.trim();
+    const url = document.getElementById('source-url').value.trim();
+    const errorEl = document.getElementById('source-error');
+    if(!url){ errorEl.textContent = 'Add a Git/App URL to continue.'; errorEl.classList.add('show'); return; }
+    errorEl.classList.remove('show');
+    const finalTitle = title || 'Application';
+    const pill = document.createElement('span');
+    pill.className = 'pill two-line';
+    pill.innerHTML = `<span class="pill-title">${escapeHtml(finalTitle)}</span><span class="pill-detail">${escapeHtml(url)}</span><span class="pill-remove" onclick="this.closest('.pill').remove()">✕</span>`;
+    document.getElementById('add-source-btn').insertAdjacentElement('beforebegin', pill);
+    closeAddSourceModal();
+  }
+
+  // ---------- nav ----------
+  function showView(name){
+    ['assistant','findings','history','skills'].forEach(v=>{
+      document.getElementById('view-'+v).classList.toggle('active', v===name);
+      document.getElementById('nav-'+v).classList.toggle('active', v===name);
+    });
+    if(name==='skills') renderSkillsLibrary();
+    document.getElementById('main-scroll').scrollTop = 0;
+  }
+
+  function renderSkillsLibrary(){
+    const grid = document.getElementById('skills-grid');
+    grid.innerHTML = skillDefs.map(s => `
+      <div class="lib-card">
+        <div class="lib-card-head">
+          <div class="lib-card-title">${s.name}</div>
+          <span class="lib-tag">${s.category}</span>
+        </div>
+        <div class="lib-desc">${s.desc}</div>
+        <button class="lib-run" onclick="runSkill('${s.id}'); showView('assistant');">Run →</button>
+      </div>
+    `).join('');
+  }
+
+  // ---------- composer ----------
+  const input = document.getElementById('composer-input');
+  input.addEventListener('input', () => { input.style.height='auto'; input.style.height=input.scrollHeight+'px'; });
+  input.addEventListener('keydown', (e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); handleSend(); } });
+  function toggleSkillsPopover(e){ e.stopPropagation(); document.getElementById('skills-popover').classList.toggle('open'); }
+  function closeSkillsPopover(){ document.getElementById('skills-popover').classList.remove('open'); }
+  document.addEventListener('click', closeSkillsPopover);
+  function attachToast(){ pushAgentText('Attachments aren\'t wired into this demo — imagine dropping in a screenshot or log file here.'); }
+
+  function handleSend(){
+    const text = input.value.trim();
+    if(!text) return;
+    showView('assistant');
+    pushUserText(text);
+    input.value=''; input.style.height='auto';
+    const t = text.toLowerCase();
+    setTimeout(()=>{
+      if(t.includes('defect')) runSkill('defect');
+      else if(t.includes('automat') || t.includes('script')) runSkill('automation');
+      else if(t.includes('test case')) runSkill('testcases');
+      else if(t.includes('scenario')) runSkill('scenarios');
+      else if(t.includes('test')) runSkill('testpass');
+      else if(t.includes('understand') || t.includes('scan') || t.includes('map')) runSkill('understand');
+      else pushAgentText('I can generate test scenarios, test cases, an automation script, or run the test. Try one of those, or ask me something specific once I\'ve had a look at the application.');
+    }, 350);
+  }
+
+  // ---------- transcript helpers ----------
+  function pushUserText(text){
+    const t = document.getElementById('transcript');
+    const el = document.createElement('div');
+    el.className = 'msg';
+    el.innerHTML = `<div class="avatar user">R</div><div class="msg-body"><div class="msg-name">You</div><div class="msg-text">${escapeHtml(text)}</div></div>`;
+    t.appendChild(el);
+    document.getElementById('main-scroll').scrollTop = t.scrollHeight;
+  }
+  function pushAgentText(text){
+    const t = document.getElementById('transcript');
+    const el = document.createElement('div');
+    el.className = 'msg';
+    el.innerHTML = `<div class="avatar agent">AI</div><div class="msg-body"><div class="msg-name">QA Agent <span class="model-tag">Claude Opus 4.8</span></div><div class="msg-text">${text}</div></div>`;
+    t.appendChild(el);
+    document.getElementById('main-scroll').scrollTop = t.scrollHeight;
+    return el;
+  }
+  function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+  function pushOptions(el, options){
+    const row = document.createElement('div');
+    row.style.marginTop = '4px';
+    row.innerHTML = options.map(o => `<span class="suggest-chip" onclick="runSkill('${o.id}')">${o.icon || ''} ${o.label}</span>`).join('');
+    el.querySelector('.msg-body').appendChild(row);
+  }
+  function askWhatNext(){
+    const el = pushAgentText('What would you like to do next?');
+    pushOptions(el, [{id:'scenarios', label:'Design test scenarios', icon:'📋'}]);
+  }
+
+  // ---------- skill execution ----------
+  function setWorkflow(stage){
+    const ids = ['understand','testdesign','testcases','automation','execute','findings'];
+    ids.forEach(id=>{
+      const el = document.getElementById('wf-'+id);
+      if(el) el.classList.toggle('active', id===stage);
+    });
+  }
+
+  function runSkill(id){
+    if(id === 'understand') return runUnderstand();
+    if(id === 'scenarios') return runScenarios();
+    if(id === 'testcases') return runTestCases();
+    if(id === 'automation') return runAutomation();
+    if(id === 'testpass') return runTestPass();
+    if(id === 'defect') return runDefectSummary();
+    if(id === 'diff') return runDiffPreview();
+  }
+
+  function newReviewId(stage){ return stage + '-' + (++reviewCounter); }
+  function nowStamp(){
+    const d = new Date();
+    return d.toLocaleDateString(undefined,{month:'short', day:'numeric'}) + ' · ' + d.toLocaleTimeString(undefined,{hour:'2-digit', minute:'2-digit'});
+  }
+
+  function runUnderstand(){
+    setWorkflow('understand');
+    pushUserText('Understand the application.');
+    const el = pushAgentText(`Taking a look at the frontend and backend repositories…`);
+    document.getElementById('home-skill-cards').style.display = 'none';
+    setTimeout(()=>{
+      el.querySelector('.msg-text').innerHTML = `Here's the gist of what <b>Project Name</b> does — review the evidence behind each figure below:`;
+      const reviewId = newReviewId('understand');
+      const card = document.createElement('div');
+      card.className = 'skill-run-card';
+      card.innerHTML = `
+        <div class="src-head"><span>◆ Understand the application</span><span class="timing">completed 4.2s</span></div>
+        <div class="src-body">
+          <div class="judge-banner light">Evidence basis · derived from connected frontend and backend code</div>
+          <div class="stat-row"><span class="conf-chip high">94%</span> <b>24</b> screens &amp; pages</div>
+          <div class="stat-row"><span class="conf-chip high">91%</span> <b>34</b> things the app can do</div>
+          <div class="stat-row"><span class="conf-chip medium">68%</span> <b>61</b> connections mapped between screens and actions</div>
+          <div class="stat-row"><span class="conf-chip medium">55%</span> <b>12</b> common journeys, like submitting or approving a loan</div>
+          <div class="review-footer" id="footer-${reviewId}">
+            <div class="review-actions">
+              <button class="btn-approve" onclick="approveUnderstand('${reviewId}')">✓ Confirm understanding</button>
+            </div>
+          </div>
+        </div>`;
+      el.querySelector('.msg-body').appendChild(card);
+    }, 900);
+  }
+
+  function approveUnderstand(reviewId){
+    document.getElementById('footer-'+reviewId).innerHTML = `<div class="approved-note">✓ Approved by you · ${nowStamp()}</div>`;
+    state.understood = true;
+    document.getElementById('sidebar-status').textContent = 'understood · scenarios pending';
+    document.getElementById('app-status-tag').innerHTML = '<span class="dot2"></span> Understood';
+    document.getElementById('app-status-tag').className = 'status-tag active';
+    document.getElementById('fact-components').textContent = '24';
+    document.getElementById('fact-endpoints').textContent = '34';
+    document.getElementById('fact-relationships').textContent = '61';
+    document.getElementById('fact-workflows').textContent = '12';
+    setProg('understand', 100);
+    setCtx(38);
+    askWhatNext();
+  }
+
+  // ---------- generic confidence-review renderer ----------
+  const bandMeta = {
+    high:{label:'Mostly Confident', dot:'teal'},
+    medium:{label:'Somewhat Confident', dot:'amber'},
+    low:{label:'Grey Areas — Insufficient Evidence', dot:'gray'}
+  };
+
+  function renderConfidenceReview(reviewId, items, config){
+    reviewRegistry[reviewId] = { config };
+    let html = `<div class="review-wrap" id="review-${reviewId}">`;
+    html += `<div class="judge-banner">Evidence review · ${items.length} item${items.length===1?'':'s'} checked, ${items.filter(i=>config.getBand(i)==='low').length} flagged for extra scrutiny</div>`;
+    ['high','medium','low'].forEach(bandKey=>{
+      const bandItems = items.filter(i=>config.getBand(i)===bandKey);
+      if(!bandItems.length) return;
+      const meta = bandMeta[bandKey];
+      const collapsed = bandKey==='high';
+      html += `
+      <div class="conf-bucket" id="bucket-${reviewId}-${bandKey}">
+        <div class="bucket-head" onclick="toggleBucket('${reviewId}','${bandKey}')">
+          <span class="band-dot ${meta.dot}"></span>
+          <span class="bucket-title">${meta.label}</span>
+          <span class="bucket-count" id="count-${reviewId}-${bandKey}">${bandItems.length}</span>
+          <span class="bucket-chevron" id="chev-${reviewId}-${bandKey}">${collapsed?'▸':'▾'}</span>
+        </div>
+        <div class="bucket-items" id="items-${reviewId}-${bandKey}" style="display:${collapsed?'none':'block'};">
+          ${bandItems.map(it=>itemRowHtml(reviewId,it,config)).join('')}
+        </div>
+      </div>`;
+    });
+    html += `
+      <div class="review-footer" id="footer-${reviewId}">
+        <div class="review-actions">
+          ${config.allowGenerateMore ? `<button class="btn-outline" onclick="generateMoreScenarios('${reviewId}')">+ Generate more scenarios</button>` : ''}
+          <button class="btn-approve" onclick="approveReview('${reviewId}')">${config.approveLabel}</button>
+        </div>
+      </div>
+      <div class="next-steps" id="nextsteps-${reviewId}" style="display:none;"></div>
+    </div>`;
+    return html;
+  }
+
+  function itemRowHtml(reviewId, it, config){
+    const uid = 'i'+it.id;
+    const score = config.getScore(it);
+    const band = config.getBand(it);
+    const main = config.getMain(it);
+    const reasoning = config.getReasoning(it);
+    const tag = config.getTag ? config.getTag(it) : null;
+    const category = config.getCategory ? config.getCategory(it) : null;
+    const trace = config.getTrace ? config.getTrace(it) : null;
+    const detailHtml = config.getDetailHtml ? config.getDetailHtml(it, reviewId+'-'+uid) : null;
+    return `
+      <div class="review-item" id="item-${reviewId}-${uid}">
+        <div class="ri-main-row">
+          <span class="conf-chip ${band}">${score}%</span>
+          ${category ? `<span class="cat-tag">${category}</span>` : ''}
+          ${tag ? `<span class="status-pill ${tag.cls}">${tag.label}</span>` : ''}
+          <span class="ri-text" id="ritext-${reviewId}-${uid}">${escapeHtml(main)}</span>
+          <span class="ri-actions">
+            ${detailHtml!=null ? `<button class="ri-icon" onclick="toggleReviewDetail('${reviewId}','${uid}')" title="Details">⋯</button>` : ''}
+            <button class="ri-icon ri-editable" onclick="editReviewItem('${reviewId}','${uid}')" title="Edit">✎</button>
+            <button class="ri-icon ri-editable" onclick="deleteReviewItem('${reviewId}','${uid}','${band}')" title="Delete">🗑</button>
+          </span>
+        </div>
+        <div class="ri-reasoning">${escapeHtml(reasoning)}</div>
+        ${trace ? `<div class="trace-tag">↳ ${trace}</div>` : ''}
+        ${detailHtml!=null ? `<div class="ri-detail" id="ridetail-${reviewId}-${uid}" style="display:none;">${detailHtml}</div>` : ''}
+      </div>`;
+  }
+
+  function evidenceChainHtml(it){
+    if(!it.chain) return '';
+    const chainHtml = it.chain.map((c,i)=>{
+      const arrow = i===0 ? '' : `<span class="ec-arrow${c.det?'':' inferred'}">→</span>`;
+      return `${arrow}<span class="ec-node">${c.n}</span>`;
+    }).join('');
+    return `<div class="fb-row"><div class="fb-label">Evidence I used</div><div class="evidence-chain">${chainHtml}</div></div>`;
+  }
+
+  function itemDetailPanel(it, uid, extraHtml, ctx, opts){
+    return `${extraHtml || ''}`;
+  }
+
+  function bandFor(pct){ return pct>=80?'high':pct>=50?'medium':'low'; }
+
+  function stepsTableHtml(it){
+    const rows = it.steps.map(s=>`<tr><td class="step-no">${s.n}</td><td>${escapeHtml(s.detail)}</td><td class="step-data">${escapeHtml(s.data)}</td></tr>`).join('');
+    return `<table class="steps-table"><thead><tr><th>Step #</th><th>Step details</th><th>Test data used</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  function scriptHtmlFor(it){
+    const lines = it.steps.map((s,i)=> `await qa.step(${i+1}, "${s.detail.replace(/"/g,"'")}");`);
+    lines.push(it.knownOracle ? `expect(outcome).toMatchExpected(); // asserts the code-supported expected outcome` : `// TODO: expected behavior not confirmed — flagged for manual verification`);
+    return `<div class="code-block">${escapeHtml(lines.join('\n'))}</div>`;
+  }
+
+  function showFix(idx, uid){
+    const it = getItem(parseInt(idx,10));
+    const slot = document.getElementById('fix-slot-'+uid);
+    if(!slot || slot.dataset.shown) return;
+    slot.dataset.shown = '1';
+    slot.innerHTML = `
+      <div class="fb-label" style="margin-top:12px;">Recommended fix</div>
+      <div class="fb-text">${it.fix}</div>
+      <div class="fix-actions">
+        <button class="save-btn" onclick="this.classList.add('done'); this.textContent='✓ Copied for developer';">⧉ Copy for developer</button>
+      </div>`;
+    const btn = document.querySelector('#fix-row-'+uid+' .fix-btn');
+    if(btn) btn.style.display = 'none';
+  }
+
+  function toggleBucket(reviewId, bandKey){
+    const itemsEl = document.getElementById(`items-${reviewId}-${bandKey}`);
+    const chev = document.getElementById(`chev-${reviewId}-${bandKey}`);
+    const open = itemsEl.style.display !== 'none';
+    itemsEl.style.display = open ? 'none' : 'block';
+    chev.textContent = open ? '▸' : '▾';
+  }
+  function toggleReviewDetail(reviewId, uid){
+    const el = document.getElementById(`ridetail-${reviewId}-${uid}`);
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  }
+
+  function editReviewItem(reviewId, uid){
+    const span = document.getElementById(`ritext-${reviewId}-${uid}`);
+    if(span.querySelector('textarea')) return;
+    const current = span.textContent;
+    span.innerHTML = `<textarea class="ri-edit-input" rows="1">${escapeHtml(current)}</textarea>`;
+    const ta = span.querySelector('textarea');
+    ta.style.height = 'auto'; ta.style.height = ta.scrollHeight+'px';
+    ta.focus();
+    const btn = document.querySelector(`#item-${reviewId}-${uid} [title="Edit"]`);
+    if(btn){ btn.textContent='✓'; btn.title='Save'; btn.setAttribute('onclick', `saveReviewItem('${reviewId}','${uid}')`); }
+  }
+  function saveReviewItem(reviewId, uid){
+    const span = document.getElementById(`ritext-${reviewId}-${uid}`);
+    const ta = span.querySelector('textarea');
+    const val = ta.value.trim() || ta.defaultValue;
+    span.textContent = val;
+    const btn = document.querySelector(`#item-${reviewId}-${uid} [title="Save"]`);
+    if(btn){ btn.textContent='✎'; btn.title='Edit'; btn.setAttribute('onclick', `editReviewItem('${reviewId}','${uid}')`); }
+  }
+  function deleteReviewItem(reviewId, uid, band){
+    const el = document.getElementById(`item-${reviewId}-${uid}`);
+    if(el) el.remove();
+    const countEl = document.getElementById(`count-${reviewId}-${band}`);
+    if(countEl){
+      const n = Math.max(0, parseInt(countEl.textContent,10)-1);
+      countEl.textContent = n;
+      if(n===0){ const bucket = document.getElementById(`bucket-${reviewId}-${band}`); if(bucket) bucket.style.display='none'; }
+    }
+  }
+
+  function generateMoreScenarios(reviewId){
+    const footer = document.getElementById('footer-'+reviewId);
+    const btn = footer.querySelector('.btn-outline');
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Generating…';
+    setTimeout(()=>{
+      const config = reviewRegistry[reviewId].config;
+      extraScenarios.forEach(ex=>{
+        if(qaItems.find(q=>q.id===ex.id)) return;
+        qaItems.push(ex);
+        const band = config.getBand(ex);
+        const itemsEl = document.getElementById(`items-${reviewId}-${band}`);
+        if(itemsEl){
+          itemsEl.insertAdjacentHTML('beforeend', itemRowHtml(reviewId, ex, config));
+          const countEl = document.getElementById(`count-${reviewId}-${band}`);
+          if(countEl) countEl.textContent = parseInt(countEl.textContent,10)+1;
+        }
+      });
+      btn.disabled = false;
+      btn.textContent = original;
+      pushAgentText('Added 2 more scenarios — including one new concurrency edge case worth a look.');
+    }, 900);
+  }
+
+  function approveReview(reviewId){
+    const wrap = document.getElementById('review-'+reviewId);
+    const footer = document.getElementById('footer-'+reviewId);
+    footer.innerHTML = `<div class="approved-note">✓ Approved by you · ${nowStamp()}</div>`;
+    wrap.classList.add('approved');
+    const config = reviewRegistry[reviewId].config;
+    if(config.onApproveStage) config.onApproveStage();
+    if(config.nextSteps && config.nextSteps.length){
+      const nextEl = document.getElementById('nextsteps-'+reviewId);
+      nextEl.style.display = 'block';
+      nextEl.innerHTML = `<div class="next-steps-label">Typical next step for a QA</div>` +
+        config.nextSteps.map(ns => {
+          const onclick = ns.action.type==='skill' ? `runSkill('${ns.action.id}')` : `runNextStep('${ns.action.key}')`;
+          return `<span class="suggest-chip" onclick="${onclick}">${ns.label}</span>`;
+        }).join('');
+    }
+  }
+
+  function collectApprovedItems(reviewId){
+    const nodes = document.querySelectorAll(`#review-${reviewId} .review-item`);
+    const ids = [];
+    nodes.forEach(node=>{
+      const m = node.id.match(/-i(\d+)$/);
+      if(m) ids.push(parseInt(m[1],10));
+    });
+    return ids;
+  }
+
+  // ---------- Stage 2: scenarios ----------
+  function runScenarios(){
+    setWorkflow('testdesign');
+    pushUserText('Design test scenarios.');
+    if(!state.understood){
+      pushAgentText(`I haven't looked at the application yet — let me do that first.`);
+      return setTimeout(()=>{ runUnderstand(); }, 300);
+    }
+    const el = pushAgentText(`Here are the scenarios I'd check, tagged with the technique I used to derive each one — review, edit, add more where needed, then approve:`);
+    const reviewId = newReviewId('plan');
+    const card = document.createElement('div');
+    card.className = 'skill-run-card';
+    card.innerHTML = `<div class="src-head"><span>◆ Test scenarios</span><span class="timing">${qaItems.length} planned</span></div><div class="src-body" id="body-${reviewId}"></div>`;
+    el.querySelector('.msg-body').appendChild(card);
+    document.getElementById('body-'+reviewId).innerHTML = renderConfidenceReview(reviewId, qaItems, {
+      getMain: it => it.text,
+      getBand: it => it.planBand,
+      getScore: it => it.planScore,
+      getReasoning: it => it.planReason,
+      getCategory: it => it.category,
+      getDetailHtml: (it, uid) => itemDetailPanel(it, uid, `
+          <div class="fb-row"><div class="fb-label">Why this technique</div><div class="fb-text">${it.planReason}</div></div>
+          ${evidenceChainHtml(it)}
+        `, {reasoning: it.planReason, score: it.planScore, band: it.planBand}),
+      contextNote: "Add a QA note before approval — e.g. 'also check the mobile app flow' or 'exclude reporting exports'",
+      approveLabel: '✓ Approve scenarios',
+      allowGenerateMore: true,
+      onApproveStage: () => {
+        state.scenariosApproved = true;
+        approvedScenarioIds = collectApprovedItems(reviewId);
+        document.getElementById('sidebar-status').textContent = 'scenarios approved';
+      },
+      nextSteps: [
+        {label:'Generate test cases', action:{type:'skill', id:'testcases'}},
+        {label:'Share scenarios with the team', action:{type:'info', key:'share-scenarios'}}
+      ]
+    });
+  }
+
+  // ---------- Stage 3: test cases ----------
+  function runTestCases(){
+    setWorkflow('testcases');
+    pushUserText('Generate test cases.');
+    if(!state.scenariosApproved){
+      pushAgentText(`I need approved scenarios first — let's generate and approve those.`);
+      return setTimeout(()=>{ runScenarios(); }, 300);
+    }
+    const ids = approvedScenarioIds.length ? approvedScenarioIds : qaItems.map(q=>q.id);
+    const items = ids.map(id=>getItem(id)).filter(Boolean);
+    const el = pushAgentText(`Here are the test cases, traced back to each scenario — expand any row to see the steps and test data:`);
+    const reviewId = newReviewId('tc');
+    const card = document.createElement('div');
+    card.className = 'skill-run-card';
+    card.innerHTML = `<div class="src-head"><span>◆ Test cases</span><span class="timing">${items.length} generated</span></div><div class="src-body" id="body-${reviewId}"></div>`;
+    el.querySelector('.msg-body').appendChild(card);
+    document.getElementById('body-'+reviewId).innerHTML = renderConfidenceReview(reviewId, items, {
+      getMain: it => `SR-${String(it.id).padStart(2,'0')}: ${it.text}`,
+      getBand: it => it.planBand,
+      getScore: it => it.planScore,
+      getReasoning: it => tcReasonFor(it.planBand),
+      getTrace: it => `Scenario #${it.id}: "${it.text}"`,
+      getDetailHtml: (it, uid) => itemDetailPanel(it, uid, `
+          ${evidenceChainHtml(it)}
+          <div class="fb-row"><div class="fb-label">Steps</div>${stepsTableHtml(it)}</div>
+        `, {reasoning: tcReasonFor(it.planBand), score: it.planScore, band: it.planBand}),
+      contextNote: "Add a QA note — e.g. 'add a step to verify the confirmation email' or 'use a different test data set'",
+      approveLabel: '✓ Approve test cases',
+      onApproveStage: () => {
+        state.testCasesApproved = true;
+        approvedTestCaseIds = collectApprovedItems(reviewId);
+        document.getElementById('sidebar-status').textContent = 'test cases approved';
+      },
+      nextSteps: [
+        {label:'Generate automation script', action:{type:'skill', id:'automation'}}
+      ]
+    });
+  }
+
+  // ---------- Stage 4: automation script ----------
+  function runAutomation(){
+    setWorkflow('automation');
+    pushUserText('Generate the automation script.');
+    if(!state.testCasesApproved){
+      pushAgentText(`I need approved test cases first — let's generate and approve those.`);
+      return setTimeout(()=>{ runTestCases(); }, 300);
+    }
+    const ids = approvedTestCaseIds.length ? approvedTestCaseIds : qaItems.map(q=>q.id);
+    const items = ids.map(id=>getItem(id)).filter(Boolean);
+    const el = pushAgentText(`Here's the automation script for each test case, traced back through it to the source scenario:`);
+    const reviewId = newReviewId('as');
+    const card = document.createElement('div');
+    card.className = 'skill-run-card';
+    card.innerHTML = `<div class="src-head"><span>◆ Automation script</span><span class="timing">${items.length} scripted</span></div><div class="src-body" id="body-${reviewId}"></div>`;
+    el.querySelector('.msg-body').appendChild(card);
+    document.getElementById('body-'+reviewId).innerHTML = renderConfidenceReview(reviewId, items, {
+      getMain: it => `AS-${String(it.id).padStart(2,'0')}: ${it.text}`,
+      getBand: it => it.knownOracle ? it.planBand : 'low',
+      getScore: it => it.knownOracle ? it.planScore : 15,
+      getReasoning: it => asReasonFor(it),
+      getTrace: it => `Test Case SR-${String(it.id).padStart(2,'0')} → Scenario #${it.id}`,
+      getDetailHtml: (it, uid) => itemDetailPanel(it, uid, `
+          ${evidenceChainHtml(it)}
+          <div class="fb-row"><div class="fb-label">Script</div>${scriptHtmlFor(it)}</div>
+        `, {reasoning: asReasonFor(it), score: it.knownOracle?it.planScore:15, band: it.knownOracle?it.planBand:'low'}),
+      contextNote: "Add a QA note — e.g. 'use the staging environment' or 'run this suite nightly'",
+      approveLabel: '✓ Approve automation script',
+      onApproveStage: () => {
+        state.automationApproved = true;
+        approvedAutomationIds = collectApprovedItems(reviewId);
+        document.getElementById('sidebar-status').textContent = 'automation approved';
+      },
+      nextSteps: [
+        {label:'Run the test', action:{type:'skill', id:'testpass'}}
+      ]
+    });
+  }
+
+  // ---------- Stage 5: execute ----------
+  function runTestPass(){
+    setWorkflow('execute');
+    pushUserText('Run the test.');
+    if(!state.understood){ pushAgentText(`I haven't looked at the application yet — let me do that first.`); return setTimeout(()=>{ runUnderstand(); },300); }
+    if(!state.scenariosApproved){ pushAgentText(`I don't have approved test scenarios yet — let's generate those first.`); return setTimeout(()=>{ runScenarios(); },300); }
+    if(!state.testCasesApproved){ pushAgentText(`I don't have approved test cases yet — let's generate those first.`); return setTimeout(()=>{ runTestCases(); },300); }
+    if(!state.automationApproved){ pushAgentText(`I don't have an approved automation script yet — let's generate that first.`); return setTimeout(()=>{ runAutomation(); },300); }
+
+    const ids = approvedAutomationIds.length ? approvedAutomationIds : qaItems.map(q=>q.id);
+    const items = ids.map(id=>getItem(id)).filter(Boolean);
+    const el = pushAgentText(`Executing the automation script now…`);
+    setTimeout(()=>{
+      const passCount = items.filter(it=>it.result==='pass').length;
+      const failCount = items.filter(it=>it.result==='fail').length;
+      const attnCount = items.filter(it=>it.result==='attn').length;
+      const unkCount = items.filter(it=>it.result==='unk').length;
+      el.querySelector('.msg-text').textContent = `Done. Here's what ran across ${items.length} test cases — review each below before I file anything:`;
+      const reviewId = newReviewId('result');
+      const card = document.createElement('div');
+      card.className = 'skill-run-card';
+      card.innerHTML = `
+        <div class="src-head"><span>◆ Test execution</span><span class="timing">completed 6.8s</span></div>
+        <div class="src-body">
+          <div class="rr-summary">
+            <div class="sum-chip pass"><b>${passCount}</b> passed</div>
+            <div class="sum-chip fail"><b>${failCount}</b> failed</div>
+            <div class="sum-chip attn"><b>${attnCount}</b> needs attention</div>
+            <div class="sum-chip unk"><b>${unkCount}</b> insufficient evidence</div>
+          </div>
+          <div id="body-${reviewId}"></div>
+        </div>`;
+      el.querySelector('.msg-body').appendChild(card);
+      document.getElementById('body-'+reviewId).innerHTML = renderConfidenceReview(reviewId, items, {
+        getMain: it => it.result==='pass' ? it.text : it.title,
+        getBand: it => it.resultBand,
+        getScore: it => it.resultScore,
+        getReasoning: it => it.resultReason,
+        getTag: it => ({cls:it.result, label: it.result==='pass'?'PASS':it.result==='fail'?'FAIL':it.result==='attn'?'ATTENTION':'UNCONFIRMED'}),
+        getTrace: it => `Test Case SR-${String(it.id).padStart(2,'0')} → Scenario #${it.id}`,
+        getDetailHtml: (it,uid) => itemDetailPanel(it, uid, `
+            ${it.result!=='pass' ? `<div class="fb-row"><div class="fb-label">What I found</div><div class="fb-text">${it.reason}</div></div><div class="fb-row"><div class="fb-label">${it.result==='fail'?'Likely cause':'Assessment'}</div><div class="fb-text">${it.likely}</div></div>` : ''}
+            ${evidenceChainHtml(it)}
+            ${it.result!=='pass' ? `<div class="fb-row" id="fix-row-${uid}"><button class="fix-btn" onclick="showFix('${it.id}','${uid}')">🛠 Suggest a fix</button><div class="fix-slot" id="fix-slot-${uid}"></div></div>` : ''}
+          `, {reasoning: it.resultReason, score: it.resultScore, band: it.resultBand}),
+        contextNote: "Add a QA note — e.g. 'also verify the mobile checkout flow' or 'this endpoint changed last sprint'",
+        approveLabel: '✓ Approve results',
+        onApproveStage: () => approveTestResults(items),
+        nextSteps: [
+          {label:'Summarize findings', action:{type:'skill', id:'defect'}},
+          {label:'Re-run the test', action:{type:'skill', id:'testpass'}},
+          {label:'Assign to a developer', action:{type:'info', key:'assign-dev'}}
+        ]
+      });
+      state.tested = true;
+    }, 1000);
+  }
+
+  function approveTestResults(items){
+    state.resultsApproved = true;
+    const passCount = items.filter(it=>it.result==='pass').length;
+    const failCount = items.filter(it=>it.result==='fail').length;
+    const attnCount = items.filter(it=>it.result==='attn').length;
+    const unkCount = items.filter(it=>it.result==='unk').length;
+    document.getElementById('findings-badge').textContent = String(failCount+attnCount+unkCount);
+    setProg('coverage', 73);
+    const avgConf = Math.round(items.reduce((s,it)=>s+it.resultScore,0)/items.length);
+    setProg('confidence', avgConf);
+    setCtx(100);
+    populateFindingsView(items);
+    runHistory.unshift({
+      n: runHistory.length+1, time: nowStamp(), pass:passCount, fail:failCount, attn:attnCount, unk:unkCount, confidence:avgConf, total:items.length,
+      items: items.map(it => ({
+        id: it.id,
+        text: it.result==='pass' ? it.text : it.title,
+        result: it.result,
+        resultBand: it.resultBand,
+        resultScore: it.resultScore
+      }))
+    });
+    document.getElementById('history-badge').textContent = String(runHistory.length);
+    populateHistoryView();
+    document.getElementById('sidebar-status').textContent = `last run: just now · run ${runHistory.length}`;
+  }
+
+  // ---------- Stage 6: defect summary ----------
+  function runDefectSummary(){
+    pushUserText('Summarize findings.');
+    if(!state.resultsApproved){
+      pushAgentText(`I don't have any approved test results yet — run the test, approve the results, and I'll summarize what comes up.`);
+      return;
+    }
+    const el = pushAgentText(`Here's a concise summary of what needs attention — review it before sharing:`);
+    const reviewId = newReviewId('defect');
+    const defectItems = qaItems.filter(it => it.result !== 'pass');
+    const card = document.createElement('div');
+    card.className = 'skill-run-card';
+    card.innerHTML = `<div class="src-head"><span>◆ Summarize findings</span><span class="timing">completed 1.6s</span></div><div class="src-body" id="body-${reviewId}"></div>`;
+    el.querySelector('.msg-body').appendChild(card);
+    document.getElementById('body-'+reviewId).innerHTML = renderConfidenceReview(reviewId, defectItems, {
+      getMain: it => it.title,
+      getBand: it => it.resultBand,
+      getScore: it => it.resultScore,
+      getReasoning: it => it.resultReason,
+      getTag: it => ({cls: it.result, label: it.result==='fail'?'FAIL':it.result==='attn'?'ATTENTION':'UNCONFIRMED'}),
+      getTrace: it => `Test Case SR-${String(it.id).padStart(2,'0')} → Scenario #${it.id}`,
+      getDetailHtml: (it,uid) => itemDetailPanel(it, uid, `
+          <div class="fb-row"><div class="fb-label">What I found</div><div class="fb-text">${it.reason}</div></div>
+          <div class="fb-row"><div class="fb-label">${it.result==='fail'?'Likely cause':'Assessment'}</div><div class="fb-text">${it.likely}</div></div>
+          ${evidenceChainHtml(it)}
+          <div class="fb-row" id="fix-row-${uid}"><button class="fix-btn" onclick="showFix('${it.id}','${uid}')">🛠 Suggest a fix</button><div class="fix-slot" id="fix-slot-${uid}"></div></div>
+        `, {reasoning: it.resultReason, score: it.resultScore, band: it.resultBand}),
+      contextNote: "Add a QA note before sharing — e.g. 'mark the date range issue as high priority'",
+      approveLabel: '✓ Approve findings',
+      onApproveStage: null,
+      nextSteps: [
+        {label:'Notify the team', action:{type:'info', key:'notify-team'}},
+        {label:'Schedule retest', action:{type:'info', key:'schedule-retest'}}
+      ]
+    });
+  }
+
+  function runDiffPreview(){
+    pushUserText('What changed since the last scan?');
+    pushAgentText(`This is the first scan on record for <b>Project Name</b> — there's nothing to compare against yet. Once you run "Understand the application" again after a change, I'll be able to show you what moved.`);
+  }
+
+  function setProg(which, pct){
+    document.getElementById('p-'+which).style.width = pct+'%';
+    document.getElementById('p-'+which+'-n').textContent = pct+'%';
+  }
+  function setCtx(pct){
+    document.getElementById('ctx-bar').style.width = pct+'%';
+    document.getElementById('ctx-pct').textContent = pct+'%';
+  }
+
+  // ---------- Findings tab (latest approved run, traced) ----------
+  function findingCardHtml(it, uid){
+    const label = it.result==='fail'?'FAILED':it.result==='attn'?'NEEDS ATTENTION':'INSUFFICIENT EVIDENCE';
+    return `
+      <div class="finding-card" id="finding-${uid}">
+        <div class="finding-head" onclick="document.getElementById('finding-${uid}').classList.toggle('open')">
+          <span class="conf-chip ${it.resultBand}">${it.resultScore}%</span>
+          <span class="status-pill ${it.result}">${label}</span>
+          <span class="finding-title">${it.title}</span>
+          <span class="chevron">›</span>
+        </div>
+        <div class="finding-body"><div class="finding-body-inner">
+          <div class="trace-tag" style="padding-left:0; margin-bottom:12px;">↳ Test Case SR-${String(it.id).padStart(2,'0')} → Scenario #${it.id}</div>
+          <div class="fb-row"><div class="fb-label">What I found</div><div class="fb-text">${it.reason}</div></div>
+          <div class="fb-row"><div class="fb-label">${it.result==='fail'?'Likely cause':'Assessment'}</div><div class="fb-text">${it.likely}</div></div>
+          ${evidenceChainHtml(it)}
+          <div class="fb-row" id="fix-row-${uid}">
+            <button class="fix-btn" onclick="showFix('${it.id}','${uid}')">🛠 Suggest a fix</button>
+            <div class="fix-slot" id="fix-slot-${uid}"></div>
+          </div>
+          ${itemDetailPanel(it, uid, '', {reasoning: it.resultReason, score: it.resultScore, band: it.resultBand})}
+        </div></div>
+      </div>`;
+  }
+
+  function populateFindingsView(items){
+    setWorkflow('findings');
+    document.getElementById('findings-empty').style.display = 'none';
+    document.getElementById('findings-content').style.display = 'block';
+    document.getElementById('findings-updated').textContent = 'Last updated: just now';
+    const passCount = items.filter(it=>it.result==='pass').length;
+    const failCount = items.filter(it=>it.result==='fail').length;
+    const attnCount = items.filter(it=>it.result==='attn').length;
+    const unkCount = items.filter(it=>it.result==='unk').length;
+    document.getElementById('findings-summary').innerHTML = `
+      <div class="sum-chip pass"><b>${passCount}</b> passed</div>
+      <div class="sum-chip fail"><b>${failCount}</b> failed</div>
+      <div class="sum-chip attn"><b>${attnCount}</b> needs attention</div>
+      <div class="sum-chip unk"><b>${unkCount}</b> insufficient evidence</div>`;
+    const list = document.getElementById('findings-list');
+    const passedItems = items.filter(it=>it.result==='pass');
+    let html = `<div class="finding-card" id="finding-passed">
+        <div class="finding-head" onclick="document.getElementById('finding-passed').classList.toggle('open')">
+          <span class="conf-chip high">94%</span>
+          <span class="status-pill pass">PASSED</span>
+          <span class="finding-title">${passedItems.length} scenarios executed cleanly</span>
+          <span class="chevron">›</span>
+        </div>
+        <div class="finding-body"><div class="finding-body-inner">
+          <ul class="passed-list">${passedItems.map(it=>`<li>${escapeHtml(it.text)}</li>`).join('')}</ul>
+        </div></div>
+      </div>`;
+    html += items.filter(it=>it.result!=='pass').map(it=>findingCardHtml(it,'f'+it.id)).join('');
+    list.innerHTML = html;
+  }
+
+  // ---------- Run history tab ----------
+  function historyDelta(curr, prev){
+    if(prev==null) return '';
+    const diff = curr-prev;
+    if(diff===0) return `<span class="d">±0</span>`;
+    const up = diff>0;
+    return `<span class="d">${up?'▲':'▼'}${Math.abs(diff)}</span>`;
+  }
+
+  function historyItemRowHtml(it, prevRun){
+    let changeTag = '';
+    if(prevRun){
+      const prevItem = prevRun.items.find(p=>p.id===it.id);
+      if(!prevItem) changeTag = `<span class="change-tag new">New this run</span>`;
+      else if(prevItem.result !== it.result){
+        changeTag = it.result==='pass'
+          ? `<span class="change-tag fixed">Fixed since Run ${prevRun.n}</span>`
+          : `<span class="change-tag changed">Changed from ${prevItem.result==='fail'?'FAILED':prevItem.result==='attn'?'ATTENTION':prevItem.result==='pass'?'PASS':'UNCONFIRMED'}</span>`;
+      } else {
+        changeTag = `<span class="change-tag same">Unchanged</span>`;
+      }
+    }
+    const label = it.result==='pass'?'PASS':it.result==='fail'?'FAIL':it.result==='attn'?'ATTENTION':'UNCONFIRMED';
+    return `<div class="history-item-row">
+      <span class="conf-chip ${it.resultBand}">${it.resultScore}%</span>
+      <span class="status-pill ${it.result}">${label}</span>
+      <span class="hi-text">${escapeHtml(it.text)}</span>
+      ${changeTag}
+    </div>`;
+  }
+
+  function historyCardHtml(r, idx){
+    const prev = runHistory[idx+1];
+    const uid = 'h'+r.n;
+    return `<div class="history-card">
+      <div class="history-head" style="cursor:pointer;" onclick="document.getElementById('history-body-${uid}').classList.toggle('open'); document.getElementById('chev-${uid}').textContent = document.getElementById('history-body-${uid}').classList.contains('open') ? '▾' : '›';">
+        <span class="history-run-label">Run ${r.n}</span>
+        <span class="history-time">${r.time}</span>
+        <span class="chevron" id="chev-${uid}">${idx===0?'▾':'›'}</span>
+      </div>
+      <div class="rr-summary">
+        <div class="sum-chip pass"><b>${r.pass}</b> passed ${prev?historyDelta(r.pass,prev.pass):''}</div>
+        <div class="sum-chip fail"><b>${r.fail}</b> failed ${prev?historyDelta(r.fail,prev.fail):''}</div>
+        <div class="sum-chip attn"><b>${r.attn}</b> attention ${prev?historyDelta(r.attn,prev.attn):''}</div>
+        <div class="sum-chip unk"><b>${r.unk}</b> insufficient ${prev?historyDelta(r.unk,prev.unk):''}</div>
+      </div>
+      <div class="stat-row" style="margin-top:2px;"><span class="conf-chip ${bandFor(r.confidence)}">${r.confidence}%</span> average confidence across ${r.total} test cases</div>
+      <div class="history-expand-hint">${idx===0?'Showing full results below':'Click to see full results'}${prev?' — compared against Run '+prev.n:''}</div>
+      <div class="history-body${idx===0?' open':''}" id="history-body-${uid}">
+        ${r.items.map(it=>historyItemRowHtml(it, prev)).join('')}
+      </div>
+    </div>`;
+  }
+
+  function populateHistoryView(){
+    const list = document.getElementById('history-list');
+    if(!runHistory.length){
+      document.getElementById('history-empty').style.display='block';
+      list.style.display='none';
+      return;
+    }
+    document.getElementById('history-empty').style.display='none';
+    list.style.display='block';
+    list.innerHTML = runHistory.map((r,idx)=>historyCardHtml(r,idx)).join('');
+  }
+
+  // ---------- Mini chat (per-section Q&A) ----------
+  const miniChatResponders = {
+    findings: (q) => {
+      if(!state.resultsApproved) return "There aren't any approved findings yet — run and approve a test first.";
+      const failed = qaItems.filter(it=>it.result==='fail').length;
+      const attn = qaItems.filter(it=>it.result==='attn').length;
+      const unk = qaItems.filter(it=>it.result==='unk').length;
+      if(q.includes('lowest confidence') || q.includes('least confident')){
+        const lowest = qaItems.reduce((a,b)=> a.resultScore<b.resultScore?a:b);
+        return `The lowest-confidence item is "${lowest.title||lowest.text}" at ${lowest.resultScore}%.`;
+      }
+      if(q.includes('fail')) return `There ${failed===1?'is':'are'} ${failed} failed item${failed===1?'':'s'}.`;
+      if(q.includes('attention')) return `${attn} item${attn===1?'':'s'} need attention.`;
+      if(q.includes('insufficient') || q.includes('unconfirmed')) return `${unk} item${unk===1?'':'s'} ${unk===1?'has':'have'} insufficient evidence.`;
+      return `This run has ${failed} failed, ${attn} needing attention, and ${unk} with insufficient evidence. Ask me about any of those specifically.`;
+    },
+    history: (q) => {
+      if(!runHistory.length) return "No runs yet — execute the test at least once to see history here.";
+      if(q.includes('how many run')) return `There ${runHistory.length===1?'has':'have'} been ${runHistory.length} run${runHistory.length===1?'':'s'} so far.`;
+      if(q.includes('latest') || q.includes('last run')){
+        const r = runHistory[0];
+        return `Run ${r.n} (${r.time}): ${r.pass} passed, ${r.fail} failed, ${r.attn} attention, ${r.unk} insufficient — ${r.confidence}% average confidence.`;
+      }
+      if(q.includes('improve') || q.includes('better') || q.includes('compare')){
+        if(runHistory.length<2) return "There's only one run so far — run the test again after a fix to see a comparison.";
+        const [latest, prev] = runHistory;
+        const diff = latest.pass-prev.pass;
+        return diff>0 ? `Yes — Run ${latest.n} passed ${diff} more item${diff===1?'':'s'} than Run ${prev.n}.` : diff<0 ? `Run ${latest.n} actually passed ${Math.abs(diff)} fewer items than Run ${prev.n}.` : `Run ${latest.n} passed the same number of items as Run ${prev.n}.`;
+      }
+      return `You have ${runHistory.length} run${runHistory.length===1?'':'s'} on record. Ask me about the latest run or how it compares to the previous one.`;
+    },
+    skills: (q) => {
+      const match = skillDefs.find(s=> q.includes(s.name.toLowerCase().split(' ')[0]));
+      if(match) return `${match.name}: ${match.desc}`;
+      return "I can walk you through any skill in this list — try asking about one by name, e.g. 'what does the automation script skill do?'";
+    }
+  };
+
+</script>
+
+
+<script id="v2-interaction-script">
+(function(){
+  window.userDataRows = [
+    {name:'Test user',value:'qa.user@example.com',comments:'Standard authenticated user'},
+    {name:'Approval reference',value:'APR-1042',comments:'Use for approval journey'},
+    {name:'Invalid account',value:'locked@example.com',comments:'Negative-path data'}
+  ];
+  window.crawlerTimer = null;
+  window.crawlerRunning = false;
+  window.crawlerStartedAt = null;
+  window.currentGeneration = 'current';
+  window.versionContext = 'QA output';
+
+  function esc(v){ return String(v ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  window.openUserDataModal = function(){
+    document.getElementById('user-data-modal').classList.add('open');
+    renderUserDataRows();
+  };
+  window.closeUserDataModal = function(){
+    document.getElementById('user-data-modal').classList.remove('open');
+  };
+  window.renderUserDataRows = function(){
+    const body = document.getElementById('user-data-body');
+    body.innerHTML = window.userDataRows.map((r,i)=>`
+      <tr>
+        <td><input data-ud="name" data-i="${i}" value="${esc(r.name)}" placeholder="e.g. Customer ID"></td>
+        <td><input data-ud="value" data-i="${i}" value="${esc(r.value)}" placeholder="Value"></td>
+        <td class="comments-cell"><input data-ud="comments" data-i="${i}" value="${esc(r.comments)}" placeholder="Why / when to use"><button class="data-delete" title="Remove row" onclick="removeUserDataRow(${i})">×</button></td>
+      </tr>`).join('');
+  };
+  window.addUserDataRow = function(){
+    window.userDataRows.push({name:'',value:'',comments:''});
+    renderUserDataRows();
+    const inputs = document.querySelectorAll('#user-data-body input[data-ud="name"]');
+    if(inputs.length) inputs[inputs.length-1].focus();
+  };
+  window.removeUserDataRow = function(i){
+    window.userDataRows.splice(i,1);
+    renderUserDataRows();
+  };
+  window.saveUserData = function(){
+    document.querySelectorAll('#user-data-body input').forEach(inp=>{
+      const i=Number(inp.dataset.i), key=inp.dataset.ud;
+      if(window.userDataRows[i]) window.userDataRows[i][key]=inp.value.trim();
+    });
+    window.userDataRows = window.userDataRows.filter(r=>r.name||r.value||r.comments);
+    closeUserDataModal();
+    if(typeof pushAgentText==='function'){
+      pushAgentText(`User data updated — ${window.userDataRows.length} data item${window.userDataRows.length===1?'':'s'} are now available when a journey needs input.`);
+    }
+  };
+
+  window.toggleCrawler = function(){
+    if(window.crawlerRunning){ stopCrawler(false); }
+    else { startCrawler(); }
+  };
+  window.startCrawler = function(){
+    if(window.crawlerRunning) return;
+    window.crawlerRunning = true;
+    window.crawlerStartedAt = Date.now();
+    const btn = document.getElementById('crawler-btn');
+    btn.textContent='Stop Crawler';
+    btn.classList.add('running');
+    const tag = document.getElementById('app-status-tag');
+    if(tag){ tag.innerHTML='<span class="dot2"></span> Crawler running'; tag.className='status-tag pending'; }
+    if(typeof pushAgentText==='function') pushAgentText('Crawler started — I’m traversing the application paths and mapping screens, actions and backend connections.');
+    let ticks=0;
+    window.crawlerTimer = setInterval(()=>{
+      ticks++;
+      const pct=Math.min(100, ticks*20);
+      if(typeof setCtx==='function') setCtx(pct);
+      if(typeof setProg==='function') setProg('understand',pct);
+      if(pct>=100) stopCrawler(true);
+    },700);
+  };
+  window.stopCrawler = function(completed){
+    if(!window.crawlerRunning) return;
+    clearInterval(window.crawlerTimer);
+    window.crawlerTimer=null;
+    window.crawlerRunning=false;
+    const btn=document.getElementById('crawler-btn');
+    btn.textContent='Start Crawler';
+    btn.classList.remove('running');
+    const tag=document.getElementById('app-status-tag');
+    if(tag){ tag.innerHTML='<span class="dot2"></span> Scan complete'; tag.className='status-tag understood'; }
+    if(typeof setCtx==='function') setCtx(completed?100:64);
+    if(typeof setProg==='function') setProg('understand',completed?100:64);
+    document.getElementById('crawler-summary-title').textContent=completed?'Scan completed':'Crawler stopped';
+    document.getElementById('crawler-summary-sub').textContent=completed
+      ? 'The crawler completed its pass through the available application paths.'
+      : 'The crawler was stopped before the full scan completed. Partial findings are retained.';
+    const duration=Math.max(1,Math.round((Date.now()-window.crawlerStartedAt)/1000));
+    document.getElementById('crawler-metrics').innerHTML=[
+      ['24','Screens / pages'],
+      ['34','Actions mapped'],
+      ['61','Connections'],
+      [completed?'12':'8','Journeys mapped']
+    ].map(m=>`<div class="crawler-metric"><b>${m[0]}</b><span>${m[1]}</span></div>`).join('');
+    document.getElementById('crawler-findings-list').innerHTML=[
+      ['Observed','24 screens/pages and 34 actionable paths mapped from the application.'],
+      ['Observed','61 frontend/backend connections identified across the scanned paths.'],
+      ['Inferred','12 common journeys identified; 4 contain assumptions worth reviewing.'],
+      ['Validation needed','Some expected outcomes and user-specific data could not be established from code alone.']
+    ].map(x=>`<div class="crawler-finding"><span class="cf-dot"></span><div><b>${x[0]}</b> · ${x[1]}</div></div>`).join('');
+    document.getElementById('crawler-modal').classList.add('open');
+    if(typeof pushAgentText==='function') pushAgentText(`${completed?'Crawler scan complete':'Crawler stopped'}. I found 24 screens, 34 actions and 12 common journeys. I’ve kept uncertain outcomes clearly marked for review.`);
+    if(typeof setWorkflow==='function') setWorkflow('understand');
+  };
+
+  window.closeCrawlerModal=function(){ document.getElementById('crawler-modal').classList.remove('open'); };
+
+  window.openVersionModal=function(context){
+    window.versionContext=context||'QA output';
+    document.getElementById('version-context').textContent='Version history · '+window.versionContext;
+    document.getElementById('version-modal').classList.add('open');
+    updateVersionCompare();
+  };
+  window.closeVersionModal=function(){ document.getElementById('version-modal').classList.remove('open'); };
+  window.selectGeneration=function(which){
+    window.currentGeneration=which;
+    document.querySelectorAll('.version-option').forEach((el,i)=>{
+      el.classList.toggle('current',(which==='current'&&i===0)||(which==='previous'&&i===1));
+    });
+    updateVersionCompare();
+    document.querySelectorAll('.generated-version').forEach(b=>b.textContent=which==='current'?'v2':'v1');
+    document.querySelectorAll('.view-version-btn').forEach(b=>b.textContent=(which==='current'?'v2':'v1')+' · Versions');
+  };
+  function updateVersionCompare(){
+    const body=document.getElementById('version-compare-body');
+    body.textContent=window.currentGeneration==='current'
+      ? 'Current generation v2 is active. It contains the latest QA understanding, test design, generated test cases, automation and findings.'
+      : 'Previous generation v1 is retained as a reference. Use Compare to review what changed before the current generation was created.';
+  }
+  window.compareGenerations=function(){
+    window.currentGeneration='current';
+    document.querySelectorAll('.version-option').forEach((el,i)=>el.classList.toggle('current',i===0));
+    document.getElementById('version-compare-body').innerHTML='<b>v1 → v2:</b> latest generation adds the current evidence review, preserves prior output for traceability, and keeps the active QA workspace on the newest generation.';
+    document.querySelectorAll('.generated-version').forEach(b=>b.textContent='v2');
+    document.querySelectorAll('.view-version-btn').forEach(b=>b.textContent='v2 · Versions');
+  };
+
+  // Add a compact version control to dynamically generated QA cards and finding/history cards.
+  function decorateVersionControls(root){
+    (root||document).querySelectorAll('.skill-run-card,.finding-card,.history-card').forEach(card=>{
+      if(card.querySelector('.generated-version')) return;
+      const head=card.querySelector('.src-head,.finding-head,.history-head');
+      if(!head) return;
+      const b=document.createElement('button');
+      b.className='generated-version';
+      b.textContent=window.currentGeneration==='current'?'v2':'v1';
+      b.title='View generation history';
+      b.onclick=function(e){e.stopPropagation();openVersionModal(card.classList.contains('history-card')?'Run history':card.classList.contains('finding-card')?'Findings':'QA output');};
+      head.appendChild(b);
+    });
+  }
+  const observer=new MutationObserver(muts=>muts.forEach(m=>m.addedNodes.forEach(n=>{
+    if(n.nodeType===1){decorateVersionControls(n);}
+  })));
+  const main=document.getElementById('main-scroll');
+  if(main) observer.observe(main,{childList:true,subtree:true});
+  document.addEventListener('DOMContentLoaded',()=>decorateVersionControls());
+
+  // Close new modals on backdrop click / Escape
+  ['crawler-modal','user-data-modal','version-modal'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.addEventListener('click',e=>{if(e.target===el) el.classList.remove('open');});
+  });
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){
+      ['crawler-modal','user-data-modal','version-modal'].forEach(id=>document.getElementById(id)?.classList.remove('open'));
+    }
+  });
+})();
+</script>
+
+
+<style id="v7-workflow-excel-css">
+/* v7: workflow navigation + export controls */
+.v7-card-actions{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex-shrink:0;
+}
+.v7-export-btn{
+  height:32px;
+  padding:0 10px;
+  border:1px solid var(--line);
+  background:var(--surface);
+  color:var(--ink-soft);
+  border-radius:8px;
+  font-family:var(--font-body);
+  font-size:11px;
+  font-weight:600;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.v7-export-btn:hover{
+  border-color:#BFC3C6;
+  background:#FBFAF8;
+  color:var(--ink);
+}
+.skill-run-card.v7-focus{
+  outline:2px solid #E5A06E;
+  outline-offset:3px;
+  animation:v7Focus 1.7s ease-out;
+}
+@keyframes v7Focus{
+  0%{box-shadow:0 0 0 0 rgba(229,160,110,.40)}
+  40%{box-shadow:0 0 0 8px rgba(229,160,110,.13)}
+  100%{box-shadow:0 0 0 0 rgba(229,160,110,0)}
+}
+</style>
+
+<script id="v7-workflow-excel">
+(function(){
+  /*
+   * AUTHORITATIVE WORKFLOW NAVIGATION
+   * The workflow buttons themselves now call this function directly.
+   * There are no competing v3/v4/v6 workflow listeners in this version.
+   */
+  const workflow = {
+    understand: { wf:'understand', match:['understand the application'], run:'understand' },
+    testdesign: { wf:'testdesign', match:['test scenarios'], run:'scenarios' },
+    testcases:  { wf:'testcases',  match:['test cases'], run:'testcases' },
+    automation: { wf:'automation', match:['automation'], run:'automation' },
+    execute:    { wf:'execute',    match:['test execution'], run:'testpass' }
+  };
+
+  function norm(v){
+    return (v||'').replace(/\s+/g,' ').trim().toLowerCase();
+  }
+
+  function cardsFor(key){
+    const meta=workflow[key];
+    if(!meta) return [];
+    return Array.from(document.querySelectorAll('#transcript .skill-run-card')).filter(card=>{
+      const head=card.querySelector('.src-head');
+      const value=norm(head ? head.textContent : card.textContent);
+      return meta.match.some(x=>value.indexOf(x)!==-1);
+    });
+  }
+
+  function focus(card){
+    if(!card) return false;
+
+    document.querySelectorAll('.skill-run-card.v7-focus')
+      .forEach(x=>x.classList.remove('v7-focus'));
+    card.classList.add('v7-focus');
+
+    const scroller=document.getElementById('main-scroll');
+    if(scroller){
+      const sr=scroller.getBoundingClientRect();
+      const cr=card.getBoundingClientRect();
+      const target=scroller.scrollTop + cr.top - sr.top - 20;
+      scroller.scrollTo({top:Math.max(0,target),behavior:'smooth'});
+    }else{
+      card.scrollIntoView({behavior:'smooth',block:'start'});
+    }
+
+    setTimeout(()=>card.classList.remove('v7-focus'),1800);
+    return true;
+  }
+
+  function waitAndFocus(key, tries){
+    const found=cardsFor(key);
+    if(found.length){
+      focus(found[found.length-1]);
+      return;
+    }
+    if(tries>0) setTimeout(()=>waitAndFocus(key,tries-1),120);
+  }
+
+  window.v7NavigateToWorkflow=function(key){
+    if(key==='findings'){
+      document.body.classList.add('secondary-view');
+      if(typeof window.showView==='function') window.showView('findings');
+      if(typeof window.setWorkflow==='function') window.setWorkflow('findings');
+      return;
+    }
+
+    const meta=workflow[key];
+    if(!meta) return;
+
+    // This is the critical part: leave Findings / Run history /
+    // Capabilities and make the chat view visible before targeting the card.
+    document.body.classList.remove('secondary-view');
+    if(typeof window.showView==='function') window.showView('assistant');
+    if(typeof window.setWorkflow==='function') window.setWorkflow(meta.wf);
+
+    // Do NOT regenerate an existing output.
+    const found=cardsFor(key);
+    if(found.length){
+      requestAnimationFrame(()=>focus(found[found.length-1]));
+      return;
+    }
+
+    // If the output has not been generated yet, generate it once.
+    if(typeof window.runSkill==='function'){
+      window.runSkill(meta.run);
+      waitAndFocus(key,60);
+    }
+  };
+
+  /*
+   * Excel export
+   * Produces an Excel-compatible .xls workbook from the visible generated
+   * output. This is intentionally dependency-free so the HTML prototype
+   * works without an external XLSX library.
+   */
+  function clean(value){
+    return (value||'')
+      .replace(/\u00a0/g,' ')
+      .replace(/\s+/g,' ')
+      .trim();
+  }
+
+  function esc(value){
+    return String(value||'')
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;');
+  }
+
+  function safeFileName(value){
+    return clean(value).replace(/[\\/:*?"<>|]+/g,'-').replace(/\s+/g,'_').slice(0,90) || 'QA_Output';
+  }
+
+  function cardRows(card){
+    const rows=[];
+    const head=card.querySelector('.src-head');
+    const title=clean(head ? head.childNodes[0]?.textContent || head.textContent : 'QA output')
+      .replace(/^◆\s*/,'');
+    rows.push(['QA Output',title,'']);
+
+    card.querySelectorAll('.judge-banner,.stat-row,.outcome-box,.fb-row,.trace-tag,.code-block').forEach(el=>{
+      const label=clean(el.querySelector('.fb-label,.outcome-label')?.textContent || '');
+      const value=clean(el.textContent);
+      if(value) rows.push([label || 'Content',value,'']);
+    });
+
+    card.querySelectorAll('.review-item').forEach(item=>{
+      const main=clean(item.querySelector('.ri-text')?.textContent);
+      const reasoning=clean(item.querySelector('.ri-reasoning')?.textContent);
+      const trace=clean(item.querySelector('.trace-tag')?.textContent);
+      if(main) rows.push(['Review item',main,reasoning+(trace?' | '+trace:'')]);
+    });
+
+    card.querySelectorAll('table').forEach(table=>{
+      const headers=Array.from(table.querySelectorAll('thead th')).map(x=>clean(x.textContent));
+      if(headers.length) rows.push(['Table','',headers.join(' | ')]);
+      table.querySelectorAll('tbody tr').forEach(tr=>{
+        const cells=Array.from(tr.children).map(x=>clean(x.textContent));
+        if(cells.some(Boolean)) rows.push(['Table row',cells.join(' | '),'']);
+      });
+    });
+
+    // Fallback for a simple generated card with no recognized components.
+    if(rows.length===1){
+      const body=card.querySelector('.src-body');
+      const value=clean(body ? body.innerText : card.innerText);
+      if(value) rows.push(['Output',value,'']);
+    }
+
+    return rows;
+  }
+
+  window.exportQAOutputToExcel=function(button){
+    const card=button.closest('.skill-run-card');
+    if(!card) return;
+
+    const rows=cardRows(card);
+    const title=clean(card.querySelector('.src-head')?.textContent || 'QA Output')
+      .replace(/^◆\s*/,'')
+      .replace(/\s*completed.*$/i,'');
+    const now=new Date().toLocaleString();
+
+    let xml='<!DOCTYPE html><html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><style>td,th{border:1px solid #D9DDE1;padding:7px 9px;font-family:Arial;font-size:10pt;}th{font-weight:bold;background:#F3F4F5;} .meta{color:#666;font-size:9pt;}</style></head><body>';
+    xml+='<table><tr><th colspan="3">'+esc(title)+'</th></tr>';
+    xml+='<tr><td class="meta">Generated</td><td colspan="2" class="meta">'+esc(now)+'</td></tr>';
+    xml+='<tr><th>Section</th><th>Content</th><th>Evidence / detail</th></tr>';
+    rows.forEach(r=>{
+      xml+='<tr><td>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td></tr>';
+    });
+    xml+='</table></body></html>';
+
+    const blob=new Blob([xml],{type:'application/vnd.ms-excel;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=safeFileName(title)+'_v2.xls';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+
+    const original=button.textContent;
+    button.textContent='✓ Exported';
+    setTimeout(()=>button.textContent=original,1400);
+  };
+
+  function addExportButton(card){
+    if(!card || card.querySelector('.v7-export-btn')) return;
+    const head=card.querySelector('.src-head');
+    if(!head) return;
+
+    let actions=head.querySelector('.v7-card-actions');
+    if(!actions){
+      actions=document.createElement('span');
+      actions.className='v7-card-actions';
+      head.appendChild(actions);
+    }
+
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.className='v7-export-btn';
+    btn.textContent='Export to Excel';
+    btn.title='Export this generated QA output to Excel';
+    btn.addEventListener('click',function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      window.exportQAOutputToExcel(btn);
+    });
+    actions.appendChild(btn);
+
+    // Move an existing version button into the same compact action group.
+    const version=head.querySelector('.generated-version');
+    if(version && version.parentElement!==actions) actions.appendChild(version);
+  }
+
+  function decorate(){
+    document.querySelectorAll('.skill-run-card').forEach(addExportButton);
+  }
+
+  const observer=new MutationObserver(function(mutations){
+    let added=false;
+    mutations.forEach(m=>{
+      if(m.addedNodes && m.addedNodes.length) added=true;
+    });
+    if(added) decorate();
+  });
+  observer.observe(document.body,{childList:true,subtree:true});
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',decorate);
+  }else{
+    decorate();
+  }
+  window.addEventListener('load',decorate);
+})();
+</script>
+
+</body>
+</html>
